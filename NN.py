@@ -14,7 +14,7 @@ def Make_dire(file_path):
         os.makedirs(file_path)
         
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32/64/64/32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', 
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', 
              Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish',
                 Norm_Choix = 0):
         self.Neur_seq = Neur_seq
@@ -27,7 +27,7 @@ class model_NN():
         self.Choix = Norm_Choix
         
     def Init_mod(self, Shape):
-        Orders = self.Neur_seq.split('/')
+        Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Input(Shape))
         for Order in Orders:
@@ -81,7 +81,7 @@ class model_NN():
         pwd = os.getcwd()
         Uniq_id = int(time.time())
 
-        Name = 'Ep_{}_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, Uniq_id)
+        Name = 'Ep_{}_N_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, Uniq_id)
         Path = os.path.join(pwd, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), Name)
         Make_dire(Path)
         self.model.save(Path + 'Model.h5')
@@ -104,7 +104,7 @@ class Sequencial_training():
     def training(self, training_extent):
         Neur_seqs = []
         #[Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
-        Neur_seqs.extend(Hyp_param_list(0, self.training_extent))
+        Neur_seqs.extend(Hyp_param_list(0, training_extent))
         for Neur in Neur_seqs:
             print('Starting training for neurone : {}'.format(Neur))
             self.Model.Neur_seq = Neur
