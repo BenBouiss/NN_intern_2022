@@ -14,9 +14,7 @@ def Make_dire(file_path):
         os.makedirs(file_path)
         
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', 
-             Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish',
-                Norm_Choix = 0):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -25,6 +23,8 @@ class model_NN():
         self.Oc_mod_type = Oc_mod_type
         self.activ_fct = activ_fct
         self.Choix = Norm_Choix
+        self.Uniq_id = int(time.time())
+        self.verbose = verbose
         
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
@@ -71,45 +71,63 @@ class model_NN():
         Shape = len(self.Var_X)
         self.Init_mod(Shape)
         self.Prepare_data()
+        self.Data_save()
+        saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
         self.model.fit(self.X_train, self.Y_train,
+                   callbacks=[saver],
                    epochs = self.Epoch,
                    batch_size = 32,
-                   validation_data = (self.X_valid, self.Y_valid))
+                   validation_data = (self.X_valid, self.Y_valid),
+                   verbose = self.verbose)
         self.Model_save()
         
-    def Model_save(self):
+    def Data_save(self):
+        self.Name = 'Ep_{}_N_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id)
+        self.Path = os.path.join(os.getcwd(), 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
         pwd = os.getcwd()
-        Uniq_id = int(time.time())
-
-        Name = 'Ep_{}_N_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, Uniq_id)
-        Path = os.path.join(pwd, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), Name)
-        Make_dire(Path)
-        self.model.save(Path + 'Model.h5')
+        Make_dire(self.Path)
         if self.Choix == 0 :
-            self.meanX.to_pickle(Path + 'MeanX.pkl')
-            self.stdX.to_pickle(Path + 'StdX.pkl')
-            np.savetxt(Path + 'MeanY.csv', np.array(self.meanY).reshape(1, ))
-            np.savetxt(Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
+            self.meanX.to_pickle(self.Path + 'MeanX.pkl')
+            self.stdX.to_pickle(self.Path + 'StdX.pkl')
+            np.savetxt(self.Path + 'MeanY.csv', np.array(self.meanY).reshape(1, ))
+            np.savetxt(self.Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
         elif self.Choix == 1:
-            self.maxX.to_pickle(Path + 'MaxX.pkl')
-            self.minX.to_pickle(Path + 'MinY.pkl')
-            np.savetxt(Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
-            np.savetxt(Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
+            self.maxX.to_pickle(self.Path + 'MaxX.pkl')
+            self.minX.to_pickle(self.Path + 'MinY.pkl')
+            np.savetxt(self.Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
+            np.savetxt(self.Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
+            
+    def Model_save(self):
+        self.model.save(self.Path + 'model.h5')
+
         
 
 class Sequencial_training():
     def __init__(self, Model, Epoch = 2):
         self.Model = Model
         self.Epoch = Epoch
-    def training(self, training_extent):
+        self.Tot = []
+    def training(self, training_extent, verbose = 1, **kwargs):
         Neur_seqs = []
-        #[Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
-        Neur_seqs.extend(Hyp_param_list(0, training_extent))
-        for Neur in Neur_seqs:
-            print('Starting training for neurone : {}'.format(Neur))
-            self.Model.Neur_seq = Neur
-            self.Model.Epoch = self.Epoch
-            self.Model.train()
+        [Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
+        #Neur_seqs.extend(Hyp_param_list(0, training_extent))
+        print('Projected training regiment :\n {}'.format(Neur_seqs))
+        for ind, Neur in enumerate(Neur_seqs):
+            Model = self.Model(Neur_seq = Neur, Epoch = self.Epoch, verbose = verbose, **kwargs)
+            
+            print('Starting training for neurone : {}, {}/{}'.format(Neur, ind, len(Neur_seqs)))
+            Model.train()
+        
+class CustomSaver(tf.keras.callbacks.Callback):
+    def __init__(self, path, Epoch_max):
+        self.path = path
+        self.Epoch_max = Epoch_max
+    def on_epoch_end(self, epoch, logs={}):
+        if epoch != self.Epoch_max:
+            self.model.save(self.path + "model_{}.h5".format(epoch))
+            
+            
+            
             
             
 def Hyp_param_list(Ind, Max):
