@@ -15,7 +15,7 @@ def Make_dire(file_path):
         
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32/64/64/32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', 
-             Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish'
+             Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish',
                 Norm_Choix = 0):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
@@ -25,8 +25,9 @@ class model_NN():
         self.Oc_mod_type = Oc_mod_type
         self.activ_fct = activ_fct
         self.Choix = Norm_Choix
+        
     def Init_mod(self, Shape):
-        Orders = self.Neur_seq.split('_')
+        Orders = self.Neur_seq.split('/')
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Input(Shape))
         for Order in Orders:
@@ -95,7 +96,30 @@ class model_NN():
             np.savetxt(Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
             np.savetxt(Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
         
-        
-def Sequencial_train():
-    def __init__(self, Size_sequence):
-        pass
+
+class Sequencial_training():
+    def __init__(self, Model, Epoch = 2):
+        self.Model = Model
+        self.Epoch = Epoch
+    def training(self, training_extent):
+        Neur_seqs = []
+        #[Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
+        Neur_seqs.extend(Hyp_param_list(0, self.training_extent))
+        for Neur in Neur_seqs:
+            print('Starting training for neurone : {}'.format(Neur))
+            self.Model.Neur_seq = Neur
+            self.Model.Epoc = self.Epoch
+            self.Model.train()
+            
+            
+def Hyp_param_list(Ind, Max):
+    List = ['1', '4', '16', '32', '64']
+    string = []
+    Possible = List[min(4, Max - 1 + Ind) :min(Max + 1 + Ind, len(List))]
+    if Ind == Max:
+        return Possible
+    else:
+        Next = Hyp_param_list(Ind + 1, Max)
+        return ['_'.join([j, i]) for i in Next for j in Possible]
+            
+    
