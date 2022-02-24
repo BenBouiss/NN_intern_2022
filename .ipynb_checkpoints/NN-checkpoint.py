@@ -108,7 +108,7 @@ class Sequencial_training():
         for Neur in Neur_seqs:
             print('Starting training for neurone : {}'.format(Neur))
             self.Model.Neur_seq = Neur
-            self.Model.Epoc = self.Epoch
+            self.Model.Epoch = self.Epoch
             self.Model.train()
             
             
