@@ -15,7 +15,8 @@ def Make_dire(file_path):
         
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32/64/64/32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', 
-             Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish'):
+             Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish'
+                Norm_Choix = 0):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -23,7 +24,7 @@ class model_NN():
         self.Dataset_train = Dataset_train
         self.Oc_mod_type = Oc_mod_type
         self.activ_fct = activ_fct
-        
+        self.Choix = Norm_Choix
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
@@ -48,15 +49,23 @@ class model_NN():
         Y_train = Y.loc[X_train.index]
         Y_valid = Y.drop(X_train.index)
         
-        self.meanX, self.stdX = X_train.mean(), X_train.std() 
-        self.meanY, self.stdY = Y_train.mean(), Y_train.std() 
+        if self.Choix == 0:
+            self.meanX, self.stdX = X_train.mean(), X_train.std() 
+            self.meanY, self.stdY = Y_train.mean(), Y_train.std() 
 
-        self.X_train, self.X_valid = (np.array((X_train - self.meanX)/self.stdX), 
-                                      np.array((X_valid - self.meanX)/self.stdX))
-        
-        self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
-                                      np.array((Y_valid - self.meanY)/self.stdY))
-        
+            self.X_train, self.X_valid = (np.array((X_train - self.meanX)/self.stdX), 
+                                          np.array((X_valid - self.meanX)/self.stdX))
+
+            self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
+                                          np.array((Y_valid - self.meanY)/self.stdY))
+        elif self.Choix == 1:
+            self.maxX, self.minX = X_train.max(), X_train.min()
+            self.maxY, self.minY = Y_train.max(), Y_train.min()
+            self.X_train, self.X_valid = (np.array((X_train - self.minX)/(self.maxX - self.minX)), 
+                                          np.array((X_valid - self.minX)/(self.maxX - self.minX)))
+            self.Y_train, self.Y_valid = (np.array((Y_train - self.minY)/(self.maxY - self.minY)), 
+                                          np.array((Y_valid - self.minY)/(self.maxY - self.minY)))
+
     def train(self):
         Shape = len(self.Var_X)
         self.Init_mod(Shape)
@@ -71,13 +80,22 @@ class model_NN():
         pwd = os.getcwd()
         Uniq_id = int(time.time())
 
-        Name = 'Ep_{}_{}-{}/'.format(self.Epoch, self.Neur_seq, Uniq_id)
+        Name = 'Ep_{}_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, Uniq_id)
         Path = os.path.join(pwd, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), Name)
         Make_dire(Path)
         self.model.save(Path + 'Model.h5')
-        self.meanX.to_pickle(Path + 'MeanX.pkl')
-        self.stdX.to_pickle(Path + 'StdX.pkl')
-        np.savetxt(Path + 'MeanY.csv', np.array(self.meanY).reshape(1, ))
-        np.savetxt(Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
+        if self.Choix == 0 :
+            self.meanX.to_pickle(Path + 'MeanX.pkl')
+            self.stdX.to_pickle(Path + 'StdX.pkl')
+            np.savetxt(Path + 'MeanY.csv', np.array(self.meanY).reshape(1, ))
+            np.savetxt(Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
+        elif self.Choix == 1:
+            self.maxX.to_pickle(Path + 'MaxX.pkl')
+            self.minX.to_pickle(Path + 'MinY.pkl')
+            np.savetxt(Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
+            np.savetxt(Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
         
         
+def Sequencial_train():
+    def __init__(self, Size_sequence):
+        pass
