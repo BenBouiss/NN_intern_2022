@@ -4,6 +4,8 @@ import tensorflow as tf
 import time
 import glob
 import pandas as pd
+import matplotlib.pyplot as plt
+import re 
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -98,7 +100,7 @@ class model_NN():
             np.savetxt(self.Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
             
     def Model_save(self):
-        self.model.save(self.Path + 'model.h5')
+        self.model.save(self.Path + 'model_{}.h5'.format(self.Epoch))
 
         
 
@@ -127,8 +129,7 @@ class CustomSaver(tf.keras.callbacks.Callback):
             self.model.save(self.path + "model_{}.h5".format(epoch))
             
             
-            
-            
+                        
             
 def Hyp_param_list(Ind, Max):
     List = ['1', '4', '16', '32', '64']
@@ -139,5 +140,78 @@ def Hyp_param_list(Ind, Max):
     else:
         Next = Hyp_param_list(Ind + 1, Max)
         return ['_'.join([j, i]) for i in Next for j in Possible]
-            
     
+    
+    
+def Fetch_data(Ocean_target, Type_tar):
+    li = []
+    df = pd.read_csv(Getpath_dataset(Ocean_target, Type_tar))
+    return df
+
+def Fetch_model(model_path, name):
+    return tf.keras.models.load_model(model_path + '/' + name)
+                     
+                     
+def Fetch_model_data(model_path, Choix):
+    if Choix == '0':
+        StdY = np.loadtxt(model_path + '/' + 'StdY.csv')
+        MeanY = np.loadtxt(model_path + '/' + 'MeanY.csv')
+        MeanX = pd.read_pickle(model_path + '/' + 'MeanX.pkl')
+        StdX = pd.read_pickle(model_path + '/' + 'StdX.pkl')
+    return MeanX, MeanY, StdX, StdY, MeanX.index
+
+def Normalizer(d, mod_p, Choix, Data_Norm):
+    if Choix == '0':
+        MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
+        X = d[Var_X]
+        X = np.array((X - MeanX)/StdX).reshape(-1, 5, )
+    return X, Var_X
+                     
+                     
+def Compute_rmse(Tar, Mod):
+    return np.sqrt(np.mean((Mod-Tar)**2))
+                     
+def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar):
+    Yr_t_s = 3600 * 24 * 365 # s/yr
+    Rho = 920 #Kg/m**3
+    Horiz_res = 2 #km/pix
+    S = (Horiz_res*10**3) ** 2  #m**2/pix
+    Data = Fetch_data(Ocean_target, Type_tar)
+    Model = Fetch_model(Model_path, name = 'model.h5')
+    tmx = int(Data.loc[len(Data) - 1].date + 1)
+    Data_norm = Fetch_model_data(Model_path, Choix)
+    Var_X = Data_norm[len(Data_norm) - 1]
+    print('Data variables used : {}'.format(' '.join(Var_X)))
+    Melts, Modded_melts = [], []
+    for t in range(tmx):
+        Cur = Data.loc[Data.date == t].reset_index(drop = True)
+        X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
+        if Choix == '0':
+            Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
+            Cur['Mod_melt'] = Y
+        Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
+        Modded_melts.append(Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
+    Melts = np.array(Melts)
+    Modded_melts = np.array(Modded_melts)
+    return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
+
+def Plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+             Plotting_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS' ):
+    
+    pwd = os.getcwd()
+    path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean_trained) if type(Ocean_trained) == list else Ocean_trained)
+    Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+    RMSEs = []
+    Param = []
+    print(path + '/Ep_{}'.format(Epoch))
+    for ind, model_p in enumerate(Models_paths):
+        print('Starting {}/{} model'.format(ind + 1, len(Models_paths)))
+        Model_name = model_p.split('/')
+        Model_name = Model_name[len(Model_name) - 1]
+        Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+        _, _, RMSE, Param = Compute_data_from_model(model_p, Choix, Plotting_target, Type_tar)
+        RMSEs.append(RMSE)
+    Param, RMSEs = np.array(Param), np.array(RMSEs)
+    return RMSEs, Param
+    
+        
