@@ -6,6 +6,7 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import re 
+import sys
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -16,7 +17,7 @@ def Make_dire(file_path):
         os.makedirs(file_path)
         
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -27,7 +28,7 @@ class model_NN():
         self.Choix = Norm_Choix
         self.Uniq_id = int(time.time())
         self.verbose = verbose
-        
+        self.batch_size = batch_size
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
@@ -46,6 +47,7 @@ class model_NN():
         df = pd.concat(li, ignore_index= True)
         X = df[self.Var_X]
         Y = df[self.Var_Y]
+        del df, li
         X_train = X.sample(frac = 0.8)
         X_valid = X.drop(X_train.index)
         
@@ -78,9 +80,10 @@ class model_NN():
         self.model.fit(self.X_train, self.Y_train,
                    callbacks=[saver],
                    epochs = self.Epoch,
-                   batch_size = 32,
+                   batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
                    verbose = self.verbose)
+        del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save()
         
     def Data_save(self):
@@ -184,6 +187,8 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar):
     print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
     for t in range(tmx):
+        if (t+1)%int(tmx/5) == 0:
+            print('Starting {} / {}'.format(t+1, tmx) , end='\r')
         Cur = Data.loc[Data.date == t].reset_index(drop = True)
         X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
         if Choix == '0':
@@ -202,7 +207,8 @@ def Plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS
     path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean_trained) if type(Ocean_trained) == list else Ocean_trained)
     Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
     RMSEs = []
-    Param = []
+    Params = []
+    Neurs = []
     print(path + '/Ep_{}'.format(Epoch))
     for ind, model_p in enumerate(Models_paths):
         print('Starting {}/{} model'.format(ind + 1, len(Models_paths)))
@@ -211,8 +217,10 @@ def Plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS
         Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
         _, _, RMSE, Param = Compute_data_from_model(model_p, Choix, Plotting_target, Type_tar)
         RMSEs.append(RMSE)
-    Param, RMSEs = np.array(Param), np.array(RMSEs)
-    plt.scatter(Param, RMSEs)
-    return RMSEs, Param
+        Params.append(Param)
+        Neurs.append(Neur)
+    Params, RMSEs = np.array(Params), np.array(RMSEs)
+    plt.scatter(Params, RMSEs)
+    return RMSEs, Params, Neurs
     
         
