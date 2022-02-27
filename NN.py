@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re 
 import sys
-import json
+import pickle
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -78,14 +78,14 @@ class model_NN():
         self.Prepare_data()
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
-        self.model.fit(self.X_train, self.Y_train,
+        Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=[saver],
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
                    verbose = self.verbose)
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
-        self.Model_save()
+        self.Model_save(Mod)
         
     def Data_save(self):
         self.Name = 'Ep_{}_N_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id)
@@ -103,26 +103,30 @@ class model_NN():
             np.savetxt(self.Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
             np.savetxt(self.Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
             
-    def Model_save(self):
+    def Model_save(self, Mod):
         self.model.save(self.Path + 'model_{}.h5'.format(self.Epoch))
         hist = self.model.history
-        json.dump(hist, opne(self.path + 'History_log.json'), 'r')
+        #json.dump(hist, open(self.path + 'History_log.json'), 'w')
+        with open(self.Path + 'TrainingHistory', 'wb') as file_pi:
+            pickle.dump(Mod.history, file_pi)
 
         
 
 class Sequencial_training():
-    def __init__(self, Model, Epoch = 2):
+    def __init__(self, Model):
         self.Model = Model
-        self.Epoch = Epoch
         self.Tot = []
-    def training(self, training_extent, verbose = 1, **kwargs):
-        Neur_seqs = []
-        [Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
+    def training(self, training_extent = 1, verbose = 1, Standard_train = ['32_64_64_32'], **kwargs):
+
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
+        if training_extent == 0:
+            Neur_seqs = Standard_train
+        else:
+            Neur_seqs = []
+            [Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
         print('Projected training regiment :\n {}'.format(Neur_seqs))
         for ind, Neur in enumerate(Neur_seqs):
-            Model = self.Model(Neur_seq = Neur, Epoch = self.Epoch, verbose = verbose, **kwargs)
-            
+            Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
             print('Starting training for neurone : {}, {}/{}'.format(Neur, ind, len(Neur_seqs)))
             Model.train()
             
@@ -262,3 +266,22 @@ def Plot_Melt_to_Modded_melt(**kwargs):
     ax.legend(loc = 'upper right')
     plt.show()
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
+
+def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS'):
+    pwd = os.getcwd()
+    path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean) if type(Ocean) == list else Ocean)
+    Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+    return Models_paths
+
+def Plot_loss_model(ind = 0, **kwargs):
+    Models_p = Get_model_path_condition(**kwargs)
+    if ind >= len(Models_p):
+        ind = len(Models_p) - 1
+    Model_p = Models_p[ind]
+    hist = pd.read_pickle(Model_p + '/TrainingHistory')
+    plt.plot(hist['loss'])
+    for k in hist.keys():
+        plt.plot(hist[k], label = k)
+    plt.legend()
+    plt.show()
+    
