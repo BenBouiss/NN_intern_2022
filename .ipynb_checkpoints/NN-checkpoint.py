@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re 
 import sys
+import json
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -104,6 +105,8 @@ class model_NN():
             
     def Model_save(self):
         self.model.save(self.Path + 'model_{}.h5'.format(self.Epoch))
+        hist = self.model.history
+        json.dump(hist, opne(self.path + 'History_log.json'), 'r')
 
         
 
@@ -122,6 +125,12 @@ class Sequencial_training():
             
             print('Starting training for neurone : {}, {}/{}'.format(Neur, ind, len(Neur_seqs)))
             Model.train()
+            
+    def Neur_seq_preview(self, training_extent):
+        Neur_seqs = []
+        [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
+        return Neur_seqs
+    
         
 class CustomSaver(tf.keras.callbacks.Callback):
     def __init__(self, path, Epoch_max):
@@ -152,7 +161,13 @@ def Fetch_data(Ocean_target, Type_tar):
     return df
 
 def Fetch_model(model_path, name):
-    return tf.keras.models.load_model(model_path + '/' + name)
+    if os.path.isfile(model_path + '/' + name):
+        return tf.keras.models.load_model(model_path + '/' + name)
+    elif os.path.isfile(model_path + '/' + 'model.h5'):
+        return tf.keras.models.load_model(model_path + '/' + 'model.h5')
+    else:
+        print('File {} not found'.format(model_path + '/' + name))
+        return None
                      
                      
 def Fetch_model_data(model_path, Choix):
@@ -174,21 +189,25 @@ def Normalizer(d, mod_p, Choix, Data_Norm):
 def Compute_rmse(Tar, Mod):
     return np.sqrt(np.mean((Mod-Tar)**2))
                      
-def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar):
+def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, message):
     Yr_t_s = 3600 * 24 * 365 # s/yr
     Rho = 920 #Kg/m**3
     Horiz_res = 2 #km/pix
     S = (Horiz_res*10**3) ** 2  #m**2/pix
     Data = Fetch_data(Ocean_target, Type_tar)
-    Model = Fetch_model(Model_path, name = 'model.h5')
+    Model = Fetch_model(Model_path, name = 'model_{}.h5'.format(Epoch))
+    if Model == None:
+        return None
     tmx = int(Data.loc[len(Data) - 1].date + 1)
     Data_norm = Fetch_model_data(Model_path, Choix)
     Var_X = Data_norm[len(Data_norm) - 1]
-    print('Data variables used : {}'.format(' '.join(Var_X)))
+    if message:
+        print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
     for t in range(tmx):
-        if (t+1)%int(tmx/5) == 0:
-            print('Starting {} / {}'.format(t+1, tmx) , end='\r')
+        if message :
+            if (t+1)%int(tmx/5) == 0:
+                print('Starting {} / {}'.format(t+1, tmx) , end='\r')
         Cur = Data.loc[Data.date == t].reset_index(drop = True)
         X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
         if Choix == '0':
@@ -200,27 +219,46 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar):
     Modded_melts = np.array(Modded_melts)
     return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
 
-def Plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
-             Plotting_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS' ):
-    
+def Compute_data_for_plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1):
     pwd = os.getcwd()
     path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean_trained) if type(Ocean_trained) == list else Ocean_trained)
     Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
-    RMSEs = []
-    Params = []
-    Neurs = []
+    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask = [], [], [], [], [], []
     print(path + '/Ep_{}'.format(Epoch))
-    for ind, model_p in enumerate(Models_paths):
-        print('Starting {}/{} model'.format(ind + 1, len(Models_paths)))
-        Model_name = model_p.split('/')
-        Model_name = Model_name[len(Model_name) - 1]
-        Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
-        _, _, RMSE, Param = Compute_data_from_model(model_p, Choix, Plotting_target, Type_tar)
-        RMSEs.append(RMSE)
-        Params.append(Param)
-        Neurs.append(Neur)
-    Params, RMSEs = np.array(Params), np.array(RMSEs)
+    if type(Ocean_target) != list:
+        Ocean_target = [Ocean_target]
+    for Oc in Ocean_target:
+        Oc_m = int(Oc[len(Oc) - 1])
+        for ind, model_p in enumerate(Models_paths):
+            print('Starting {}/{} model'.format(ind + 1, len(Models_paths)), end = '\r')
+            Model_name = model_p.split('/')
+            Model_name = Model_name[len(Model_name) - 1]
+            Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+            Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
+            if Comp != None:
+                Melt, Modded_melt, RMSE, Param = Comp
+                RMSEs.append(RMSE)
+                Params.append(Param)
+                Neurs.append(Neur)
+                Melts = np.append(Melts, Melt)
+                Modded_melts = np.append(Modded_melts, Modded_melt)
+                Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
+    return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask
+    
+def Plot_RMSE_to_param(**kwargs):
+    RMSEs, Params, _, _, Neurs, _ = Compute_data_for_plotting(**kwargs)
     plt.scatter(Params, RMSEs)
     return RMSEs, Params, Neurs
     
-        
+def Plot_Melt_to_Modded_melt(**kwargs):
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask = Compute_data_for_plotting(**kwargs)
+    fig, ax = plt.subplots()
+
+    for v in np.unique(Oc_mask):
+        idx = np.where(Oc_mask == v)
+        ax.scatter(Modded_melts[idx], Melts[idx], s = 1.5, label = 'Ocean{}'.format(v))
+        #ax.legend(Oc_mask)
+    ax.legend(loc = 'upper right')
+    plt.show()
+    return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
