@@ -9,6 +9,7 @@ import re
 import sys
 import pickle
 import pathlib
+import matplotlib.colors as mcolors
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -86,6 +87,7 @@ class model_NN():
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
                    verbose = self.verbose)
+        
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
         
@@ -126,7 +128,11 @@ class Sequencial_training():
         else:
             Neur_seqs = []
             [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
-        print('Projected training regiment :\n {}'.format(Neur_seqs))
+            Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, **kwargs)
+        if Neur_seqs == []:
+            print('No need for training for config : {} epoch and training_extent = {}'.format(self.Model(**kwargs).Epoch, training_extent))
+        else:
+            print('Projected training regiment :\n {}'.format(Neur_seqs))
         Time_elap = float(0)
         for ind, Neur in enumerate(Neur_seqs):
             Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
@@ -139,7 +145,20 @@ class Sequencial_training():
         [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
         return Neur_seqs
     
-        
+    def Verify_current_regiment(self, Neur_seqs, Model, **kwargs):
+        Template = Model(**kwargs)
+        Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
+        for file in Current_Files:
+            name = file.split('/')[-1]
+            EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', name)[0]
+            if Neur in Neur_seqs:
+                Neur_seqs.remove(Neur)
+        return Neur_seqs
+    
+    def Test_verify(self, Ext = 4, **kwargs):
+        Neur_seqs = self.Neur_seq_preview(Ext)
+        N_Neur = self.Verify_current_regiment(Neur_seqs,self.Model ,**kwargs)
+        return N_Neur
 class CustomSaver(tf.keras.callbacks.Callback):
     def __init__(self, path, Epoch_max):
         self.path = path
@@ -184,6 +203,10 @@ def Fetch_model(model_path, name):
         return tf.keras.models.load_model(model_path + '/' + 'model.h5')
     else:
         print('File {} not found'.format(model_path + '/' + name))
+        files = glob.glob(model_path + '/*')
+        for f in files:
+            os.remove(f)
+        os.rmdir(model_path)
         return None
                      
                      
@@ -246,8 +269,13 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         Dataset = Data.to_xarray()
         return Dataset
 def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
-             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1):
-    Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained)
+             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Exact = 0):
+    Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact)
+    if index != None:
+        if index >= len(Models_paths):
+            index = len(Models_paths) - 1
+        Models_paths = [Models_paths[index]]
+        print(Models_paths)
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask = [], [], [], [], [], []
     print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
@@ -255,7 +283,7 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
     for Oc in Ocean_target:
         Oc_m = int(Oc[-1])
         for ind, model_p in enumerate(Models_paths):
-            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
+            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]))#, end = '\r')
             Model_name = model_p.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
             Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
@@ -267,13 +295,29 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
                 Melts = np.append(Melts, Melt)
                 Modded_melts = np.append(Modded_melts, Modded_melt)
                 Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
-    return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask
+    if index == None:
+        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask
+    else:
+        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, model_p
     
 def Plot_RMSE_to_param(**kwargs):
     RMSEs, Params, _, _, Neurs, _ = Compute_data_for_plotting(**kwargs)
     plt.scatter(Params, RMSEs)
     return RMSEs, Params, Neurs
-    
+
+def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
+    RMSE, _, Melts, Modded_Melts, _, _, name = Compute_data_for_plotting(index = ind, **kwargs)
+    name = name.split('/')[-1]
+    x = np.arange(1, len(Modded_Melts) + 1)
+    plt.plot(x, Melts, label = 'Real melt')
+    plt.plot(x, Modded_Melts, label = 'Modded melt')
+    plt.xlabel('Time (yrs)')
+    plt.ylabel('Mass lost(Gt/yr)')
+    plt.legend()
+    print(RMSE)
+    if save:
+        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'Melt_time_fct_M_{}.png'.format(name)))
+        
 def Plot_Melt_to_Modded_melt(**kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask = Compute_data_for_plotting(**kwargs)
     fig, ax = plt.subplots()
@@ -311,22 +355,24 @@ def Plot_loss_model(ind = 0, **kwargs):
     
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T = Compute_dataset_for_plot(ind = ind, **kwargs)
-    cmap = plt.get_cmap('viridis')
+    cmap = plt.get_cmap('seismic')
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
     ax1, ax2 = axes
-    a = Dataset.Mod_melt.plot(ax = ax1,add_colorbar=False, robust=False, cmap = cmap)
-    ax1.set_title('Modded melt (m/s) at t = {} months'.format(T))
-    Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=False, cmap = cmap)
-    ax2.set_title('Real melt (m/s) at t = {} months'.format(T))
+    vmin = float(min(Dataset.Mod_melt.min(), Dataset.meltRate.min()))
+    vmax = float(max(Dataset.Mod_melt.max(), Dataset.meltRate.max()))
+    a = Dataset.Mod_melt.plot(ax = ax1,add_colorbar=False, robust=True, cmap = cmap, vmin = vmin, vmax = vmax, norm = mcolors.CenteredNorm())
+    ax1.set_title('Modded melt rates'.format(T))
+    Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=True, cmap = cmap,vmin = vmin, vmax = vmax , norm = mcolors.CenteredNorm())
+    ax2.set_title('"Real" melt rates'.format(T))
+    plt.suptitle('t = {} months'.format(T))
     ax=plt.gca()
-    cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'MelRate m/s', location = 'bottom', extend='both', fraction=0.096, pad=0.15)#, shrink = 0.6
+    cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'MelRate (m/s)', location = 'bottom', extend='both', fraction=0.096, pad=0.15)#, shrink = 0.6
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'Side_side_M_{}.png'.format(name)))
-                    
+        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'Side_side_M_{}_t={}.png'.format(name, T)))
+    return Dataset.meltRate.min(), Dataset.Mod_melt.min()
 def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
              Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, Compute_at_t = 1, T = 0):
     Models_p, _ = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact = 1)
-    print(Models_p)
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
