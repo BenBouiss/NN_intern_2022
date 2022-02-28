@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import re 
 import sys
 import pickle
+import pathlib
 
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
@@ -18,7 +19,7 @@ def Make_dire(file_path):
         os.makedirs(file_path)
         
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = ''):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -30,6 +31,7 @@ class model_NN():
         self.Uniq_id = int(time.time())
         self.verbose = verbose
         self.batch_size = batch_size
+        self.Extra_n = Extra_n
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
@@ -88,7 +90,7 @@ class model_NN():
         self.Model_save(Mod)
         
     def Data_save(self):
-        self.Name = 'Ep_{}_N_{}_Ch_{}-{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id)
+        self.Name = 'Ep_{}_N_{}_Ch_{}-{}_Ex_{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id, self.Extra_n)
         self.Path = os.path.join(os.getcwd(), 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
         pwd = os.getcwd()
         Make_dire(self.Path)
@@ -123,13 +125,15 @@ class Sequencial_training():
             Neur_seqs = Standard_train
         else:
             Neur_seqs = []
-            [Neur_seqs.extend(Hyp_param_list(0, i+1 )) for i in range(training_extent)]
+            [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
         print('Projected training regiment :\n {}'.format(Neur_seqs))
+        Time_elap = float(0)
         for ind, Neur in enumerate(Neur_seqs):
             Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
-            print('Starting training for neurone : {}, {}/{}'.format(Neur, ind, len(Neur_seqs)))
+            print("Starting training for neurone : {}, {}/{} (Previous step : {:.3f} s)".format(Neur, ind, len(Neur_seqs), Time_elap))
+            Start = time.perf_counter()
             Model.train()
-            
+            Time_elap = time.perf_counter() - Start
     def Neur_seq_preview(self, training_extent):
         Neur_seqs = []
         [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
@@ -147,7 +151,7 @@ class CustomSaver(tf.keras.callbacks.Callback):
             
                         
             
-def Hyp_param_list(Ind, Max):
+def Hyp_param_list2(Ind, Max): ### Initial fct ###
     List = ['1', '4', '16', '32', '64']
     string = []
     Possible = List[min(4, Max - 1 + Ind) :min(Max + 1 + Ind, len(List))]
@@ -157,6 +161,15 @@ def Hyp_param_list(Ind, Max):
         Next = Hyp_param_list(Ind + 1, Max)
         return ['_'.join([j, i]) for i in Next for j in Possible]
     
+def Hyp_param_list(Ind, Max):
+    List = ['1', '4', '8','16', '32', '64']
+    string = []
+    Possible = List[min(5, 2 * Ind + int(Max)) :min(int(Max/ 1.1) + 4 + 2 * Ind, len(List))]
+    if Ind == Max:
+        return Possible
+    else:
+        Next = Hyp_param_list(Ind + 1, Max)
+        return ['_'.join([j, i]) for i in Next for j in Possible]
     
     
 def Fetch_data(Ocean_target, Type_tar):
@@ -193,7 +206,7 @@ def Normalizer(d, mod_p, Choix, Data_Norm):
 def Compute_rmse(Tar, Mod):
     return np.sqrt(np.mean((Mod-Tar)**2))
                      
-def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, message):
+def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, T = 0):
     Yr_t_s = 3600 * 24 * 365 # s/yr
     Rho = 920 #Kg/m**3
     Horiz_res = 2 #km/pix
@@ -208,37 +221,43 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
     if message:
         print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
-    for t in range(tmx):
-        if message :
-            if (t+1)%int(tmx/5) == 0:
-                print('Starting {} / {}'.format(t+1, tmx) , end='\r')
-        Cur = Data.loc[Data.date == t].reset_index(drop = True)
+    if not Compute_at_t :
+        for t in range(tmx):
+            if message :
+                if (t+1)%int(tmx/5) == 0:
+                    print('Starting {} / {}'.format(t+1, tmx) , end='\r')
+            Cur = Data.loc[Data.date == t].reset_index(drop = True)
+            X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
+            if Choix == '0':
+                Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
+                Cur['Mod_melt'] = Y
+            Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
+            Modded_melts.append(Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
+        Melts = np.array(Melts)
+        Modded_melts = np.array(Modded_melts)
+        return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
+    else:
+        Cur = Data.loc[Data.date == T].reset_index(drop = True)
         X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
         if Choix == '0':
             Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
             Cur['Mod_melt'] = Y
-        Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
-        Modded_melts.append(Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
-    Melts = np.array(Melts)
-    Modded_melts = np.array(Modded_melts)
-    return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
-
-def Compute_data_for_plotting(Epoch = 14, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+        Data = Cur.set_index(['date', 'y', 'x'])
+        Dataset = Data.to_xarray()
+        return Dataset
+def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
              Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1):
-    pwd = os.getcwd()
-    path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean_trained) if type(Ocean_trained) == list else Ocean_trained)
-    Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+    Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained)
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask = [], [], [], [], [], []
     print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
     for Oc in Ocean_target:
-        Oc_m = int(Oc[len(Oc) - 1])
+        Oc_m = int(Oc[-1])
         for ind, model_p in enumerate(Models_paths):
-            print('Starting {}/{} model'.format(ind + 1, len(Models_paths)), end = '\r')
-            Model_name = model_p.split('/')
-            Model_name = Model_name[len(Model_name) - 1]
-            Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
+            Model_name = model_p.split('/')[-1]
+            EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
             Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
             if Comp != None:
                 Melt, Modded_melt, RMSE, Param = Comp
@@ -258,7 +277,6 @@ def Plot_RMSE_to_param(**kwargs):
 def Plot_Melt_to_Modded_melt(**kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask = Compute_data_for_plotting(**kwargs)
     fig, ax = plt.subplots()
-
     for v in np.unique(Oc_mask):
         idx = np.where(Oc_mask == v)
         ax.scatter(Modded_melts[idx], Melts[idx], s = 1.5, label = 'Ocean{}'.format(v))
@@ -267,14 +285,19 @@ def Plot_Melt_to_Modded_melt(**kwargs):
     plt.show()
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
-def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS'):
+def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0):
     pwd = os.getcwd()
     path = os.path.join(pwd, 'Auto_model', Type_trained, '_'.join(Ocean) if type(Ocean) == list else Ocean)
-    Models_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
-    return Models_paths
+    Model_paths = glob.glob(path + '/Ep_*'.format(Epoch))
+    if Exact == 0:
+        N_paths = [p for p in Model_paths if int(re.findall('Ep_(\d+)', p.split('/')[-1])[0]) >= Epoch]
+    else:
+        N_paths = [p for p in Model_paths if int(re.findall('Ep_(\d+)', p.split('/')[-1])[0]) == Epoch]
+    #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
+    return N_paths, path
 
 def Plot_loss_model(ind = 0, **kwargs):
-    Models_p = Get_model_path_condition(**kwargs)
+    Models_p, _ = Get_model_path_condition(**kwargs)
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
@@ -283,5 +306,35 @@ def Plot_loss_model(ind = 0, **kwargs):
     for k in hist.keys():
         plt.plot(hist[k], label = k)
     plt.legend()
+    plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
     plt.show()
     
+def Plotting_side_by_side(ind = 0,save = False, **kwargs):
+    Dataset, name, T = Compute_dataset_for_plot(ind = ind, **kwargs)
+    cmap = plt.get_cmap('viridis')
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+    ax1, ax2 = axes
+    a = Dataset.Mod_melt.plot(ax = ax1,add_colorbar=False, robust=False, cmap = cmap)
+    ax1.set_title('Modded melt (m/s) at t = {} months'.format(T))
+    Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=False, cmap = cmap)
+    ax2.set_title('Real melt (m/s) at t = {} months'.format(T))
+    ax=plt.gca()
+    cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'MelRate m/s', location = 'bottom', extend='both', fraction=0.096, pad=0.15)#, shrink = 0.6
+    if save:
+        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'Side_side_M_{}.png'.format(name)))
+                    
+def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, Compute_at_t = 1, T = 0):
+    Models_p, _ = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact = 1)
+    print(Models_p)
+    if ind >= len(Models_p):
+        ind = len(Models_p) - 1
+    Model_p = Models_p[ind]
+    print(Model_p)
+    Model_name = Model_p.split('/')[-1]
+    EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+    Dataset = Compute_data_from_model(Model_p, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = 1, T = T)
+    if Dataset != None:
+        return Dataset, Model_name, T
+    else:
+        print('Not found')
