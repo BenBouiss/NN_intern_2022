@@ -302,18 +302,18 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
                 Modded_melts = np.append(Modded_melts, Modded_melt)
                 Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
     if index == None:
-        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target
+        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch
     else:
         return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, model_p, Ocean_trained, Ocean_target
     
 def Plot_RMSE_to_param(save = False, **kwargs):
-    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar = Compute_data_for_plotting(**kwargs)
+    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep = Compute_data_for_plotting(**kwargs)
     plt.scatter(Params, RMSEs)
     plt.xlabel('Number of parameters')
     plt.ylabel('RMSE of modeled vs "real" melt rates(Gt/yr)')
-    plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format('Ocean' + ('-'.join(i[-1] for i in Oc_tr), Oc_tar)))
+    plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format(Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar)))
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_N{}_Tr{}_Tar{}'.format(Neurs, 
+        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
     return RMSEs, Params, Neurs
 
@@ -325,7 +325,9 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     plt.plot(x, Modded_Melts, label = 'Modeled melt')
     plt.xlabel('Time (yrs)')
     plt.ylabel('Mass lost(Gt/yr)')
-    plt.title('Modeling melt rates of {} \n using NN trained on {}'.format(Oc_tar, Concat_Oc_names(Oc_train)))
+    #print(Concat_Oc_names(Oc_tar))
+    #print(Concat_Oc_names(Oc_train))
+    plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
     plt.legend()
     print(RMSE)
     if save:
@@ -333,13 +335,13 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
         
 def Plot_Melt_to_Modded_melt(save = False, **kwargs):
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar = Compute_data_for_plotting(**kwargs)
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _ = Compute_data_for_plotting(**kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
     Vmax = max(np.append(Melts, Modded_melts))
     for v in np.unique(Oc_mask):
         idx = np.where(Oc_mask == v)
-        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.4 ,label = 'Ocean{}'.format(v))
+        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = 'Ocean{}'.format(v))
         ax.legend(Oc_mask)
     linex, liney = [Vmin, Vmax], [Vmin, Vmax]
     ax.plot(linex, liney, c = 'red', ls = '-', linewidth = 0.8)
@@ -392,14 +394,14 @@ def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     ax1.set_title('Modeled melt rates'.format(T))
     Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
     ax2.set_title('"Real" melt rates'.format(T))
-    plt.suptitle('Modeled vs "real" melt rates for t = {} months \n (NN trained on {} applied to {})'.format(T, 
-                                                                                            Concat_Oc_names(Oc_tr), Oc_tar), y=1.035)
+    plt.suptitle('Modeled vs "real" melt rates for t = {} month \n (NN trained on {} applied to {})'.format(T, 
+                Concat_Oc_names(Oc_tr), Oc_tar), y=1.035)
     #plt.tight_layout()
     cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'Melt rate (m/s)', location = 'bottom', extend='both', fraction=0.16, pad=0.15)#, shrink = 0.6
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 
-            'Side_side_M_{}_t={}.png'.format(name, T)), facecolor='white')
-    return np.array([Dataset.meltRate.min(), Dataset.Mod_melt.min()]), np.array([Dataset.meltRate.max(), Dataset.Mod_melt.max()])
+        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+            'Side_side_M_{}_t={}.png'.format(name, T)), facecolor='white', bbox_inches='tight')
+    return np.array([Dataset.Mod_melt.min(), Dataset.meltRate.min()]), np.array([Dataset.Mod_melt.max(), Dataset.meltRate.max()])
 
 
 def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
