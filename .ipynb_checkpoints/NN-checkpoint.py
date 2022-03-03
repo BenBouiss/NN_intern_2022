@@ -98,7 +98,7 @@ class model_NN():
         
     def Data_save(self):
         self.Name = 'Ep_{}_N_{}_Ch_{}-{}_Ex_{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id, self.Extra_n)
-        self.Path = os.path.join(os.getcwd(), 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
+        self.Path = os.path.join(PWD, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
         Make_dire(self.Path)
         if self.Choix == 0 :
             self.meanX.to_pickle(self.Path + 'MeanX.pkl')
