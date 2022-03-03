@@ -405,8 +405,8 @@ def Plotting_side_by_side(ind = 0,save = False, **kwargs):
 
 
 def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
-             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, Compute_at_t = 1, T = 0, Extra_n = []):
-    Models_p, _ = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact = 1, Extra_n = Extra_n)
+             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, Compute_at_t = 1, T = 0, Extra_n = [], Exact = 1):
+    Models_p, _ = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact = Exact, Extra_n = Extra_n)
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
