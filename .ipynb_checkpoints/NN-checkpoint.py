@@ -126,8 +126,8 @@ class Sequencial_training():
     def __init__(self, Model):
         self.Model = Model
         self.Tot = []
-    def training(self, training_extent = 1, verbose = 1, Verify = 1,
-                 Standard_train = ['32_64_64_32'], **kwargs):
+    def training(self, training_extent = 1, verbose = 1, Verify = 1,message = 1,
+                 Standard_train = ['32_64_64_32'], Exact = 0, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:
@@ -136,7 +136,7 @@ class Sequencial_training():
             Neur_seqs = []
             [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
             if Verify == 1:
-                Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, **kwargs)
+                Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, Exact, message, **kwargs)
         if Neur_seqs == []:
             print('No need for training for config : {} epoch and training_extent = {}'.format(self.Model(**kwargs).Epoch, training_extent))
         else:
@@ -153,14 +153,17 @@ class Sequencial_training():
         [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
         return Neur_seqs
     
-    def Verify_current_regiment(self, Neur_seqs, Model, **kwargs):
+    def Verify_current_regiment(self, Neur_seqs, Model, Exact,message, **kwargs):
         Template = Model(**kwargs)
         Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
+        Current_Files = Get_model_path_json(Template.Var_X, Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = Exact, Choix = Template.Choix)
         for file in Current_Files:
             name = file.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', name)[0]
             if (Neur in Neur_seqs) and os.path.isfile(file + '/model_{}.h5'.format(EpochM)):
                 Neur_seqs.remove(Neur)
+                if message == 1:
+                    print('Neur removed : {} because of {}'.format(Neur, file))
         return Neur_seqs
     
     def Test_verify(self, Ext = 4, **kwargs):
@@ -373,16 +376,18 @@ def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
-    Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch if Exact == 1 else ''))
-    print(Model_paths)
-    for f in Model_paths:
-        with open(f + '/config.json') as json_file:
-            data = json.load(json_file)
-        if Exact == 1:
-            if data['Extra_n'] != Extra_n or data['Choix'] != int(Choix) or data['Epoch'] != Epoch or sorted(data['Var_X']) != sorted(Var):
+    if Exact == 1:
+        Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+    else:
+        Model_paths = glob.glob(path + '/Ep_*')
+    #Mod = list(Model_paths)
+    for f in list(Model_paths):
+        if os.path.isfile(f + '/config.json'):
+            with open(f + '/config.json') as json_file:
+                data = json.load(json_file)
+            if ((data['Choix'] != int(Choix)) or (sorted(data['Var_X']) != sorted(Var))):
                 Model_paths.remove(f)
-                continue
-        if data['Epoch'] < Epoch:
+        else:
             Model_paths.remove(f)
     return Model_paths
     
