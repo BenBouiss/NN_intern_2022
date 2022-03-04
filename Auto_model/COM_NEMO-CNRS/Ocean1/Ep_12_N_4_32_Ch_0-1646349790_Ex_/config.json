@@ -1,0 +1,1 @@
+{"Neur_seq": "4_32", "Epoch": 12, "Var_X": ["x", "y", "temperatureYZ", "salinityYZ", "iceDraft"], "Var_Y": "meltRate", "Dataset_train": ["Ocean1"], "Oc_mod_type": "COM_NEMO-CNRS", "activ_fct": "swish", "Choix": 0, "Uniq_id": 1646349790, "verbose": 0, "batch_size": 32, "Extra_n": "", "Training_time": 234.5711903309857}

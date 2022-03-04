@@ -86,13 +86,14 @@ class model_NN():
         self.Prepare_data()
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
+        Start = time.perf_counter()
         Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=[saver],
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
                    verbose = self.verbose)
-        
+        self.Js['Training_time'] = time.perf_counter() - Start
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
         
@@ -125,7 +126,8 @@ class Sequencial_training():
     def __init__(self, Model):
         self.Model = Model
         self.Tot = []
-    def training(self, training_extent = 1, verbose = 1, Standard_train = ['32_64_64_32'], **kwargs):
+    def training(self, training_extent = 1, verbose = 1, Verify = 1,
+                 Standard_train = ['32_64_64_32'], **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:
@@ -133,7 +135,8 @@ class Sequencial_training():
         else:
             Neur_seqs = []
             [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
-            Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, **kwargs)
+            if Verify == 1:
+                Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, **kwargs)
         if Neur_seqs == []:
             print('No need for training for config : {} epoch and training_extent = {}'.format(self.Model(**kwargs).Epoch, training_extent))
         else:
@@ -156,7 +159,7 @@ class Sequencial_training():
         for file in Current_Files:
             name = file.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', name)[0]
-            if Neur in Neur_seqs:
+            if (Neur in Neur_seqs) and os.path.isfile(file + '/model_{}.h5'.format(EpochM)):
                 Neur_seqs.remove(Neur)
         return Neur_seqs
     
@@ -366,9 +369,23 @@ def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
     return N_paths, path
 
-def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0):
-    pass
-
+def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = 0):
+    if type(Ocean) != list:
+        Ocean = [Ocean]
+    path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
+    Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch if Exact == 1 else ''))
+    print(Model_paths)
+    for f in Model_paths:
+        with open(f + '/config.json') as json_file:
+            data = json.load(json_file)
+        if Exact == 1:
+            if data['Extra_n'] != Extra_n or data['Choix'] != int(Choix) or data['Epoch'] != Epoch or sorted(data['Var_X']) != sorted(Var):
+                Model_paths.remove(f)
+                continue
+        if data['Epoch'] < Epoch:
+            Model_paths.remove(f)
+    return Model_paths
+    
 def Plot_loss_model(ind = 0, **kwargs):
     Models_p, _ = Get_model_path_condition(**kwargs)
     if ind >= len(Models_p):
