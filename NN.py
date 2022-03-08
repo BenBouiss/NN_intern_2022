@@ -126,6 +126,9 @@ class Sequencial_training():
     def __init__(self, Model):
         self.Model = Model
         self.Tot = []
+    def Train_more_Models(self, Model_list = ['COM_NEMO-CNRS'], **kwargs):
+        for Mod_name in Model_list:
+            self.training(Oc_mod_type = Mod_name, **kwargs)
     def training(self, training_extent = 1, verbose = 1, Verify = 1,message = 1,
                  Standard_train = ['32_64_64_32'], Exact = 0, **kwargs):
 
@@ -222,7 +225,7 @@ def Fetch_model(model_path, name):
                      
                      
 def Fetch_model_data(model_path, Choix):
-    if Choix == '0':
+    if str(Choix) == '0':
         StdY = np.loadtxt(model_path + '/' + 'StdY.csv')
         MeanY = np.loadtxt(model_path + '/' + 'MeanY.csv')
         MeanX = pd.read_pickle(model_path + '/' + 'MeanX.pkl')
@@ -230,10 +233,10 @@ def Fetch_model_data(model_path, Choix):
     return MeanX, MeanY, StdX, StdY, MeanX.index
 
 def Normalizer(d, mod_p, Choix, Data_Norm):
-    if Choix == '0':
+    if str(Choix) == '0':
         MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
         X = d[Var_X]
-        X = np.array((X - MeanX)/StdX).reshape(-1, 5, )
+        X = np.array((X - MeanX)/StdX).reshape(-1, len(Var_X), )
     return X, Var_X
                      
                      
@@ -262,7 +265,7 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
                     print('Starting {} / {}'.format(t+1, tmx) , end='\r')
             Cur = Data.loc[Data.date == t].reset_index(drop = True)
             X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
-            if Choix == '0':
+            if str(Choix) == '0':
                 Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
                 Cur['Mod_melt'] = Y
             Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
@@ -273,7 +276,7 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
     else:
         Cur = Data.loc[Data.date == T].reset_index(drop = True)
         X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
-        if Choix == '0':
+        if str(Choix) == '0':
             Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
             Cur['Mod_melt'] = Y
         Data = Cur.set_index(['date', 'y', 'x'])
@@ -372,7 +375,7 @@ def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
     return N_paths, path
 
-def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = 0):
+def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = 0, Neur = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -387,6 +390,13 @@ def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
                 data = json.load(json_file)
             if ((data['Choix'] != int(Choix)) or (sorted(data['Var_X']) != sorted(Var))):
                 Model_paths.remove(f)
+                continue
+            if (Neur != None and data['Neur_seq'] != Neur):
+                Model_paths.remove(f)
+                continue
+            if Exact != 1 and data['Epoch'] != Epoch:
+                Model_paths.remove(f)
+                continue
         else:
             Model_paths.remove(f)
     return Model_paths
@@ -416,8 +426,7 @@ def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     ax1.set_title('Modeled melt rates'.format(T))
     Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
     ax2.set_title('"Real" melt rates'.format(T))
-    plt.suptitle('Modeled vs "real" melt rates for t = {} month \n (NN trained on {} applied to {})'.format(T, 
-                Concat_Oc_names(Oc_tr), Oc_tar), y=1.035)
+    plt.suptitle('Modeled vs "real" melt rates for t = {} month \n (NN trained on {} applied to {})'.format(T, Concat_Oc_names(Oc_tr), Oc_tar), y=1.035)
     #plt.tight_layout()
     cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'Melt rate (m/s)', location = 'bottom', extend='both', fraction=0.16, pad=0.15)#, shrink = 0.6
     if save:
@@ -456,3 +465,67 @@ def Concat_Oc_names(Strs):
         return 'Ocean' + '-'.join(i[-1] for i in Strs)
     else:
         return Strs
+    
+#def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+#Exact = 0, Choix = 0, Neur = None)
+def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
+        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0]):
+    s_to_yr = 3600 * 24 * 365
+    cmap = plt.get_cmap('seismic')
+    nTime = len(list(T))
+    fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime))
+    for ind_t, t in enumerate(T):
+        if nTime == 1:
+            axes = axes_t
+        else:
+            axes = axes_t[ind_t]
+        Datasets, Vars = [], []
+        for Index, Att in enumerate(Attribs):
+            Files = Get_model_path_json(**Att)
+            #print(Files)
+            File = Files[ind]
+            with open(File + '/config.json') as json_file:
+                Config = json.load(json_file)
+            Choix, Epoch = Config['Choix'], Config['Epoch']
+
+            Dataset = Compute_data_from_model(File, Choix, Oc_tar, 
+                                    Type_tar, Epoch, message, Compute_at_t = True, T = t)
+            Dataset[['Mod_melt', 'meltRate']] = Dataset[['Mod_melt', 'meltRate']] * s_to_yr
+            Datasets.append(Dataset)
+            Vars.append(Config['Var_X'])
+        mins, maxs = [], []
+        for d in Datasets:
+            mins.append(float(d.Mod_melt.min()))
+            maxs.append(float(d.Mod_melt.max()))
+        vmin = min(mins)
+        vmax = max(maxs)
+        norm = MidpointNormalize( midpoint = 0 )
+        for i, d in enumerate(Datasets):
+            if i == 0:
+                A = d.Mod_melt.plot(ax = axes[0],add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+            else:
+                d.Mod_melt.plot(ax = axes[i], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+            if ind_t == 0:
+                axes[i].set_title('_'.join(Vars[i]))
+            else:
+                axes[i].set_title('')               
+        d.meltRate.plot(ax = axes[-1], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+        axes[-1].set_title('')
+
+        ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+        cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
+    return Datasets
+#    cmap = plt.get_cmap('seismic')
+#    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+#    ax1, ax2 = axes
+#   vmin = float(min(Dataset.Mod_melt.min(), Dataset.meltRate.min()))
+#  vmax = float(max(Dataset.Mod_melt.max(), Dataset.meltRate.max()))
+#    norm = MidpointNormalize( midpoint = 0 )
+#    a = Dataset.Mod_melt.plot(ax = ax1,add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+#    ax1.set_title('Modeled melt rates'.format(T))
+#    Dataset.meltRate.plot(ax = ax2, add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+#    ax2.set_title('"Real" melt rates'.format(T))
+#    plt.suptitle('Modeled vs "real" melt rates for t = {} month \n (NN trained on {} applied to {})'.format(T, Concat_Oc_names(Oc_tr), Oc_tar), y=1.035)
+    #plt.tight_layout()
+#    cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'Melt rate (m/s)', location = 'bottom', extend='both', fraction=0.16, pad=0.15)#, shrink = 0.6
+        
