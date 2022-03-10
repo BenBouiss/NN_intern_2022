@@ -158,7 +158,7 @@ class Sequencial_training():
     
     def Verify_current_regiment(self, Neur_seqs, Model, Exact,message, **kwargs):
         Template = Model(**kwargs)
-        Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
+        #Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
         Current_Files = Get_model_path_json(Template.Var_X, Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = Exact, Choix = Template.Choix)
         for file in Current_Files:
             name = file.split('/')[-1]
@@ -247,13 +247,23 @@ def Fetch_model_data(model_path, Choix):
         MeanY = np.loadtxt(model_path + '/' + 'MeanY.csv')
         MeanX = pd.read_pickle(model_path + '/' + 'MeanX.pkl')
         StdX = pd.read_pickle(model_path + '/' + 'StdX.pkl')
-    return MeanX, MeanY, StdX, StdY, MeanX.index
+        return MeanX, MeanY, StdX, StdY, MaxX.index
+    if str(Choix) == '1':
+        MinY = np.loadtxt(model_path + '/' + 'MinY.csv')
+        MaxY = np.loadtxt(model_path + '/' + 'MaxY.csv')
+        MinX = pd.read_pickle(model_path + '/' + 'MinX.pkl')
+        MaxX = pd.read_pickle(model_path + '/' + 'MaxX.pkl')
+        return MaxX, MinX, MaxY, MinY, MaxX.index
 
 def Normalizer(d, mod_p, Choix, Data_Norm):
     if str(Choix) == '0':
         MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
         X = d[Var_X]
         X = np.array((X - MeanX)/StdX).reshape(-1, len(Var_X), )
+    if str(Choix) == '1':
+        MaxX, MinX, MaxY, MinY, Var_X = Data_Norm
+        X = d[Var_X]
+        X = np.array((X - MinX)/(MaxX - MinX)).reshape(-1, len(Var_X), )
     return X, Var_X
                      
                      
@@ -285,6 +295,10 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
             if str(Choix) == '0':
                 Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
                 Cur['Mod_melt'] = Y
+            if str(Choix) == '1':
+                Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3])
+                Cur['Mod_melt'] = Y
+                
             Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
             Modded_melts.append(Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         Melts = np.array(Melts)
@@ -296,6 +310,10 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         if str(Choix) == '0':
             Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
             Cur['Mod_melt'] = Y
+        if str(Choix) == '1':
+            Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3])
+            Cur['Mod_melt'] = Y
+            
         Data = Cur.set_index(['date', 'y', 'x'])
         Dataset = Data.to_xarray()
         return Dataset
@@ -392,7 +410,7 @@ def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
     return N_paths, path
 
-def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = 0, Neur = None):
+def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = None, Neur = None, Batch_size = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -405,10 +423,10 @@ def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
         if os.path.isfile(f + '/config.json'):
             with open(f + '/config.json') as json_file:
                 data = json.load(json_file)
-            if ((data['Choix'] != int(Choix)) or (sorted(data['Var_X']) != sorted(Var))):
+            if ((Neur != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
                 Model_paths.remove(f)
                 continue
-            if (Neur != None and data['Neur_seq'] != Neur):
+            if (Neur != None and data['Neur_seq'] != Neur) or (Batch_size != None and Batch_size != data['batch_size']):
                 Model_paths.remove(f)
                 continue
             if Exact != 1 and data['Epoch'] != Epoch:
