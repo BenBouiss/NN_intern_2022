@@ -11,7 +11,7 @@ import pickle
 import pathlib
 import matplotlib.colors as mcolors
 import json
-
+import itertools
 
 PWD = os.getcwd() 
 
@@ -137,7 +137,7 @@ class Sequencial_training():
             Neur_seqs = Standard_train
         else:
             Neur_seqs = []
-            [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
+            [Neur_seqs.extend(Better_neur_gen(i+1)) for i in range(training_extent)]
             if Verify == 1:
                 Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, Exact, message, **kwargs)
         if Neur_seqs == []:
@@ -153,7 +153,7 @@ class Sequencial_training():
             Time_elap = time.perf_counter() - Start
     def Neur_seq_preview(self, training_extent):
         Neur_seqs = []
-        [Neur_seqs.extend(Hyp_param_list(0, i)) for i in range(training_extent + 1)]
+        [Neur_seqs.extend(Better_neur_gen(i+1)) for i in range(training_extent)]
         return Neur_seqs
     
     def Verify_current_regiment(self, Neur_seqs, Model, Exact,message, **kwargs):
@@ -194,15 +194,32 @@ def Hyp_param_list2(Ind, Max): ### Initial fct ###
         Next = Hyp_param_list(Ind + 1, Max)
         return ['_'.join([j, i]) for i in Next for j in Possible]
     
-def Hyp_param_list(Ind, Max):
-    List = ['1', '4', '8','16', '32', '64']
-    string = []
-    Possible = List[min(5, 2 * Ind + int(Max)) :min(int(Max/ 1.1) + 4 + 2 * Ind, len(List))]
-    if Ind == Max:
-        return Possible
-    else:
-        Next = Hyp_param_list(Ind + 1, Max)
-        return ['_'.join([j, i]) for i in Next for j in Possible]
+def Verify_string_tuple(Seqs, extent):
+    List = ['1', '4', '8','16', '32', '64', '96', '128', '256']
+    seqsT = list(Seqs)
+    Min = int(Seqs[0][0])
+    for ind, seq in enumerate(Seqs):
+        removed = 0
+        int_list = [int(i) for i in seq]
+        Max = int_list[0]
+        for ints in int_list:
+            if ints<Max:
+                seqsT.remove(seq)
+                removed = 1
+                break
+            else:
+                Max = ints
+        if extent >= 3 and removed == 0:
+            if int_list.count(Min) < int(extent)/2 and int_list.count(Min)!=0:
+                seqsT.remove(seq)
+    return seqsT
+            
+def Better_neur_gen(Extent):
+    List = ['1', '4', '8','16', '32', '64', '96', '128'] 
+    li = List[min(Extent-1 + int(Extent/2), min(len(List)-2, len(List) - 4 + int(Extent/5))):Extent + 3 + int(2/Extent) + int(Extent/5)]
+    permut = list(itertools.product(li, repeat = Extent))
+    Seq = Verify_string_tuple(permut, Extent)
+    return ['_'.join(i) for i in Seq]
     
     
 def Fetch_data(Ocean_target, Type_tar):
