@@ -49,7 +49,7 @@ class model_NN():
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
         
-    def Prepare_data(self):
+    def Prepare_data(self, Indexs):
         li = []
         for Data in self.Dataset_train:
             li.append(pd.read_csv(Getpath_dataset(Data, self.Oc_mod_type)))
@@ -57,12 +57,23 @@ class model_NN():
         X = df[self.Var_X]
         Y = df[self.Var_Y]
         del df, li
-        X_train = X.sample(frac = 0.8)
-        X_valid = X.drop(X_train.index)
-        
-        Y_train = Y.loc[X_train.index]
-        Y_valid = Y.drop(X_train.index)
-        
+        if Indexs == None:
+            X_train = X.sample(frac = 0.8)
+            X_valid = X.drop(X_train.index)
+
+            Y_train = Y.loc[X_train.index]
+            Y_valid = Y.drop(X_train.index)
+            self.Js['Similar_training'] = 0
+        else:
+            ind_p = os.path.join(os.getcwd(), 'Auto_model/tmp/', '_'.join(self.Dataset_train))
+            inds = glob.glob(ind_p + '/*.csv')
+            Inds = np.loadtxt(inds[0]).astype(int)
+            X_valid = X.loc[Inds]
+            Y_valid = Y.loc[Inds]
+            X_train = X.drop(Inds)
+            Y_train = Y.drop(Inds)
+            self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
+            
         if self.Choix == 0:
             self.meanX, self.stdX = X_train.mean(), X_train.std() 
             self.meanY, self.stdY = Y_train.mean(), Y_train.std() 
@@ -80,10 +91,10 @@ class model_NN():
             self.Y_train, self.Y_valid = (np.array((Y_train - self.minY)/(self.maxY - self.minY)), 
                                           np.array((Y_valid - self.minY)/(self.maxY - self.minY)))
 
-    def train(self):
+    def train(self, Indexs = None):
         Shape = len(self.Var_X)
         self.Init_mod(Shape)
-        self.Prepare_data()
+        self.Prepare_data(Indexs)
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
         Start = time.perf_counter()
@@ -130,7 +141,7 @@ class Sequencial_training():
         for Mod_name in Model_list:
             self.training(Oc_mod_type = Mod_name, **kwargs)
     def training(self, training_extent = 1, verbose = 1, Verify = 1,message = 1,
-                 Standard_train = ['32_64_64_32'], Exact = 0, **kwargs):
+                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = 0, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:
@@ -144,12 +155,18 @@ class Sequencial_training():
             print('No need for training for config : {} epoch and training_extent = {}'.format(self.Model(**kwargs).Epoch, training_extent))
         else:
             print('Projected training regiment :\n {}'.format(Neur_seqs))
+        
+        if Similar_training == 1:
+            Indexs = 1
+            self.Generate_training_index(**kwargs)
+        else:
+            Indexs = None
         Time_elap = float(0)
         for ind, Neur in enumerate(Neur_seqs):
             Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
             print("Starting training for neurone : {}, {}/{} (Previous step : {:.3f} s)".format(Neur, ind, len(Neur_seqs), Time_elap))
             Start = time.perf_counter()
-            Model.train()
+            Model.train(Indexs)
             Time_elap = time.perf_counter() - Start
     def Neur_seq_preview(self, training_extent):
         Neur_seqs = []
@@ -158,8 +175,9 @@ class Sequencial_training():
     
     def Verify_current_regiment(self, Neur_seqs, Model, Exact,message, **kwargs):
         Template = Model(**kwargs)
-        Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
-        Current_Files = Get_model_path_json(Template.Var_X, Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = Exact, Choix = Template.Choix)
+        #Current_Files, _ = Get_model_path_condition(Template.Epoch, '_'.join(Template.Dataset_train), Template.Oc_mod_type, Exact = 0)
+        Current_Files = Get_model_path_json(Template.Var_X, Template.Epoch, '_'.join(Template.Dataset_train), 
+                    Template.Oc_mod_type, Exact = Exact, Choix = Template.Choix, Extra_n = Template.Extra_n)
         for file in Current_Files:
             name = file.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', name)[0]
@@ -173,6 +191,20 @@ class Sequencial_training():
         Neur_seqs = self.Neur_seq_preview(Ext)
         N_Neur = self.Verify_current_regiment(Neur_seqs,self.Model ,**kwargs)
         return N_Neur
+    
+    def Generate_training_index(self, **kwargs):
+        Template = self.Model(**kwargs)
+        Path = os.getcwd() + '/Auto_model/tmp/'+ '_'.join(Template.Dataset_train) + '/'
+        Make_dire(Path)
+        if len(glob.glob(Path + '*.csv')) == 0 :
+            li = []
+            for data in Template.Dataset_train:
+                li.append(pd.read_csv(Getpath_dataset(data, Template.Oc_mod_type)))
+            df = pd.concat(li, ignore_index= True)
+            index = df.sample(frac = 0.2).index
+            np.savetxt(Path + 'ind_{}.csv'.format(int(time.time())), index.to_numpy())
+        
+        
 class CustomSaver(tf.keras.callbacks.Callback):
     def __init__(self, path, Epoch_max):
         self.path = path
@@ -235,9 +267,9 @@ def Fetch_model(model_path, name):
     else:
         print('File {} not found'.format(model_path + '/' + name))
         files = glob.glob(model_path + '/*')
-        for f in files:
-            os.remove(f)
-        os.rmdir(model_path)
+        #for f in files:
+        #    os.remove(f)
+        #os.rmdir(model_path)
         return None
                      
                      
@@ -247,13 +279,23 @@ def Fetch_model_data(model_path, Choix):
         MeanY = np.loadtxt(model_path + '/' + 'MeanY.csv')
         MeanX = pd.read_pickle(model_path + '/' + 'MeanX.pkl')
         StdX = pd.read_pickle(model_path + '/' + 'StdX.pkl')
-    return MeanX, MeanY, StdX, StdY, MeanX.index
+        return MeanX, MeanY, StdX, StdY, MeanX.index
+    if str(Choix) == '1':
+        MinY = np.loadtxt(model_path + '/' + 'MinY.csv')
+        MaxY = np.loadtxt(model_path + '/' + 'MaxY.csv')
+        MinX = pd.read_pickle(model_path + '/' + 'MinX.pkl')
+        MaxX = pd.read_pickle(model_path + '/' + 'MaxX.pkl')
+        return MaxX, MinX, MaxY, MinY, MaxX.index
 
 def Normalizer(d, mod_p, Choix, Data_Norm):
     if str(Choix) == '0':
         MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
         X = d[Var_X]
         X = np.array((X - MeanX)/StdX).reshape(-1, len(Var_X), )
+    if str(Choix) == '1':
+        MaxX, MinX, MaxY, MinY, Var_X = Data_Norm
+        X = d[Var_X]
+        X = np.array((X - MinX)/(MaxX - MinX)).reshape(-1, len(Var_X), )
     return X, Var_X
                      
                      
@@ -285,6 +327,10 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
             if str(Choix) == '0':
                 Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
                 Cur['Mod_melt'] = Y
+            if str(Choix) == '1':
+                Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3])
+                Cur['Mod_melt'] = Y
+                
             Melts.append(Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
             Modded_melts.append(Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         Melts = np.array(Melts)
@@ -296,6 +342,10 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         if str(Choix) == '0':
             Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
             Cur['Mod_melt'] = Y
+        if str(Choix) == '1':
+            Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3])
+            Cur['Mod_melt'] = Y
+            
         Data = Cur.set_index(['date', 'y', 'x'])
         Dataset = Data.to_xarray()
         return Dataset
@@ -307,7 +357,7 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
         if index >= len(Models_paths):
             index = len(Models_paths) - 1
         Models_paths = [Models_paths[index]]
-        print(Models_paths)
+        print(f'{Models_paths} \n', end = '\r')
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask = [], [], [], [], [], []
     print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
@@ -315,7 +365,7 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
     for Oc in Ocean_target:
         Oc_m = int(Oc[-1])
         for ind, model_p in enumerate(Models_paths):
-            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]))#, end = '\r')
+            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
             Model_name = model_p.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
             Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
@@ -392,7 +442,7 @@ def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
     return N_paths, path
 
-def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = "", Choix = 0, Neur = None):
+def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = None, Choix = None, Neur = None, Batch_size = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -405,13 +455,13 @@ def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
         if os.path.isfile(f + '/config.json'):
             with open(f + '/config.json') as json_file:
                 data = json.load(json_file)
-            if ((data['Choix'] != int(Choix)) or (sorted(data['Var_X']) != sorted(Var))):
+            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
                 Model_paths.remove(f)
                 continue
-            if (Neur != None and data['Neur_seq'] != Neur):
+            if (Neur != None and data['Neur_seq'] != Neur) or (Batch_size != None and Batch_size != data['batch_size']):
                 Model_paths.remove(f)
                 continue
-            if Exact != 1 and data['Epoch'] != Epoch:
+            if (Exact != 1 and data['Epoch'] != Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
                 Model_paths.remove(f)
                 continue
         else:
@@ -419,7 +469,8 @@ def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NE
     return Model_paths
     
 def Plot_loss_model(ind = 0, **kwargs):
-    Models_p, _ = Get_model_path_condition(**kwargs)
+    #Models_p, _ = Get_model_path_condition(**kwargs)
+    Models_p = Get_model_path_json(**kwargs)
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
