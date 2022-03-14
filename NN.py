@@ -227,7 +227,7 @@ def Hyp_param_list2(Ind, Max): ### Initial fct ###
         return ['_'.join([j, i]) for i in Next for j in Possible]
     
 def Verify_string_tuple(Seqs, extent):
-    List = ['1', '4', '8','16', '32', '64', '96', '128', '256']
+    List = ['1', '4', '8','16', '32', '64', '96', '128']
     seqsT = list(Seqs)
     Min = int(Seqs[0][0])
     for ind, seq in enumerate(Seqs):
@@ -350,7 +350,7 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         Dataset = Data.to_xarray()
         return Dataset
     
-def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
+def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Multi_comp = 0,
              Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}):
     #Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact, Extra_n)
     Models_paths = Get_model_path_json(Epoch = Epoch, Ocean = Ocean_trained, Type_trained = Type_trained, **NN_attributes)
@@ -373,7 +373,10 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
             if Comp != None:
                 Melt, Modded_melt, RMSE, Param = Comp
                 RMSEs.append(RMSE)
-                Params.append(Param)
+                if len(Ocean_target) != 1:
+                    Params = np.append(Params, np.full_like(Melt, Param))
+                else:
+                    Params.append(Param)
                 Neurs.append(Neur)
                 Melts = np.append(Melts, Melt)
                 Modded_melts = np.append(Modded_melts, Modded_melt)
@@ -393,17 +396,30 @@ def Plot_RMSE_to_param(save = False, **kwargs):
     ax.scatter(Params, RMSEs, color = 'blue')
     if t != []:
         ax2 = ax.twinx()
-        ax2.scatter(Params, t, color = 'red', s= 1.5)
+        ax2.scatter(Params, t, color = 'red', s= 4)
         ax2.set_ylabel("Training time(s)",color="red")
 
-    plt.xlabel('Number of parameters')
+    ax.set_xlabel('Number of parameters')
     ax.set_ylabel('RMSE of modeled vs "real" melt rates(Gt/yr)', color = 'blue')
     plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format(Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar)))
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}'.format(Ep, 
-                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
+        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
+                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
+def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
 
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t = Compute_data_for_plotting(**kwargs)
+    df = pd.DataFrame()
+    df['Melts'] = Melts
+    df['Modded_melts'] = Modded_melts
+    df['Params'] = Params
+    RMSE = []
+    Param = np.unique(Params)
+    for P in Param:
+        Cur = df.loc[df.Params == P]
+        RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
+    plt.scatter(Param, RMSE)
+    
 def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     RMSE, _, Melts, Modded_Melts, _, _, name, Oc_train, Oc_tar = Compute_data_for_plotting(index = ind, **kwargs)
     name = name.split('/')[-1]
@@ -548,11 +564,14 @@ def Concat_Oc_names(Strs):
 #def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
 #Exact = 0, Choix = 0, Neur = None)
 def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
-        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0]):
+        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False):
+    
+    Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
     cmap = plt.get_cmap('seismic')
     nTime = len(list(T))
-    fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime))
+    fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime), sharex=True, sharey=True)
+    plt.subplots_adjust(hspace = 0.15)
     for ind_t, t in enumerate(T):
         if nTime == 1:
             axes = axes_t
@@ -584,15 +603,32 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
                 A = d.Mod_melt.plot(ax = axes[0],add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
             else:
                 d.Mod_melt.plot(ax = axes[i], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+            if i == 0:
+                axes[i].set_ylabel(f"T = {t} month")
+            else:
+                axes[i].set_xlabel('')
+                axes[i].set_ylabel('')
             if ind_t == 0:
                 axes[i].set_title('_'.join(Vars[i]))
+                #axes[i].set_title(f"{} = month", loc = 'left')
             else:
-                axes[i].set_title('')               
+                axes[i].set_title('')
+            if ind_t != 0 or i != 0:
+                axes[i].set_xlabel('')
         d.meltRate.plot(ax = axes[-1], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
         axes[-1].set_title('')
+        axes[-1].set_ylabel('')
+        axes[-1].set_xlabel('')
 
         ticks = np.linspace(vmin, vmax, 5, endpoint=True)
         cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
+    #fig.supxlabel('x')
+    #fig.supylabel('y')
+    fig.text(0.45, 0.095, 'X', ha='center')
+    fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
+    if save:
+        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+            'N_side_M_{}_t={}.png'.format(name, T)), facecolor='white', bbox_inches='tight')
     return Datasets
 #    cmap = plt.get_cmap('seismic')
 #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
