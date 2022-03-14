@@ -351,15 +351,16 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         return Dataset
     
 def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
-             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Exact = 0, Extra_n = []):
-    Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact, Extra_n)
+             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}):
+    #Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact, Extra_n)
+    Models_paths = Get_model_path_json(Epoch = Epoch, Ocean = Ocean_trained, Type_trained = Type_trained, **NN_attributes)
     if index != None:
         if index >= len(Models_paths):
             index = len(Models_paths) - 1
         Models_paths = [Models_paths[index]]
         print(f'{Models_paths} \n', end = '\r')
-    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask = [], [], [], [], [], []
-    print(path + '/Ep_{}'.format(Epoch))
+    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t = [], [], [], [], [], [], []
+    #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
     for Oc in Ocean_target:
@@ -377,21 +378,31 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
                 Melts = np.append(Melts, Melt)
                 Modded_melts = np.append(Modded_melts, Modded_melt)
                 Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
+                if Time:
+                    with open(model_p + '/config.json') as json_file:
+                        data = json.load(json_file)
+                    t.append(data['Training_time'])
     if index == None:
-        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch
+        return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t
     else:
         return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, model_p, Ocean_trained, Ocean_target
     
 def Plot_RMSE_to_param(save = False, **kwargs):
-    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep = Compute_data_for_plotting(**kwargs)
-    plt.scatter(Params, RMSEs)
+    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_data_for_plotting(**kwargs)
+    fig, ax = plt.subplots()
+    ax.scatter(Params, RMSEs, color = 'blue')
+    if t != []:
+        ax2 = ax.twinx()
+        ax2.scatter(Params, t, color = 'red', s= 1.5)
+        ax2.set_ylabel("Training time(s)",color="red")
+
     plt.xlabel('Number of parameters')
-    plt.ylabel('RMSE of modeled vs "real" melt rates(Gt/yr)')
+    ax.set_ylabel('RMSE of modeled vs "real" melt rates(Gt/yr)', color = 'blue')
     plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format(Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar)))
     if save:
         plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
-    return RMSEs, Params, Neurs
+    return RMSEs, Params, Neurs, t
 
 def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     RMSE, _, Melts, Modded_Melts, _, _, name, Oc_train, Oc_tar = Compute_data_for_plotting(index = ind, **kwargs)
