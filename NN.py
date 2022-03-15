@@ -504,20 +504,26 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
             Model_paths.remove(f)
     return Model_paths
     
-def Plot_loss_model(ind = 0, **kwargs):
+def Plot_loss_model(save = False, ind = 0, **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
+    fig, ax = plt.subplots()
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
     hist = pd.read_pickle(Model_p + '/TrainingHistory')
     plt.plot(hist['loss'])
+    with open(Model_p + '/config.json') as json_file:
+                data = json.load(json_file)
     for k in hist.keys():
         plt.plot(hist[k], label = k)
-    plt.legend()
+    plt.legend(loc = 'upper right')
     plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
+    plt.xlabel('Epoch')
     plt.show()
-    
+    if save:
+        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+            f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight')
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)
     cmap = plt.get_cmap('seismic')
@@ -637,7 +643,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
     if save:
         fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
-            'N_side_M_{}_t={}.png'.format(name, T)), facecolor='white', bbox_inches='tight')
+            'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
     return Datasets
 #    cmap = plt.get_cmap('seismic')
 #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
