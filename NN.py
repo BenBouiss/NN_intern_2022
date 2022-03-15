@@ -375,9 +375,10 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
                 RMSEs.append(RMSE)
                 if len(Ocean_target) != 1:
                     Params = np.append(Params, np.full_like(Melt, Param))
+                    Neurs = np.append(Neurs, np.full_like(Melt, Neur))
                 else:
                     Params.append(Param)
-                Neurs.append(Neur)
+                    Neurs.append(Neur)
                 Melts = np.append(Melts, Melt)
                 Modded_melts = np.append(Modded_melts, Modded_melt)
                 Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
@@ -396,11 +397,11 @@ def Plot_RMSE_to_param(save = False, **kwargs):
     ax.scatter(Params, RMSEs, color = 'blue')
     if t != []:
         ax2 = ax.twinx()
-        ax2.scatter(Params, t, color = 'red', s= 4)
+        ax2.scatter(Params, t, s = 10, color = 'red')
         ax2.set_ylabel("Training time(s)",color="red")
 
     ax.set_xlabel('Number of parameters')
-    ax.set_ylabel('RMSE of modeled vs "real" melt rates(Gt/yr)', color = 'blue')
+    ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)', color = 'blue')
     plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format(Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar)))
     if save:
         plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
@@ -409,16 +410,24 @@ def Plot_RMSE_to_param(save = False, **kwargs):
 def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
 
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t = Compute_data_for_plotting(**kwargs)
-    df = pd.DataFrame()
-    df['Melts'] = Melts
-    df['Modded_melts'] = Modded_melts
-    df['Params'] = Params
-    RMSE = []
-    Param = np.unique(Params)
-    for P in Param:
-        Cur = df.loc[df.Params == P]
-        RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
+    if len(Params) == len(Melts):
+        df = pd.DataFrame()
+        df['Melts'] = Melts
+        df['Modded_melts'] = Modded_melts
+        df['Params'] = Params
+        df['Neurs'] = Neurs
+        RMSE = []
+        Neurs = []
+        Param = np.unique(Params)
+        for P in Param:
+            Cur = df.loc[df.Params == P]
+            RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
+            Neur.append(np.unique(Cur.Neurs))
+    else:
+        RMSE = RMSEs
+        Param = Params
     plt.scatter(Param, RMSE)
+    return Param, RMSE, Neur
     
 def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     RMSE, _, Melts, Modded_Melts, _, _, name, Oc_train, Oc_tar = Compute_data_for_plotting(index = ind, **kwargs)
