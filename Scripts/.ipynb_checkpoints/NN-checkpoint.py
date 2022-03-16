@@ -13,8 +13,8 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 
-PWD = os.getcwd() 
-
+PWD = os.path.dirname(os.getcwd()) 
+Bet_path = '/bettik/bouissob/'
 def Getpath_dataset(Dataset, Oc_mod_type):
     Bet_path = '/bettik/bouissob/'
     return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
@@ -65,7 +65,7 @@ class model_NN():
             Y_valid = Y.drop(X_train.index)
             self.Js['Similar_training'] = 0
         else:
-            ind_p = os.path.join(os.getcwd(), 'Auto_model/tmp/', '_'.join(self.Dataset_train))
+            ind_p = os.path.join(PWD, 'Auto_model/tmp/', '_'.join(self.Dataset_train))
             inds = glob.glob(ind_p + '/*.csv')
             Inds = np.loadtxt(inds[0]).astype(int)
             X_valid = X.loc[Inds]
@@ -194,7 +194,7 @@ class Sequencial_training():
     
     def Generate_training_index(self, **kwargs):
         Template = self.Model(**kwargs)
-        Path = os.getcwd() + '/Auto_model/tmp/'+ '_'.join(Template.Dataset_train) + '/'
+        Path = PWD + '/Auto_model/tmp/'+ '_'.join(Template.Dataset_train) + '/'
         Make_dire(Path)
         if len(glob.glob(Path + '*.csv')) == 0 :
             li = []
@@ -302,16 +302,21 @@ def Normalizer(d, mod_p, Choix, Data_Norm):
 def Compute_rmse(Tar, Mod):
     return np.sqrt(np.mean((Mod-Tar)**2))
                      
-def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, T = 0):
+def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, T = 0, Compute_at_ind = False, Datas = None):
     Yr_t_s = 3600 * 24 * 365 # s/yr
     Rho = 920 #Kg/m**3
     Horiz_res = 2 #km/pix
     S = (Horiz_res*10**3) ** 2  #m**2/pix
-    Data = Fetch_data(Ocean_target, Type_tar)
+    if Compute_at_ind :
+        Data = Datas
+        tmx = int(max(np.array(Data.date)))
+    else:
+        Data = Fetch_data(Ocean_target, Type_tar)
+        tmx = int(Data.loc[len(Data) - 1].date + 1)
     Model = Fetch_model(Model_path, name = 'model_{}.h5'.format(Epoch))
     if Model == None:
         return None
-    tmx = int(Data.loc[len(Data) - 1].date + 1)
+    
     Data_norm = Fetch_model_data(Model_path, Choix)
     Var_X = Data_norm[len(Data_norm) - 1]
     if message:
@@ -350,7 +355,7 @@ def Compute_data_from_model(Model_path, Choix, Ocean_target, Type_tar, Epoch, me
         Dataset = Data.to_xarray()
         return Dataset
     
-def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Multi_comp = 0,
+def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Compute_at_ind = False,
              Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}):
     #Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact, Extra_n)
     Models_paths = Get_model_path_json(Epoch = Epoch, Ocean = Ocean_trained, Type_trained = Type_trained, **NN_attributes)
@@ -363,13 +368,26 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
     #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
+    if Compute_at_ind:
+        li = []
+        for Ind, Dataset in enumerate(['Ocean1','Ocean2','Ocean3','Ocean4']):
+            D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_trained))
+            df = pd.read_csv(D_path)
+            df['Oc'] = Ind + 1
+            li.append(df)
+        DF = pd.concat(li, ignore_index= True)
+        Masks = os.path.join(PWD, 'Auto_model', 'tmp', 'Ocean1_Ocean2_Ocean3_Ocean4', 'ind_1646995963.csv')
+        DF = DF.loc[np.loadtxt(Masks).astype(int)]
     for Oc in Ocean_target:
         Oc_m = int(Oc[-1])
         for ind, model_p in enumerate(Models_paths):
-            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
+            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\n')
             Model_name = model_p.split('/')[-1]
             EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
-            Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
+            if Compute_at_ind:
+                Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = DF.loc[DF.Oc == Oc_m])
+            else:
+                Comp = Compute_data_from_model(model_p, Choix, Oc, Type_tar, Epoch, message)
             if Comp != None:
                 Melt, Modded_melt, RMSE, Param = Comp
                 RMSEs.append(RMSE)
@@ -404,7 +422,7 @@ def Plot_RMSE_to_param(save = False, **kwargs):
     ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)', color = 'blue')
     plt.title('RMSE as a function of parameters trained \n (NN trained on {} applied to {})'.format(Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar)))
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
+        plt.savefig(os.path.join(PWD, 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
 def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
@@ -443,11 +461,11 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     plt.legend()
     print(RMSE)
     if save:
-        plt.savefig(os.path.join(os.getcwd(), 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(name, 
+        plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(name, 
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
         
-def Plot_Melt_to_Modded_melt(save = False, **kwargs):
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _ = Compute_data_for_plotting(**kwargs)
+def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_data_for_plotting(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
     Vmax = max(np.append(Melts, Modded_melts))
@@ -463,7 +481,7 @@ def Plot_Melt_to_Modded_melt(save = False, **kwargs):
     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)))
     plt.show()
     if save:
-        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}'.format(Neurs, 
+        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}'.format(Neurs, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
@@ -522,7 +540,7 @@ def Plot_loss_model(save = False, ind = 0, **kwargs):
     plt.xlabel('Epoch')
     plt.show()
     if save:
-        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+        fig.savefig(os.path.join(PWD, 'Image_output', 
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight')
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)
@@ -540,7 +558,7 @@ def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     #plt.tight_layout()
     cbar = plt.colorbar(a, cmap = cmap, ax = axes, label = 'Melt rate (m/s)', location = 'bottom', extend='both', fraction=0.16, pad=0.15)#, shrink = 0.6
     if save:
-        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+        fig.savefig(os.path.join(PWD, 'Image_output', 
             'Side_side_M_{}_t={}.png'.format(name, T)), facecolor='white', bbox_inches='tight')
     return np.array([Dataset.Mod_melt.min(), Dataset.meltRate.min()]), np.array([Dataset.Mod_melt.max(), Dataset.meltRate.max()])
 
@@ -642,7 +660,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     fig.text(0.45, 0.095, 'X', ha='center')
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
     if save:
-        fig.savefig(os.path.join(os.getcwd(), 'Image_output', 
+        fig.savefig(os.path.join(PWD, 'Image_output', 
             'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
     return Datasets
 #    cmap = plt.get_cmap('seismic')
