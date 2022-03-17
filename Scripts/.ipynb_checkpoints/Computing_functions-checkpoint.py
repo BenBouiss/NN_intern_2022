@@ -20,7 +20,6 @@ Rho = 920 #Kg/m**3
 Horiz_res = 2 #km/pix
 S = (Horiz_res*10**3) ** 2  #m**2/pix
     
-    
 def Make_dire(file_path):
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
@@ -37,9 +36,6 @@ def Fetch_model(model_path, name):
     else:
         print('File {} not found'.format(model_path + '/' + name))
         files = glob.glob(model_path + '/*')
-        #for f in files:
-        #    os.remove(f)
-        #os.rmdir(model_path)
         return None
                      
                      
@@ -170,7 +166,6 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
             Melts = np.append(Melts, Melt)
             Modded_melts = np.append(Modded_melts, Modded_melt)
             Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
-            
             data = Get_model_attributes(model_p)
             t.append(data['Training_time'])
     return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t
