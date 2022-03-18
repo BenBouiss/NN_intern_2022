@@ -13,13 +13,21 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 
+from .Trainings import *
+
+
+
 PWD = os.path.dirname(os.getcwd()) 
 Bet_path = '/bettik/bouissob/'
 Yr_t_s = 3600 * 24 * 365 # s/yr
 Rho = 920 #Kg/m**3
 Horiz_res = 2 #km/pix
 S = (Horiz_res*10**3) ** 2  #m**2/pix
-    
+
+def Getpath_dataset(Dataset, Oc_mod_type):
+    Bet_path = '/bettik/bouissob/'
+    return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
+
 def Make_dire(file_path):
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
@@ -37,7 +45,8 @@ def Fetch_model(model_path, name):
         print('File {} not found'.format(model_path + '/' + name))
         files = glob.glob(model_path + '/*')
         return None
-                     
+
+
                      
 def Fetch_model_data(model_path, Choix):
     if str(Choix) == '0':
@@ -52,25 +61,28 @@ def Fetch_model_data(model_path, Choix):
         MinX = pd.read_pickle(model_path + '/' + 'MinX.pkl')
         MaxX = pd.read_pickle(model_path + '/' + 'MaxX.pkl')
         return MaxX, MinX, MaxY, MinY, MaxX.index
-
+    if str(Choix) == '2':
+        MedY = np.loadtxt(model_path + '/' + 'MedY.csv')
+        iqrY = np.loadtxt(model_path + '/' + 'iqrY.csv')
+        MedX = pd.read_pickle(model_path + '/' + 'MedX.pkl')
+        iqrX = pd.read_pickle(model_path + '/' + 'iqrX.pkl')
+        return MedX, iqrX, MedY, iqrY, MedX.index
+    
+    
 def Normalizer(d, Choix, Data_Norm):
     if str(Choix) == '0':
         MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
         X = d[Var_X]
         X = np.array((X - MeanX)/StdX).reshape(-1, len(Var_X), )
-    if str(Choix) == '1':
+    elif str(Choix) == '1':
         MaxX, MinX, MaxY, MinY, Var_X = Data_Norm
         X = d[Var_X]
         X = np.array((X - MinX)/(MaxX - MinX)).reshape(-1, len(Var_X), )
+    elif str(Choix) == '2':
+        MedX, iqrX, MedY, iqrY, Var_X = Data_Norm
+        X = d[Var_X]
+        X = np.array((X - MedX)/(iqrX)).reshape(-1, len(Var_X), )
     return X, Var_X
-                     
-def Get_model_attributes(model_p):
-    if os.path.isfile(f + '/config.json'):
-        with open(model_p + '/config.json') as json_file:
-            data = json.load(json_file)
-        return data
-    else:
-        return None
 
 def Compute_rmse(Tar, Mod):
     return np.sqrt(np.mean((Mod-Tar)**2))
@@ -80,6 +92,8 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
     elif str(Choix) == '1':
         Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3])
+    elif str(Choix) == '2':
+        Y = np.array(Model(X) * (Data_norm[3]) + Data_norm[2])
     else:
         return None
     return Y
@@ -98,24 +112,24 @@ def Compute_datas(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Com
     if message:
         print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
-    if not Compute_at_t :
+    if not type(Compute_at_t) == int :
         for t in range(tmx):
             if message and (t+1)%int(tmx/5) == 0:
                 print('Starting {} / {}'.format(t+1, tmx) , end='\r')
-            Melt, Modded = Compute_data_at_T(Data, t, Choix, Data_norm, Integrate = True)
+            Melt, Modded = Compute_data_at_T(Model, Data, t, Choix, Data_norm, Integrate = True)
             Melts.append(Melt)
             Modded_melts.append(Modded)
         Melts = np.array(Melts)
         Modded_melts = np.array(Modded_melts)
         return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
     else:
-        Dataset = Compute_data_at_T(Data, Compute_at_t, Choix, Data_norm, Integrate = False)
+        Dataset = Compute_data_at_T(Model, Data, Compute_at_t, Choix, Data_norm, Integrate = False)
         return Dataset
 
-def Compute_data_at_T(Data, T, Choix, Data_norm, Integrate = True):
-    Cur = Data.loc[Data.date == t].reset_index(drop = True)
-    X, Var_X = Normalizer(Cur, Model_path, Choix, Data_norm)
-    Cur['Mod_melt'] = Compute_data_from_model(X, Model, Choix)
+def Compute_data_at_T(Model, Data, T, Choix, Data_norm, Integrate = True):
+    Cur = Data.loc[Data.date == T].reset_index(drop = True)
+    X, Var_X = Normalizer(Cur, Choix, Data_norm)
+    Cur['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
     if Integrate:
         Melts = (Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
         Modded_melts = (Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
@@ -142,7 +156,8 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
         Ocean_target = [Ocean_target]
     if Compute_at_ind:
         DF = Gather_datasets(Ocean_target, Type_tar, save_index = True)
-        Masks = os.path.join(PWD, 'Auto_model', 'tmp', 'Ocean1_Ocean2_Ocean3_Ocean4', 'ind_1646995963.csv')
+        Att = Get_model_attributes(Models_paths[0])
+        Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_trained), f"ind_{Att['Similar_training']}.csv")
         DF = DF.loc[np.loadtxt(Masks).astype(int)]
     for Oc in Ocean_target:
         Oc_m = int(Oc[-1])
@@ -170,32 +185,26 @@ def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained 
             t.append(data['Training_time'])
     return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t
 
-def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None):
-    if type(Ocean) != list:
-        Ocean = [Ocean]
-    path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
-    if Exact == 1:
-        Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+
+def Compute_RMSEs_Total_Param(**kwargs):
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t = Compute_data_for_plotting(**kwargs)
+    if len(Params) == len(Melts):
+        df = pd.DataFrame()
+        df['Melts'] = Melts
+        df['Modded_melts'] = Modded_melts
+        df['Params'] = Params
+        df['Neurs'] = Neurs
+        RMSE = []
+        Neurs = []
+        T = []
+        Param = np.unique(Params)
+        for P in Param:
+            Cur = df.loc[df.Params == P]
+            RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
+            Neurs.append(np.unique(Cur.Neurs))
+            T.append(np.unique(Cur.Time))
     else:
-        Model_paths = glob.glob(path + '/Ep_*')
-    #Mod = list(Model_paths)
-    for f in list(Model_paths):
-        data = Get_model_attributes(f)
-        if data != None:
-            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
-                Model_paths.remove(f)
-                continue
-            if (Neur != None and data['Neur_seq'] != Neur) or (Batch_size != None and Batch_size != data['batch_size']):
-                Model_paths.remove(f)
-                continue
-            if (Exact != 1 and data['Epoch'] != Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
-                Model_paths.remove(f)
-                continue
-        else:
-            Model_paths.remove(f)
-    if index != None:
-        if index >= len(Models_paths):
-            index = len(Models_paths) - 1
-        Models_paths = [Models_paths[index]]
-        print(f'{Models_paths} \n', end = '\r')
-    return Model_paths
+        RMSE = RMSEs
+        Param = Params
+        T = t
+    return Param, T, RMSE, Neurs

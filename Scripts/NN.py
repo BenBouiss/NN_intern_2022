@@ -679,7 +679,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
+            'N_side_M_{}_t={}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 #    cmap = plt.get_cmap('seismic')
 #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))

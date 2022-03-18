@@ -13,7 +13,11 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 
+from .Computing_functions import *
+from .Trainings import *
 
+PWD = os.getcwd()
+Bet_path = '/bettik/bouissob/'
 def Plot_RMSE_to_param(save = False, **kwargs):
     RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_data_for_plotting(**kwargs)
     fig, ax = plt.subplots()
@@ -31,30 +35,21 @@ def Plot_RMSE_to_param(save = False, **kwargs):
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
 def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
-
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t = Compute_data_for_plotting(**kwargs)
-    if len(Params) == len(Melts):
-        df = pd.DataFrame()
-        df['Melts'] = Melts
-        df['Modded_melts'] = Modded_melts
-        df['Params'] = Params
-        df['Neurs'] = Neurs
-        RMSE = []
-        Neurs = []
-        Param = np.unique(Params)
-        for P in Param:
-            Cur = df.loc[df.Params == P]
-            RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
-            Neur.append(np.unique(Cur.Neurs))
-    else:
-        RMSE = RMSEs
-        Param = Params
-    plt.scatter(Param, RMSE)
+    Param, T, RMSE = Compute_RMSEs_Total_Param(**kwargs)
+    fig, ax = plt.subplots()
+    ax.scatter(Param, RMSE)
+    ax2 = ax.twinx()
+    ax2.scatter(Param, T, s = 10, color = 'red')
+    ax2.set_ylabel("Training time(s)",color="red")
+    ax.set_xlabel('Number of parameters')
+    ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)')
+    if save:
+        plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
+                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur
     
 def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
-    RMSE, _, Melts, Modded_Melts, _, _, name, Oc_train, Oc_tar = Compute_data_for_plotting(index = ind, **kwargs)
-    name = name.split('/')[-1]
+    RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_data_for_plotting(index = ind, **kwargs)
     x = np.arange(1, len(Modded_Melts) + 1)
     plt.plot(x, Melts, label = 'Real melt')
     plt.plot(x, Modded_Melts, label = 'Modeled melt')
@@ -66,7 +61,7 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     plt.legend()
     print(RMSE)
     if save:
-        plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(name, 
+        plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(int(time.time()), 
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
         
 def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
@@ -90,42 +85,7 @@ def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
-def Get_model_path_condition(Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = []):
-    path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean) if type(Ocean) == list else Ocean)
-    Model_paths = glob.glob(path + '/Ep_*'.format(Epoch))
-    if Exact == 0:
-        N_paths = [p for p in Model_paths if int(re.findall('Ep_(\d+)', p.split('/')[-1])[0]) >= Epoch]
-    else:
-        N_paths = [p for p in Model_paths if int(re.findall('Ep_(\d+)', p.split('/')[-1])[0]) == Epoch
-                  and re.findall('Ex_(\w+)', p.split('/')[-1]) == Extra_n ]
-    #print('For condition Epoch = {}, list of all matching files : {}'.format(Epoch, [p.split('/')[-1] for p in N_paths]))
-    return N_paths, path
 
-def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, Extra_n = None, Choix = None, Neur = None, Batch_size = None):
-    if type(Ocean) != list:
-        Ocean = [Ocean]
-    path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
-    if Exact == 1:
-        Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
-    else:
-        Model_paths = glob.glob(path + '/Ep_*')
-    #Mod = list(Model_paths)
-    for f in list(Model_paths):
-        if os.path.isfile(f + '/config.json'):
-            with open(f + '/config.json') as json_file:
-                data = json.load(json_file)
-            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
-                Model_paths.remove(f)
-                continue
-            if (Neur != None and data['Neur_seq'] != Neur) or (Batch_size != None and Batch_size != data['batch_size']):
-                Model_paths.remove(f)
-                continue
-            if (Exact != 1 and data['Epoch'] != Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
-                Model_paths.remove(f)
-                continue
-        else:
-            Model_paths.remove(f)
-    return Model_paths
     
 def Plot_loss_model(save = False, ind = 0, **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
@@ -177,7 +137,7 @@ def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trai
     print(Model_p)
     Model_name = Model_p.split('/')[-1]
     EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
-    Dataset = Compute_data_from_model(Model_p, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = 1, T = T)
+    Dataset = Compute_datas(Model_p, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = 1, T = T)
     if Dataset != None:
         return Dataset, Model_name, T, Ocean_target, Ocean_trained
     else:
@@ -224,8 +184,8 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
                 Config = json.load(json_file)
             Choix, Epoch = Config['Choix'], Config['Epoch']
 
-            Dataset = Compute_data_from_model(File, Choix, Oc_tar, 
-                                    Type_tar, Epoch, message, Compute_at_t = True, T = t)
+            Dataset = Compute_datas(File, Choix, Oc_tar, 
+                            Type_tar, Epoch, message, Compute_at_t = t)
             Dataset[['Mod_melt', 'meltRate']] = Dataset[['Mod_melt', 'meltRate']] * s_to_yr
             Datasets.append(Dataset)
             Vars.append(Config['Var_X'])
@@ -268,3 +228,6 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
         fig.savefig(os.path.join(PWD, 'Image_output', 
             'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
     return Datasets
+
+
+

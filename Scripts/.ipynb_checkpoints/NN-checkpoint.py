@@ -39,6 +39,7 @@ class model_NN():
         self.batch_size = batch_size
         self.Extra_n = Extra_n
         self.Js = dict(self.__dict__)
+        
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
@@ -120,7 +121,7 @@ class model_NN():
             np.savetxt(self.Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
         elif self.Choix == 1:
             self.maxX.to_pickle(self.Path + 'MaxX.pkl')
-            self.minX.to_pickle(self.Path + 'MinY.pkl')
+            self.minX.to_pickle(self.Path + 'MinX.pkl')
             np.savetxt(self.Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
             np.savetxt(self.Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
             
@@ -678,7 +679,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
+            'N_side_M_{}_t={}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 #    cmap = plt.get_cmap('seismic')
 #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
