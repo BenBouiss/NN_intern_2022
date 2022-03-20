@@ -17,7 +17,7 @@ from .Trainings import *
 
 
 
-PWD = os.path.dirname(os.getcwd()) 
+PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
 Yr_t_s = 3600 * 24 * 365 # s/yr
 Rho = 920 #Kg/m**3
@@ -36,13 +36,13 @@ def Fetch_data(Ocean_target, Type_tar):
     df = pd.read_csv(Getpath_dataset(Ocean_target, Type_tar))
     return df
 
-def Fetch_model(model_path, name):
-    if os.path.isfile(model_path + '/' + name):
-        return tf.keras.models.load_model(model_path + '/' + name)
+def Fetch_model(model_path):
+    if os.path.isfile(model_path):
+        return tf.keras.models.load_model(model_path)
     elif os.path.isfile(model_path + '/' + 'model.h5'):
         return tf.keras.models.load_model(model_path + '/' + 'model.h5')
     else:
-        print('File {} not found'.format(model_path + '/' + name))
+        print('File {} not found'.format(model_path))
         files = glob.glob(model_path + '/*')
         return None
 
@@ -98,13 +98,13 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         return None
     return Y
     
-def Compute_datas(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None):
+def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None):
     if Compute_at_ind :
         Data = Datas
     else:
         Data = Fetch_data(Ocean_target, Type_tar)
     tmx = int(max(np.array(Data.date)))
-    Model = Fetch_model(Model_path, name = 'model_{}.h5'.format(Epoch))
+    
     if Model == None:
         return None
     Data_norm = Fetch_model_data(Model_path, Choix)
@@ -116,95 +116,110 @@ def Compute_datas(Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Com
         for t in range(tmx):
             if message and (t+1)%int(tmx/5) == 0:
                 print('Starting {} / {}'.format(t+1, tmx) , end='\r')
-            Melt, Modded = Compute_data_at_T(Model, Data, t, Choix, Data_norm, Integrate = True)
+                
+            Cur = Data.loc[Data.date == t].reset_index(drop = True)
+            Melt, Modded = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = True)
             Melts.append(Melt)
             Modded_melts.append(Modded)
         Melts = np.array(Melts)
         Modded_melts = np.array(Modded_melts)
         return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
     else:
-        Dataset = Compute_data_at_T(Model, Data, Compute_at_t, Choix, Data_norm, Integrate = False)
+        Cur = Data.loc[Data.date == Compute_at_t].reset_index(drop = True)
+        Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
         return Dataset
 
-def Compute_data_at_T(Model, Data, T, Choix, Data_norm, Integrate = True):
-    Cur = Data.loc[Data.date == T].reset_index(drop = True)
-    X, Var_X = Normalizer(Cur, Choix, Data_norm)
-    Cur['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
+def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
+    X, Var_X = Normalizer(Data, Choix, Data_norm)
+    Data['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
     if Integrate:
-        Melts = (Cur['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
-        Modded_melts = (Cur['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
+        Melts = (Data['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
+        Modded_melts = (Data['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         return Melts, Modded_melts
     else:
-        return Cur.set_index(['date', 'y', 'x']).to_xarray()
+        return Data.set_index(['date', 'y', 'x']).to_xarray()
 
 def Gather_datasets(Datasets, Type_tar, save_index = False):
     li = []
     for Ind, Dataset in enumerate(Datasets):
-        D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_trained))
+        D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
         df = pd.read_csv(D_path)
         if save_index:
             df['Oc'] = Ind + 1
         li.append(df)
     return pd.concat(li, ignore_index= True)
-def Compute_data_for_plotting(Epoch = 4, Ocean_trained = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Compute_at_ind = False,
-             Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}):
-    #Models_paths, path = Get_model_path_condition(Epoch, Ocean_trained, Type_trained, Exact, Extra_n)
-    Models_paths = Get_model_path_json(Epoch = Epoch, Ocean = Ocean_trained, Type_trained = Type_trained,index = index, **NN_attributes)
-    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t = [], [], [], [], [], [], []
+
+def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None):
+    if Models_paths == None:
+        Models_paths = Get_model_path_json(index = index, **NN_attributes)
+        
+    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t, uniq_id = [], [], [], [], [], [], [], []
     #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
     if Compute_at_ind:
         DF = Gather_datasets(Ocean_target, Type_tar, save_index = True)
         Att = Get_model_attributes(Models_paths[0])
-        Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_trained), f"ind_{Att['Similar_training']}.csv")
+        Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_target), f"ind_{Att['Similar_training']}.csv")
         DF = DF.loc[np.loadtxt(Masks).astype(int)]
-    for Oc in Ocean_target:
-        Oc_m = int(Oc[-1])
-        for ind, model_p in enumerate(Models_paths):
-            print('Starting {}/{} model {}'.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\n')
+
+    for ind, model_p in enumerate(Models_paths):
+        print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
+        for ind_o, Oc in enumerate(Ocean_target):
+            Oc_m = int(Oc[-1])
             Model_name = model_p.split('/')[-1]
-            EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+            Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
+            if '.h5' in model_p:
+                Model = Fetch_model(os.path.join(model_p))
+            else:
+                Model = Fetch_model(os.path.join(model_p, 'model_{}.h5'.format(Epoch)))
             if Compute_at_ind:
                 Datas = DF.loc[DF.Oc == Oc_m]
-                Comp = Compute_datas(model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = Datas)
+                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas)
             else:
-                Comp = Compute_datas(model_p, Choix, Oc, Type_tar, Epoch, message)
+                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message)
             Melt, Modded_melt, RMSE, Param = Comp
             RMSEs.append(RMSE)
+            data = Get_model_attributes(model_p)
             if len(Ocean_target) != 1:
                 Params = np.append(Params, np.full_like(Melt, Param))
                 Neurs = np.append(Neurs, np.full_like(Melt, Neur))
+                uniq_id = np.append(uniq_id, np.full_like(Melt, data['Uniq_id']))
             else:
                 Params.append(Param)
                 Neurs.append(Neur)
+                uniq_id.append(data['Uniq_id'])
             Melts = np.append(Melts, Melt)
             Modded_melts = np.append(Modded_melts, Modded_melt)
             Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
-            data = Get_model_attributes(model_p)
-            t.append(data['Training_time'])
-    return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t
+            
+        t.append(data['Training_time'])
+        Ocean_trained = data['Dataset_train']
+    return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t, uniq_id
 
 
 def Compute_RMSEs_Total_Param(**kwargs):
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t = Compute_data_for_plotting(**kwargs)
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t, ids = Compute_RMSE_from_model_ocean(**kwargs)
     if len(Params) == len(Melts):
         df = pd.DataFrame()
         df['Melts'] = Melts
         df['Modded_melts'] = Modded_melts
         df['Params'] = Params
         df['Neurs'] = Neurs
+        df['uniq_id'] = ids
         RMSE = []
         Neurs = []
         T = []
-        Param = np.unique(Params)
-        for P in Param:
-            Cur = df.loc[df.Params == P]
+        Param = []
+        ids = np.unique(ids)
+        for i in ids:
+            Cur = df.loc[df.uniq_id == i]
             RMSE.append(Compute_rmse(np.array(Cur.Melts), np.array(Cur.Modded_melts)))
             Neurs.append(np.unique(Cur.Neurs))
-            T.append(np.unique(Cur.Time))
+            Param.append(np.unique(Cur.Params))
     else:
         RMSE = RMSEs
         Param = Params
-        T = t
+    T = t
+    print(f"T size {len(T)} \n RMSE size : {len(RMSE)} \n Param size : {len(Param)}")
     return Param, T, RMSE, Neurs

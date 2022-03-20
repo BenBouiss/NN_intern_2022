@@ -27,7 +27,7 @@ def find_iqr(x):
   return np.subtract(*np.percentile(x, [75, 25]))
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -41,14 +41,28 @@ class model_NN():
         self.batch_size = batch_size
         self.Extra_n = Extra_n
         self.Cutting = Better_cutting
+        self.Drop = Drop
+        self.Default_drop = Default_drop
         self.Js = dict(self.__dict__)
+        
         
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Input(Shape))
-        for Order in Orders:
+        Drop_seq = []
+        for i, Order in enumerate(Orders):
             self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
+            if self.Drop != None:
+                if i < len(Orders) - 1 : 
+                    if self.Drop == 'Default':
+                        self.model.add(tf.keras.layers.Dropout(self.Default_drop))
+                        Default_Drop.append(self.Default_drop)
+                    elif self.Drop == 'Scaling':
+                        Dropout = max(0.5, 0.9 - i * 0.15)
+                        self.model.add(tf.keras.layers.Dropout(Dropout)
+                        Default_Drop.append(Dropout)
+                                       
         self.model.add(tf.keras.layers.Dense(1))
         self.model.compile(optimizer='adam',
                      loss = 'mse',
@@ -288,7 +302,7 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                 Model_paths.remove(f)
                 continue
             if Cutting != None:
-                if (data.get('Cutting') is None) or (data.get('Cutting') is not None and data['Cutting'] != Cutting):
+                if (data.get('Cutting') is None) or (data.get('Cutting') is not None and data['Cutting'] != Cutting) or (Cutting == '' and (data.get('Cutting') is not None and data['Cutting'] != Cutting)):
                     Model_paths.remove(f)
                     continue
         else:

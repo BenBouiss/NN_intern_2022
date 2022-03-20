@@ -19,7 +19,7 @@ from .Trainings import *
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
 def Plot_RMSE_to_param(save = False, **kwargs):
-    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_data_for_plotting(**kwargs)
+    RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_RMSE_from_model_ocean(**kwargs)
     fig, ax = plt.subplots()
     ax.scatter(Params, RMSEs, color = 'blue')
     if t != []:
@@ -35,9 +35,11 @@ def Plot_RMSE_to_param(save = False, **kwargs):
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
 def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
-    Param, T, RMSE = Compute_RMSEs_Total_Param(**kwargs)
+    Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(**kwargs)
     fig, ax = plt.subplots()
     ax.scatter(Param, RMSE)
+    print(T, len(T))
+    print(Param, len(Param))
     ax2 = ax.twinx()
     ax2.scatter(Param, T, s = 10, color = 'red')
     ax2.set_ylabel("Training time(s)",color="red")
@@ -46,10 +48,10 @@ def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
-    return Param, RMSE, Neur
+    return Param, RMSE, Neur, T
     
 def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
-    RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_data_for_plotting(index = ind, **kwargs)
+    RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, **kwargs)
     x = np.arange(1, len(Modded_Melts) + 1)
     plt.plot(x, Melts, label = 'Real melt')
     plt.plot(x, Modded_Melts, label = 'Modeled melt')
@@ -65,7 +67,7 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
         
 def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_data_for_plotting(Compute_at_ind = Compute_at_ind, **kwargs)
+    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
     Vmax = max(np.append(Melts, Modded_melts))
@@ -162,7 +164,7 @@ def Concat_Oc_names(Strs):
 #def Get_model_path_json(Var, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', 
 #Exact = 0, Choix = 0, Neur = None)
 def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
-        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False):
+        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False, Title = []):
     
     Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
@@ -207,7 +209,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
                 axes[i].set_xlabel('')
                 axes[i].set_ylabel('')
             if ind_t == 0:
-                axes[i].set_title('_'.join(Vars[i]))
+                axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i]])} \n {Title[i] if Title != [] else ''}")
                 #axes[i].set_title(f"{} = month", loc = 'left')
             else:
                 axes[i].set_title('')
@@ -230,4 +232,5 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     return Datasets
 
 
-
+def Plot_Models_per_epoch(Epoch, NN_attrib = {}):
+    Models = Get_model_path_json(**NN_attrib)
