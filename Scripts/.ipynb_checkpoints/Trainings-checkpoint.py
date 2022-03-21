@@ -56,16 +56,17 @@ class model_NN():
             optimizer = tf.keras.optimizers.Adam(lr=0.01)
             
         for i, Order in enumerate(Orders):
-            self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
-            if self.Drop != None:
-                if i < len(Orders) - 1 : 
-                    if self.Drop == 'Default':
-                        self.model.add(tf.keras.layers.Dropout(self.Default_drop))
-                        Drop_seq.append(self.Default_drop)
-                    elif self.Drop == 'Scaling':
-                        Dropout = max(0.5, 0.9 - i * 0.15)
-                        self.model.add(tf.keras.layers.Dropout(Dropout))
-                        Drop_seq.append(Dropout)
+            if int(Order)!=0:
+                self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
+                if self.Drop != None:
+                    if i < len(Orders) - 1 : 
+                        if self.Drop == 'Default':
+                            self.model.add(tf.keras.layers.Dropout(self.Default_drop))
+                            Drop_seq.append(self.Default_drop)
+                        elif self.Drop == 'Scaling':
+                            Dropout = max(0.5, 0.9 - i * 0.15)
+                            self.model.add(tf.keras.layers.Dropout(Dropout))
+                            Drop_seq.append(Dropout)
         self.Js['Drop_seq'] = Drop_seq
         self.model.add(tf.keras.layers.Dense(1))
         if self.Drop != None:
@@ -76,6 +77,7 @@ class model_NN():
             self.model.compile(optimizer='adam',
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
+        self.Js['Param'] = self.model.count_params()
     def Fetch_data(self, Datasets, Oc_mod_type):
         li = []
         for Data in Datasets:

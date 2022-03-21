@@ -192,8 +192,9 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             with open(File + '/config.json') as json_file:
                 Config = json.load(json_file)
             Choix, Epoch = Config['Choix'], Config['Epoch']
-
-            Dataset = Compute_datas(File, Choix, Oc_tar, 
+#(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
+            Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
+            Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
                             Type_tar, Epoch, message, Compute_at_t = t)
             Dataset[['Mod_melt', 'meltRate']] = Dataset[['Mod_melt', 'meltRate']] * s_to_yr
             Datasets.append(Dataset)
@@ -235,7 +236,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            'N_side_M_{}_t={}.png'.format(Oc_tar, '_'.join(str(T)))), facecolor='white', bbox_inches='tight')
+            'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 
 
