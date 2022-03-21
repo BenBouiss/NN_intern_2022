@@ -60,7 +60,7 @@ class model_NN():
                         Default_Drop.append(self.Default_drop)
                     elif self.Drop == 'Scaling':
                         Dropout = max(0.5, 0.9 - i * 0.15)
-                        self.model.add(tf.keras.layers.Dropout(Dropout)
+                        self.model.add(tf.keras.layers.Dropout(Dropout))
                         Default_Drop.append(Dropout)
                                        
         self.model.add(tf.keras.layers.Dense(1))

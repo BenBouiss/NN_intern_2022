@@ -34,12 +34,18 @@ def Plot_RMSE_to_param(save = False, **kwargs):
         plt.savefig(os.path.join(PWD, 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
-def Plot_total_RMSE_param(save = False, message_p = 1, **kwargs):
-    Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(**kwargs)
+def Plot_total_RMSE_param(save = False, message_p = 1,load = False, **kwargs):
+    if load:
+        Path = os.path.join(os.getcwd(), 'Cached_data', 'Total_RMSE_Ep_8_Ch_0_OcT_VarX_non_posit_same_ind.csv')
+        df = pd.read_csv(Path)
+        Neur = df['Neur'].values
+        Param = df['Params'].values
+        RMSE = df['RMSE'].values
+        T = df['T'].values
+    else:
+        Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(**kwargs)
     fig, ax = plt.subplots()
     ax.scatter(Param, RMSE)
-    print(T, len(T))
-    print(Param, len(Param))
     ax2 = ax.twinx()
     ax2.scatter(Param, T, s = 10, color = 'red')
     ax2.set_ylabel("Training time(s)",color="red")
@@ -232,5 +238,25 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     return Datasets
 
 
-def Plot_Models_per_epoch(Epoch, NN_attrib = {}):
-    Models = Get_model_path_json(**NN_attrib)
+def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
+
+    Dicts = []
+    RMSEs = []
+    Ts = []
+    Params = []
+    Neurs = []
+    for Neur in Neurones:
+        Models = Get_model_path_json(Neur = Neur, **NN_attrib)
+        for Mod_p in Models:
+            Sub_mods = glob.glob(os.path.join(Mod_p, ''))
+            for Mod in Sub_mods:
+                Param, T, RMSE, Neurs = Compute_RMSEs_Total_Param(Models_paths = Mod, **kwargs)
+                Name = Mod.split('/')[-1]
+                Epoch = re.findall('model_(\d+).h5', Name)[0]
+                Config = Get_model_attributes(Mod_p)
+                Dict = {}
+                for Attrib in Attribs:
+                    Dict[Attrib] = Config[Attrib]
+                Dicts.append(Dict)
+                RMSEs.append(RMSE)
+                Params.append(Param)

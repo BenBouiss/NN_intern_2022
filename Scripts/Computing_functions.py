@@ -167,12 +167,17 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
         print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
         for ind_o, Oc in enumerate(Ocean_target):
             Oc_m = int(Oc[-1])
-            Model_name = model_p.split('/')[-1]
-            Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
             if '.h5' in model_p:
                 Model = Fetch_model(os.path.join(model_p))
+                Model_name = model_p.split('/')[-2]
+                Neur, Choix = re.findall('N_(\w+)_Ch_(\d+)', Model_name)[0]
+                Mod = model_p.split('/')[-1]
+                Epoch = re.findall('model_(\d+).h5', Mod)[0]
+                model_p = os.path.dirname(model_p)
             else:
+                Model_name = model_p.split('/')[-1]
                 Model = Fetch_model(os.path.join(model_p, 'model_{}.h5'.format(Epoch)))
+                Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
             if Compute_at_ind:
                 Datas = DF.loc[DF.Oc == Oc_m]
                 Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas)
@@ -183,7 +188,8 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
             data = Get_model_attributes(model_p)
             if len(Ocean_target) != 1:
                 Params = np.append(Params, np.full_like(Melt, Param))
-                Neurs = np.append(Neurs, np.full_like(Melt, Neur))
+                #Neurs = np.append(Neurs, np.full_like(Melt, Neur))
+                Neurs.extend([Neur] * len(Melt))
                 uniq_id = np.append(uniq_id, np.full_like(Melt, data['Uniq_id']))
             else:
                 Params.append(Param)
@@ -192,7 +198,6 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
             Melts = np.append(Melts, Melt)
             Modded_melts = np.append(Modded_melts, Modded_melt)
             Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
-            
         t.append(data['Training_time'])
         Ocean_trained = data['Dataset_train']
     return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t, uniq_id
