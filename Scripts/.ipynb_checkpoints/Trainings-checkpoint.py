@@ -51,23 +51,31 @@ class model_NN():
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Input(Shape))
         Drop_seq = []
+        #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
+        if self.Drop != None:
+            optimizer = tf.keras.optimizers.Adam(lr=0.01)
+            
         for i, Order in enumerate(Orders):
             self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
             if self.Drop != None:
                 if i < len(Orders) - 1 : 
                     if self.Drop == 'Default':
                         self.model.add(tf.keras.layers.Dropout(self.Default_drop))
-                        Default_Drop.append(self.Default_drop)
+                        Drop_seq.append(self.Default_drop)
                     elif self.Drop == 'Scaling':
                         Dropout = max(0.5, 0.9 - i * 0.15)
                         self.model.add(tf.keras.layers.Dropout(Dropout))
-                        Default_Drop.append(Dropout)
-                                       
+                        Drop_seq.append(Dropout)
+        self.Js['Drop_seq'] = Drop_seq
         self.model.add(tf.keras.layers.Dense(1))
-        self.model.compile(optimizer='adam',
+        if self.Drop != None:
+            self.model.compile(optimizer=optimizer,
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
-
+        else:
+            self.model.compile(optimizer='adam',
+                     loss = 'mse',
+                    metrics = ['mae', 'mse'])
     def Fetch_data(self, Datasets, Oc_mod_type):
         li = []
         for Data in Datasets:
@@ -93,7 +101,10 @@ class model_NN():
             self.Js['Similar_training'] = 0
         else:
             ind_p = os.path.join(PWD, 'Auto_model/tmp/', '_'.join(self.Dataset_train))
-            inds = glob.glob(ind_p + '/ind_Cut*.csv')
+            if self.Cutting != False:
+                inds = glob.glob(ind_p + '/Cut*.csv')
+            else:
+                inds = glob.glob(ind_p + '/ind_*.csv')
             Inds = np.loadtxt(inds[0]).astype(int)
             X_valid = X.loc[Inds]
             Y_valid = Y.loc[Inds]
@@ -280,7 +291,7 @@ def Better_neur_gen(Extent):
     return ['_'.join(i) for i in Seq]
 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
-            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None):
+            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -294,19 +305,29 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
         if data != None:
             if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
                 Model_paths.remove(f)
+                #print(f"{f} removed because either Choix or Var")
                 continue
             if (Neur != None and data['Neur_seq'] != Neur) or (Batch_size != None and Batch_size != data['batch_size']):
                 Model_paths.remove(f)
+                #print(f"{f} removed because either Neur or Batch")
                 continue
             if (Exact != 1 and data['Epoch'] != Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
                 Model_paths.remove(f)
+                #print(f"{f} removed because either Epoch or Extra_n")
                 continue
             if Cutting != None:
-                if (data.get('Cutting') is None) or (data.get('Cutting') is not None and data['Cutting'] != Cutting) or (Cutting == '' and (data.get('Cutting') is not None and data['Cutting'] != Cutting)):
+                if (data.get('Cutting') is None and Cutting != '') or (data.get('Cutting') is not None and data['Cutting'] != Cutting) or (Cutting == '' and (data.get('Cutting') is not None and data['Cutting'] != Cutting)):
                     Model_paths.remove(f)
+                    #print(f"{f} removed because either Cutting")
+                    continue
+            if Drop != None:
+                if (data.get('Cutting') is None and Drop != '') or (data.get('Drop') is not None and data['Drop'] != Drop):
+                    Model_paths.remove(f)
+                    #print(f"{f} removed because either Drop")
                     continue
         else:
             Model_paths.remove(f)
+    #print(f"Validated paths : {Model_paths}")
     if index != None:
         if index >= len(Model_paths):
             index = len(Model_paths) - 1

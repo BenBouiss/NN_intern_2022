@@ -95,7 +95,7 @@ def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
 
 
     
-def Plot_loss_model(save = False, ind = 0, **kwargs):
+def Plot_loss_model(save = False, ind = 0,Forbid_key = [], **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
     fig, ax = plt.subplots()
@@ -103,11 +103,12 @@ def Plot_loss_model(save = False, ind = 0, **kwargs):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
     hist = pd.read_pickle(Model_p + '/TrainingHistory')
-    plt.plot(hist['loss'])
+    #plt.plot(hist['loss'])
     with open(Model_p + '/config.json') as json_file:
                 data = json.load(json_file)
     for k in hist.keys():
-        plt.plot(hist[k], label = k)
+        if k not in Forbid_key:
+            plt.plot(hist[k], label = k)
     plt.legend(loc = 'upper right')
     plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
     plt.xlabel('Epoch')
