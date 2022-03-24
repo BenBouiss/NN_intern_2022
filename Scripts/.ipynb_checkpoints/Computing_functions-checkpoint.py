@@ -146,10 +146,13 @@ def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
     else:
         return Data.set_index(['date', 'y', 'x']).to_xarray()
 
-def Gather_datasets(Datasets, Type_tar, save_index = False):
+def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
     li = []
     for Ind, Dataset in enumerate(Datasets):
-        D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
+        if Method == None:
+            D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
+        else:
+            Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
         df = pd.read_csv(D_path)
         if save_index:
             df['Oc'] = Ind + 1
@@ -159,13 +162,14 @@ def Gather_datasets(Datasets, Type_tar, save_index = False):
 def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None):
     if Models_paths == None:
         Models_paths = Get_model_path_json(index = index, **NN_attributes)
-        
+    
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t, uniq_id = [], [], [], [], [], [], [], []
     #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
     if Compute_at_ind:
-        DF = Gather_datasets(Ocean_target, Type_tar, save_index = True)
+        data = Get_model_attributes(Models_paths)
+        DF = Gather_datasets(Ocean_target, Type_tar, save_index = True, Method = data.get('Method_data'))
         Att = Get_model_attributes(Models_paths[0])
         Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_target), f"ind_{Att['Similar_training']}.csv")
         DF = DF.loc[np.loadtxt(Masks).astype(int)]
@@ -174,6 +178,7 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
         print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
         for ind_o, Oc in enumerate(Ocean_target):
             Oc_m = int(Oc[-1])
+            data = Get_model_attributes(model_p)
             if '.h5' in model_p:
                 Model = Fetch_model(model_p)
                 Model_name = model_p.split('/')[-2]
@@ -189,10 +194,10 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
                 Datas = DF.loc[DF.Oc == Oc_m]
                 Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas)
             else:
-                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message)
+                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Method = data.get('Method_data'))
             Melt, Modded_melt, RMSE, Param = Comp
             RMSEs.append(RMSE)
-            data = Get_model_attributes(model_p)
+            
             if len(Ocean_target) != 1:
                 Params = np.append(Params, np.full_like(Melt, Param))
                 #Neurs = np.append(Neurs, np.full_like(Melt, Neur))

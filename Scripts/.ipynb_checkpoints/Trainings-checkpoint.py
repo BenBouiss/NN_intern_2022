@@ -19,9 +19,12 @@ def Getpath_dataset(Dataset, Oc_mod_type, Method = None):
     Bet_path = '/bettik/bouissob/'
     if Method == None:
         return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
-    else:
+    elif Method == 4:
         return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}_lite.csv'
-
+    else:
+        return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}.csv'
+    
+    
 def Make_dire(file_path):
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
@@ -37,7 +40,7 @@ class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40]):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
-        self.Var_X = Var_X
+        self.Var_X = list(Var_X)
         self.Var_Y = Var_Y
         self.Dataset_train = Dataset_train
         self.Oc_mod_type = Oc_mod_type
@@ -52,19 +55,21 @@ class model_NN():
         self.Default_drop = Default_drop
         self.Method_data = Method_data
         self.Method_extent = Method_extent
-        if self.Method_data != None:
-            self.Big_Var = []
+        if Method_data == 4:
+            Big_Var = []
             if 'Big_T' in self.Var_X:
                 self.Var_X.remove('Big_T')
                 All_name = Generate_Var_name('T', Method_extent)
-                self.Big_Var.extend(All_name)
+                Big_Var.append(All_name)
+                self.Var_X.extend(All_name)
             if 'Big_S' in self.Var_X:
                 self.Var_X.remove('Big_S')
                 All_name = Generate_Var_name('S', Method_extent)
-                self.Big_Var.extend(All_name)
-            self.Var_X.extend(self.Big_Var)
+                Big_Var.append(All_name)
+                self.Var_X.extend(All_name)
+            self.Big_Var = Big_Var
+            
         self.Js = dict(self.__dict__)
-        
         
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
@@ -149,18 +154,26 @@ class model_NN():
         del X, Y
         print('Begin Norma')
         if self.Choix == 0:
-            if self.Method_data == None :
+            if self.Method_data != 4 :
                 self.meanX, self.stdX = X_train.mean(), X_train.std() 
-                
             else:
-                Arr = X_train.drop(self.Big_Var, axis = 1)
+                #Arr = X_train.drop(self.Big_Var, axis = 1)
+                Means, Stds = [], []
+                for i, Var in enumerate(self.Big_Var):
+                    if i == 0:
+                        Arr = X_train.drop(Var, axis = 1)
+                    else:
+                        Arr = Arr.drop(Var, axis = 1)
+                    Means.append(X_train[Var].to_numpy().mean())
+                    Stds.append(X_train[Var].to_numpy().std())
+                        
                 M = Arr.mean().to_frame().T
-                M[self.Big_Var] = X_train[self.Big_Var].to_numpy().mean()
-                self.meanX = M.mean()
                 Std = Arr.std().to_frame().T
-                Std[self.Big_Var] = X_train[self.Big_Var].to_numpy().std()
+                for i, Var in enumerate(self.Big_Var):
+                    M[Var] = Means[i]
+                    Std[Var] = Stds[i]
+                self.meanX = M.mean()
                 self.stdX = Std.mean()
-                print('Ben3')
                 del Arr, M, Std
             
             self.meanY, self.stdY = Y_train.mean(), Y_train.std()     
@@ -169,7 +182,6 @@ class model_NN():
 
             self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
                                           np.array((Y_valid - self.meanY)/self.stdY))
-            print('Ben4')
         elif self.Choix == 1:
             self.maxX, self.minX = X_train.max(), X_train.min()
             self.maxY, self.minY = Y_train.max(), Y_train.min()

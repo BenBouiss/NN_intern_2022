@@ -89,7 +89,7 @@ def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)))
     plt.show()
     if save:
-        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}'.format(Neurs, 
+        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}'.format(np.unique(Neurs), 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar))), facecolor = 'white')
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
