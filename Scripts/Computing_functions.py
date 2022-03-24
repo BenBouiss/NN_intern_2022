@@ -24,16 +24,12 @@ Rho = 920 #Kg/m**3
 Horiz_res = 2 #km/pix
 S = (Horiz_res*10**3) ** 2  #m**2/pix
 
-def Getpath_dataset(Dataset, Oc_mod_type):
-    Bet_path = '/bettik/bouissob/'
-    return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
-
 def Make_dire(file_path):
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
         
-def Fetch_data(Ocean_target, Type_tar):
-    df = pd.read_csv(Getpath_dataset(Ocean_target, Type_tar))
+def Fetch_data(Ocean_target, Type_tar, Method):
+    df = pd.read_csv(Getpath_dataset(Ocean_target, Type_tar, Method))
     return df
 
 def Fetch_model(model_path):
@@ -98,11 +94,11 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         return None
     return Y
     
-def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None):
+def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None):
     if Compute_at_ind :
         Data = Datas
     else:
-        Data = Fetch_data(Ocean_target, Type_tar)
+        Data = Fetch_data(Ocean_target, Type_tar, Method)
     tmx = int(max(np.array(Data.date)))
     
     if Model == None:
@@ -112,10 +108,10 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
     if message:
         print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
-    if not type(Compute_at_t) == int :
+    if Compute_at_t == False:
         for t in range(tmx):
             if message and (t+1)%int(tmx/5) == 0:
-                print('Starting {} / {}'.format(t+1, tmx) , end='\r')
+                print('Starting {} / {}'.format(t+1, tmx) , end='/r')
                 
             Cur = Data.loc[Data.date == t].reset_index(drop = True)
             Melt, Modded = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = True)
@@ -125,10 +121,21 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
         Modded_melts = np.array(Modded_melts)
         return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
     else:
-        Cur = Data.loc[Data.date == Compute_at_t].reset_index(drop = True)
-        Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
-        return Dataset
-
+        if type(Compute_at_t) == int:
+            Cur = Data.loc[Data.date == Compute_at_t].reset_index(drop = True)
+            Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
+            return Dataset
+        else:
+            d = []
+            for t in Compute_at_t:
+                print(f"Starting {t} / {Compute_at_t}        ", end = '\r')
+                Cur = Data.loc[Data.date == t].reset_index(drop = True)
+                Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
+                d.append(Dataset)
+                if t != Compute_at_t[-1]:
+                    print(" ######################################################## ", end = '\r')
+            return d
+        
 def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
     X, Var_X = Normalizer(Data, Choix, Data_norm)
     Data['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)

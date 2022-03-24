@@ -104,8 +104,7 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [], **kwargs):
     Model_p = Models_p[ind]
     hist = pd.read_pickle(Model_p + '/TrainingHistory')
     #plt.plot(hist['loss'])
-    with open(Model_p + '/config.json') as json_file:
-                data = json.load(json_file)
+    data = Get_model_attributes(Model_p)
     for k in hist.keys():
         if k not in Forbid_key:
             plt.plot(hist[k], label = k)
@@ -189,13 +188,12 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             Files = Get_model_path_json(**Att)
             #print(Files)
             File = Files[ind]
-            with open(File + '/config.json') as json_file:
-                Config = json.load(json_file)
+            Config = Get_model_attributes(File)
             Choix, Epoch = Config['Choix'], Config['Epoch']
 #(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
             Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
             Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
-                            Type_tar, Epoch, message, Compute_at_t = t)
+                            Type_tar, Epoch, message, Compute_at_t = t, Method = Config.get('Method_data'))
             Dataset[['Mod_melt', 'meltRate']] = Dataset[['Mod_melt', 'meltRate']] * s_to_yr
             Datasets.append(Dataset)
             Vars.append(Config['Var_X'])
@@ -217,7 +215,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
                 axes[i].set_xlabel('')
                 axes[i].set_ylabel('')
             if ind_t == 0:
-                axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i]])} \n {Title[i] if Title != [] else ''}")
+                axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i] if Config.get('Method_data') == None])} \n {Title[i] if Title != [] else ''}")
                 #axes[i].set_title(f"{} = month", loc = 'left')
             else:
                 axes[i].set_title('')
@@ -230,6 +228,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
 
         ticks = np.linspace(vmin, vmax, 5, endpoint=True)
         cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
+    return Datasets
     #fig.supxlabel('x')
     #fig.supylabel('y')
     fig.text(0.45, 0.095, 'X', ha='center')
@@ -239,6 +238,89 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 
+def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
+        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False, Title = [], sharing = False):
+    Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
+    s_to_yr = 3600 * 24 * 365
+    cmap = plt.get_cmap('seismic')
+    nTime = len(list(T))
+    if sharing :
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime), sharex=True, sharey=True)
+    else:
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
+    plt.subplots_adjust(hspace = 0.15)
+    Datasets = []
+    for Index, Att in enumerate(Attribs):
+        Files = Get_model_path_json(**Att)
+        #print(Files)
+        File = Files[ind]
+        Config = Get_model_attributes(File)
+        Choix, Epoch = Config['Choix'], Config['Epoch']
+#(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
+        Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
+        print(f"Started computing for {File}")
+        Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+                        Type_tar, Epoch, message, Compute_at_t = T, Method = Config.get('Method_data'))
+        Datasets.append(Dataset)
+        print(f"Finished computing for {File}")
+    #return Datasets
+    Plotting_grid = []
+    VMins = []
+    VMaxs = []
+    for Mods in zip(*Datasets):
+        Current_grid = []
+        Mins, Maxs = [], []
+        for Mod in Mods:
+            Mod[['Mod_melt', 'meltRate']] = Mod[['Mod_melt', 'meltRate']] * s_to_yr
+            Current_grid.append(Mod)
+            Mins.append(float(Mod.Mod_melt.min()))
+            Maxs.append(float(Mod.Mod_melt.max()))
+        Plotting_grid.append(Current_grid)
+        VMins.append(min(Mins))
+        VMaxs.append(max(Maxs))
+        
+    for t, Datasets in enumerate(Plotting_grid):
+        if nTime == 1:
+            axes = axes_t
+        else:
+            axes = axes_t[t]
+        norm = MidpointNormalize( midpoint = 0 )
+        vmin, vmax = VMins[t], VMaxs[t]
+        
+        for i, d in enumerate(Datasets):
+            if i == 0:
+                A = d.Mod_melt.plot(ax = axes[0],add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+                
+            else:
+                d.Mod_melt.plot(ax = axes[i], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+            if i == 0:
+                axes[i].set_ylabel(f"T = {T[t]} month")
+            else:
+                axes[i].set_xlabel('')
+                axes[i].set_ylabel('')
+            if t == 0:
+                pass
+                #axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i] if Config.get('Method_data') == None])} \n {Title[i] if Title != [] else ''}")
+                #axes[i].set_title(f"{} = month", loc = 'left')
+            else:
+                axes[i].set_title('')
+            if t != 0 or i != 0:
+                axes[i].set_xlabel('')
+        d.meltRate.plot(ax = axes[-1], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+        axes[-1].set_title('')
+        axes[-1].set_ylabel('')
+        axes[-1].set_xlabel('')
+        ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+        cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
+    return Datasets
+    #fig.supxlabel('x')
+    #fig.supylabel('y')
+    fig.text(0.45, 0.095, 'X', ha='center')
+    fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
+    if save:
+        fig.savefig(os.path.join(PWD, 'Image_output', 
+            'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
+    return Datasets
 
 def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
 

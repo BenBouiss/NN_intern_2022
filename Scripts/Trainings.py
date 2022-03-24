@@ -15,9 +15,12 @@ import itertools
 
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
-def Getpath_dataset(Dataset, Oc_mod_type):
+def Getpath_dataset(Dataset, Oc_mod_type, Method = None):
     Bet_path = '/bettik/bouissob/'
-    return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
+    if Method == None:
+        return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
+    else:
+        return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}_lite.csv'
 
 def Make_dire(file_path):
     if not os.path.isdir(file_path):
@@ -26,8 +29,12 @@ def Make_dire(file_path):
 def find_iqr(x):
   return np.subtract(*np.percentile(x, [75, 25]))
 
+def Generate_Var_name(Str, Extent):
+    Min, Max = Extent
+    return [f"{Str}_{i}" for i in np.arange(Min, Max)]
+
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = 3):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40]):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = Var_X
@@ -43,6 +50,19 @@ class model_NN():
         self.Cutting = Better_cutting
         self.Drop = Drop
         self.Default_drop = Default_drop
+        self.Method_data = Method_data
+        self.Method_extent = Method_extent
+        if self.Method_data != None:
+            self.Big_Var = []
+            if 'Big_T' in self.Var_X:
+                self.Var_X.remove('Big_T')
+                All_name = Generate_Var_name('T', Method_extent)
+                self.Big_Var.extend(All_name)
+            if 'Big_S' in self.Var_X:
+                self.Var_X.remove('Big_S')
+                All_name = Generate_Var_name('S', Method_extent)
+                self.Big_Var.extend(All_name)
+            self.Var_X.extend(self.Big_Var)
         self.Js = dict(self.__dict__)
         
         
@@ -53,7 +73,7 @@ class model_NN():
         Drop_seq = []
         #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
         if self.Drop != None:
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.01) #x100
             
         for i, Order in enumerate(Orders):
             if int(Order)!=0:
@@ -78,14 +98,28 @@ class model_NN():
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
         self.Js['Param'] = self.model.count_params()
+        
     def Fetch_data(self, Datasets, Oc_mod_type):
         li = []
-        for Data in Datasets:
-            Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type))
-            if self.Cutting == 'Same_t':
-                Current = Current.loc[Current.date <= 250]
-            li.append(Current)
-        df = pd.concat(li, ignore_index= True)
+        for ind, Data in enumerate(Datasets):
+            if self.Method_data == None:
+                
+                Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                if self.Cutting == 'Same_t':
+                    Current = Current.loc[Current.date <= 250]
+                li.append(Current)
+                del Current
+            else:
+                print(f"Getting dataset : {Data}")
+                if ind == 0:
+                    df = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                else:
+                    df = pd.concat([df, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))], ignore_index= True)
+                print(f"Finished dataset : {Data}")
+                
+        if self.Method_data == None:
+            df = pd.concat(li, ignore_index= True)
+        del li
         return df
 
     def Prepare_data(self, Indexs):
@@ -93,11 +127,10 @@ class model_NN():
         X = df[self.Var_X]
         Y = df[self.Var_Y]
         del df
-        
+        print('Check index')
         if Indexs == None:
             X_train = X.sample(frac = 0.8)
             X_valid = X.drop(X_train.index)
-
             Y_train = Y.loc[X_train.index]
             Y_valid = Y.drop(X_train.index)
             self.Js['Similar_training'] = 0
@@ -113,16 +146,30 @@ class model_NN():
             X_train = X.drop(Inds)
             Y_train = Y.drop(Inds)
             self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
-            
+        del X, Y
+        print('Begin Norma')
         if self.Choix == 0:
-            self.meanX, self.stdX = X_train.mean(), X_train.std() 
-            self.meanY, self.stdY = Y_train.mean(), Y_train.std() 
-
+            if self.Method_data == None :
+                self.meanX, self.stdX = X_train.mean(), X_train.std() 
+                
+            else:
+                Arr = X_train.drop(self.Big_Var, axis = 1)
+                M = Arr.mean().to_frame().T
+                M[self.Big_Var] = X_train[self.Big_Var].to_numpy().mean()
+                self.meanX = M.mean()
+                Std = Arr.std().to_frame().T
+                Std[self.Big_Var] = X_train[self.Big_Var].to_numpy().std()
+                self.stdX = Std.mean()
+                print('Ben3')
+                del Arr, M, Std
+            
+            self.meanY, self.stdY = Y_train.mean(), Y_train.std()     
             self.X_train, self.X_valid = (np.array((X_train - self.meanX)/self.stdX), 
                                           np.array((X_valid - self.meanX)/self.stdX))
 
             self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
                                           np.array((Y_valid - self.meanY)/self.stdY))
+            print('Ben4')
         elif self.Choix == 1:
             self.maxX, self.minX = X_train.max(), X_train.min()
             self.maxY, self.minY = Y_train.max(), Y_train.min()
@@ -293,7 +340,7 @@ def Better_neur_gen(Extent):
     return ['_'.join(i) for i in Seq]
 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
-            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None):
+            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, Method_data = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -326,6 +373,10 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                 if (data.get('Cutting') is None and Drop != '') or (data.get('Drop') is not None and data['Drop'] != Drop):
                     Model_paths.remove(f)
                     #print(f"{f} removed because either Drop")
+                    continue
+            if Method_data != None:
+                if data.get('Method_data') != Method_data:
+                    Model_paths.remove(f)
                     continue
         else:
             Model_paths.remove(f)
