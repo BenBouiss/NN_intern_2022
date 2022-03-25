@@ -19,7 +19,7 @@ def Getpath_dataset(Dataset, Oc_mod_type, Method = None):
     Bet_path = '/bettik/bouissob/'
     if Method == None:
         return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
-    elif Method == 4:
+    elif Method == 4 or Method == 2:
         return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}_lite.csv'
     else:
         return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}.csv'
@@ -37,7 +37,7 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40]):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Multi_thread = False, Workers = 1):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -55,7 +55,10 @@ class model_NN():
         self.Default_drop = Default_drop
         self.Method_data = Method_data
         self.Method_extent = Method_extent
-        if Method_data == 4:
+        self.Scaling_lr = Scaling_lr
+        self.Multi_thread = Multi_thread
+        self.Workers = Workers
+        if Method_data == 4 or Method_data == 2:
             Big_Var = []
             if 'Big_T' in self.Var_X:
                 self.Var_X.remove('Big_T')
@@ -116,21 +119,38 @@ class model_NN():
                 del Current
             else:
                 print(f"Getting dataset : {Data}")
-                if ind == 0:
-                    df = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                print(f"Dataset used : {Getpath_dataset(Data, Oc_mod_type, self.Method_data)}")
+                if self.Method_data != 4 and self.Method_data != 2:
+                    if ind == 0:
+                        df = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                    else:
+                        df = pd.concat([df, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))], ignore_index= True)
                 else:
-                    df = pd.concat([df, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))], ignore_index= True)
+                    if ind == 0:
+                        X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)
+                        Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])
+
+                    else:
+                        X = pd.concat([X, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)], ignore_index= True)
+                        Y = pd.concat([Y, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])], ignore_index= True)
                 print(f"Finished dataset : {Data}")
-                
+
+        if self.Method_data == 4 or self.Method_data == 2:
+            return X, Y
+        
         if self.Method_data == None:
             df = pd.concat(li, ignore_index= True)
         del li
         return df
 
     def Prepare_data(self, Indexs):
-        df = self.Fetch_data(self.Dataset_train, self.Oc_mod_type)
-        X = df[self.Var_X]
-        Y = df[self.Var_Y]
+        if self.Method_data == 4 or self.Method_data == 2:
+            X, Y = self.Fetch_data(self.Dataset_train, self.Oc_mod_type)
+            df = []
+        else:
+            df = self.Fetch_data(self.Dataset_train, self.Oc_mod_type)
+            X = df[self.Var_X]
+            Y = df[self.Var_Y]
         del df
         print('Check index')
         if Indexs == None:
@@ -154,7 +174,7 @@ class model_NN():
         del X, Y
         print('Begin Norma')
         if self.Choix == 0:
-            if self.Method_data != 4 :
+            if self.Method_data != 4 and self.Method_data != 2:
                 self.meanX, self.stdX = X_train.mean(), X_train.std() 
             else:
                 #Arr = X_train.drop(self.Big_Var, axis = 1)
@@ -203,13 +223,20 @@ class model_NN():
         self.Prepare_data(Indexs)
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
+        if self.Scaling_lr == True:
+            New_lr = tf.keras.callbacks.LearningRateScheduler(scheduler)
+            Callbacks = [saver, New_lr]
+        else:
+            Callbacks = [saver]
         Start = time.perf_counter()
         Mod = self.model.fit(self.X_train, self.Y_train,
-                   callbacks=[saver],
+                   callbacks=Callbacks,
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
-                   verbose = self.verbose)
+                   verbose = self.verbose,
+                   use_multiprocessing = self.Multi_thread,
+                   workers = self.Workers)
         self.Js['Training_time'] = time.perf_counter() - Start
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
@@ -321,7 +348,11 @@ class CustomSaver(tf.keras.callbacks.Callback):
         if epoch + 1 != self.Epoch_max:
             self.model.save(self.path + "model_{}.h5".format(epoch + 1))
             
-            
+def scheduler(epoch, lr):
+    if (epoch+1) % 8:
+        return lr / 5
+    else:
+        return lr
                         
     
 def Verify_string_tuple(Seqs, extent):
@@ -352,7 +383,8 @@ def Better_neur_gen(Extent):
     return ['_'.join(i) for i in Seq]
 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
-            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, Method_data = None):
+            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
+            Method_data = None, Scaling_lr = False):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -387,7 +419,7 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                     #print(f"{f} removed because either Drop")
                     continue
             if Method_data != None:
-                if data.get('Method_data') != Method_data:
+                if (data.get('Method_data') != Method_data and Method_data != '') or (Method_data == '' and data.get('Method_data') is not None):
                     Model_paths.remove(f)
                     continue
         else:

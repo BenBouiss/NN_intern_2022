@@ -61,7 +61,7 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     x = np.arange(1, len(Modded_Melts) + 1)
     plt.plot(x, Melts, label = 'Real melt')
     plt.plot(x, Modded_Melts, label = 'Modeled melt')
-    plt.xlabel('Time (yrs)')
+    plt.xlabel('Time (month)')
     plt.ylabel('Mass lost(Gt/yr)')
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
@@ -72,25 +72,26 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(int(time.time()), 
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
         
-def Plot_Melt_to_Modded_melt(save = False,Compute_at_ind = False, **kwargs):
+def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False, **kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
     Vmax = max(np.append(Melts, Modded_melts))
     for v in np.unique(Oc_mask):
         idx = np.where(Oc_mask == v)
-        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = 'Ocean{}'.format(v))
+        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = f'Ocean{int(v)} R = {np.round(np.corrcoef(Modded_melts[idx],Melts[idx])[0,1], 4)}')
         ax.legend(Oc_mask)
     linex, liney = [Vmin, Vmax], [Vmin, Vmax]
     ax.plot(linex, liney, c = 'red', ls = '-', linewidth = 0.8)
     ax.legend(loc = 'upper left')
-    plt.xlabel('Modeled melt rate (Gt/yr)')
-    plt.ylabel('"Real" melt rate(Gt/yr)')
+    plt.xlabel('NN emulated melt rate (Gt/yr)')
+    plt.ylabel('Modeled melt rate(Gt/yr)')
     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)))
     plt.show()
+    print(Compute_rmse(Melts, Modded_melts))
     if save:
-        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}_{}'.format(np.unique(Neurs), 
-                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
+        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}_{}_Ex_{}'.format(np.unique(Neurs), 
+                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()), Save_name)), facecolor = 'white')
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
 
@@ -228,7 +229,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
 
         ticks = np.linspace(vmin, vmax, 5, endpoint=True)
         cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
-    return Datasets
+    #return Datasets
     #fig.supxlabel('x')
     #fig.supylabel('y')
     fig.text(0.45, 0.095, 'X', ha='center')
@@ -312,7 +313,6 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
         axes[-1].set_xlabel('')
         ticks = np.linspace(vmin, vmax, 5, endpoint=True)
         cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
-    return Datasets
     #fig.supxlabel('x')
     #fig.supylabel('y')
     fig.text(0.45, 0.095, 'X', ha='center')
