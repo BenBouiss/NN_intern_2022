@@ -175,7 +175,10 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
         DF = DF.loc[np.loadtxt(Masks).astype(int)]
 
     for ind, model_p in enumerate(Models_paths):
-        print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
+        if '.h5' in model_p:
+            print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), '/'.join(model_p.split('/')[-2:])), end = '\r')
+        else:
+            print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
         for ind_o, Oc in enumerate(Ocean_target):
             Oc_m = int(Oc[-1])
             data = Get_model_attributes(model_p)
@@ -186,6 +189,7 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
                 Mod = model_p.split('/')[-1]
                 Epoch = re.findall('model_(\d+).h5', Mod)[0]
                 model_p = os.path.dirname(model_p)
+                data = Get_model_attributes(model_p)
             else:
                 Model_name = model_p.split('/')[-1]
                 Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]

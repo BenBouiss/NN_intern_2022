@@ -62,7 +62,7 @@ def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
     plt.plot(x, Melts, label = 'Real melt')
     plt.plot(x, Modded_Melts, label = 'Modeled melt')
     plt.xlabel('Time (month)')
-    plt.ylabel('Mass lost(Gt/yr)')
+    plt.ylabel('Mass loss(Gt/yr)')
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
@@ -109,13 +109,18 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [], **kw
     for k in hist.keys():
         if k not in Forbid_key and k not in Second_axis:
             ax.plot(hist[k], label = k)
+            
     if Second_axis != []:
         ax2 = ax.twinx()
         for k in Second_axis:
-            ax2.plot(hist[k], label = k, color = 'crimson')
-    ax.legend(loc = 'upper right')
-    ax2.legend(loc = 'upper left')
-    ax2.set_ylabel("Learning rate",color="crimson")
+            ax2.plot(hist[k], label = k, color = 'slategrey')
+        #ax2.legend(loc = 'upper left')
+        ax2.set_ylabel("Learning rate",color="slategrey")
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+        ax.legend(h1+h2, l1+l2, loc=0)
+    else:
+        ax.legend(loc = 'upper right')
     plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
     plt.xlabel('Epoch')
     plt.show()

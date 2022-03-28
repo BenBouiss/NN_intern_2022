@@ -394,7 +394,7 @@ def Better_neur_gen(Extent):
 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = False):
+            Method_data = None, Scaling_lr = None , Pick_Best = False):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -414,7 +414,7 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                 Model_paths.remove(f)
                 #print(f"{f} removed because either Neur or Batch")
                 continue
-            if (Exact != 1 and data['Epoch'] != Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
+            if (Exact != 1 and data['Epoch'] < Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
                 Model_paths.remove(f)
                 #print(f"{f} removed because either Epoch or Extra_n")
                 continue
@@ -432,6 +432,10 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                 if (data.get('Method_data') != Method_data and Method_data != '') or (Method_data == '' and data.get('Method_data') is not None):
                     Model_paths.remove(f)
                     continue
+            if Scaling_lr != None:
+                if data.get('Scaling_lr') is None and Scaling_lr == True or (Scaling_lr == True and Scaling_lr != data.get('Scaling_lr')):
+                    Model_paths.remove(f)
+                    continue
         else:
             Model_paths.remove(f)
     #print(f"Validated paths : {Model_paths}")
@@ -439,6 +443,11 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
         if index >= len(Model_paths):
             index = len(Model_paths) - 1
         Model_paths = [Model_paths[index]]
+        
+    if Pick_Best == True:
+        hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
+        Best = np.argmin(hist['val_mse'])
+        Model_paths = [f"{Model_paths[0]}/model_{Best}.h5"]
     return Model_paths
 
 def Get_model_path_json_exp(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
