@@ -37,7 +37,7 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Multi_thread = False, Workers = 1):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -56,8 +56,14 @@ class model_NN():
         self.Method_data = Method_data
         self.Method_extent = Method_extent
         self.Scaling_lr = Scaling_lr
+        
+        if self.Scaling_lr == True:
+            self.Frequence_scaling_change = Frequence_scaling_change
+            self.Scaling_change = Scaling_change
+        
         self.Multi_thread = Multi_thread
         self.Workers = Workers
+        
         if Method_data == 4 or Method_data == 2:
             Big_Var = []
             if 'Big_T' in self.Var_X:
@@ -71,7 +77,7 @@ class model_NN():
                 Big_Var.append(All_name)
                 self.Var_X.extend(All_name)
             self.Big_Var = Big_Var
-            
+        
         self.Js = dict(self.__dict__)
         
     def Init_mod(self, Shape):
@@ -224,7 +230,8 @@ class model_NN():
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
         if self.Scaling_lr == True:
-            New_lr = tf.keras.callbacks.LearningRateScheduler(scheduler)
+            New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
+                                                              
             Callbacks = [saver, New_lr]
         else:
             Callbacks = [saver]
@@ -240,6 +247,13 @@ class model_NN():
         self.Js['Training_time'] = time.perf_counter() - Start
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
+        
+    def scheduler(self, epoch, lr):
+        if (epoch+1) % self.Frequence_scaling_change == 0:
+            return lr / self.Scaling_change
+        else:
+            return lr
+        
         
     def Data_save(self):
         self.Name = 'Ep_{}_N_{}_Ch_{}-{}_Ex_{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id, self.Extra_n)
@@ -348,11 +362,7 @@ class CustomSaver(tf.keras.callbacks.Callback):
         if epoch + 1 != self.Epoch_max:
             self.model.save(self.path + "model_{}.h5".format(epoch + 1))
             
-def scheduler(epoch, lr):
-    if (epoch+1) % 8:
-        return lr / 5
-    else:
-        return lr
+
                         
     
 def Verify_string_tuple(Seqs, extent):
@@ -424,6 +434,30 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                     continue
         else:
             Model_paths.remove(f)
+    #print(f"Validated paths : {Model_paths}")
+    if index != None:
+        if index >= len(Model_paths):
+            index = len(Model_paths) - 1
+        Model_paths = [Model_paths[index]]
+    return Model_paths
+
+def Get_model_path_json_exp(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
+            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None):
+    if type(Ocean) != list:
+        Ocean = [Ocean]
+    path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
+    if Exact == 1:
+        Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
+    else:
+        Model_paths = glob.glob(path + '/Ep_*')
+    #Mod = list(Model_paths)
+    for f in list(Model_paths):
+        data = Get_model_attributes(f)
+        if data != None:
+            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
+                Model_paths.remove(f)
+                #print(f"{f} removed because either Choix or Var")
+                continue
     #print(f"Validated paths : {Model_paths}")
     if index != None:
         if index >= len(Model_paths):

@@ -96,7 +96,7 @@ def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False
 
 
     
-def Plot_loss_model(save = False, ind = 0,Forbid_key = [], **kwargs):
+def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [], **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
     fig, ax = plt.subplots()
@@ -107,9 +107,15 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [], **kwargs):
     #plt.plot(hist['loss'])
     data = Get_model_attributes(Model_p)
     for k in hist.keys():
-        if k not in Forbid_key:
-            plt.plot(hist[k], label = k)
-    plt.legend(loc = 'upper right')
+        if k not in Forbid_key and k not in Second_axis:
+            ax.plot(hist[k], label = k)
+    if Second_axis != []:
+        ax2 = ax.twinx()
+        for k in Second_axis:
+            ax2.plot(hist[k], label = k, color = 'crimson')
+    ax.legend(loc = 'upper right')
+    ax2.legend(loc = 'upper left')
+    ax2.set_ylabel("Learning rate",color="crimson")
     plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
     plt.xlabel('Epoch')
     plt.show()
