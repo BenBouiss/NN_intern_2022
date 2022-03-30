@@ -433,8 +433,10 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                     Model_paths.remove(f)
                     continue
             if Scaling_lr != None:
-                if data.get('Scaling_lr') is None and Scaling_lr == True or (Scaling_lr == True and Scaling_lr != data.get('Scaling_lr')):
+                #print(data.get('Scaling_lr'), Scaling_lr, f)
+                if data.get('Scaling_lr') is None and Scaling_lr == True or (data.get('Scaling_lr') is not None and Scaling_lr != data.get('Scaling_lr')):
                     Model_paths.remove(f)
+                    #print(f"{f} removed because Scaling")
                     continue
         else:
             Model_paths.remove(f)
@@ -447,7 +449,7 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
     if Pick_Best == True:
         hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
         Best = np.argmin(hist['val_mse'])
-        Model_paths = [f"{Model_paths[0]}/model_{Best}.h5"]
+        Model_paths = [f"{Model_paths[0]}/model_{Best + 1}.h5"]
     return Model_paths
 
 def Get_model_path_json_exp(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 

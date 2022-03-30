@@ -34,7 +34,7 @@ def Plot_RMSE_to_param(save = False, **kwargs):
         plt.savefig(os.path.join(PWD, 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
-def Plot_total_RMSE_param(save = False, message_p = 1,load = False, **kwargs):
+def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = False, **kwargs):
     if load:
         Path = os.path.join(os.getcwd(), 'Cached_data', 'Total_RMSE_Ep_8_Ch_0_OcT_VarX_non_posit_same_ind.csv')
         df = pd.read_csv(Path)
@@ -51,28 +51,42 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False, **kwargs):
     ax2.set_ylabel("Training time(s)",color="red")
     ax.set_xlabel('Number of parameters')
     ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)')
+    if See_best:
+        Bests = RMSE.argsort()[:4]
+        ax.scatter(Param[Bests], RMSE[Bests])
     if save:
-        plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
-                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
+        plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_{}'.format(int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur, T
     
-def Plot_Melt_time_function(ind = 0, save = False, **kwargs):
+def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, **kwargs):
     RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, **kwargs)
     x = np.arange(1, len(Modded_Melts) + 1)
-    plt.plot(x, Melts, label = 'Real melt')
-    plt.plot(x, Modded_Melts, label = 'Modeled melt')
+    if Indep != True:
+        plt.plot(x, Melts, label = Concat_Oc_names(Oc_tar))
+    else:
+        plt.figure()
+        plt.plot(x, Melts, label = 'Modeled melts')
+    if Nothing == False:
+        plt.plot(x, Modded_Melts, label = 'NN emulated melts')
+        plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
+    else:
+        if Indep == True:
+            plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
+        else:
+            plt.title(f'Integrated melt rates over the iceshelf \n under all scenario')
     plt.xlabel('Time (month)')
     plt.ylabel('Mass loss(Gt/yr)')
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
-    plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
+
     plt.legend()
     print(RMSE)
     if save:
-        plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}.png'.format(int(time.time()), 
-                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar))),facecolor='white')
+        plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 
+                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white')
         
 def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False, **kwargs):
+    print('Ben')
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
@@ -96,7 +110,7 @@ def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False
 
 
     
-def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [], **kwargs):
+def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title = True, **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
     fig, ax = plt.subplots()
@@ -121,8 +135,10 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [], **kw
         ax.legend(h1+h2, l1+l2, loc=0)
     else:
         ax.legend(loc = 'upper right')
-    plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
-    plt.xlabel('Epoch')
+    print(Model_p.split('/')[-1])
+    if Title:
+        plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
+    ax.set_xlabel('Epoch')
     plt.show()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
@@ -311,6 +327,7 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
                 axes[i].set_xlabel('')
                 axes[i].set_ylabel('')
             if t == 0:
+                axes[i].set_title(f"{Title[i]}")
                 pass
                 #axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i] if Config.get('Method_data') == None])} \n {Title[i] if Title != [] else ''}")
                 #axes[i].set_title(f"{} = month", loc = 'left')

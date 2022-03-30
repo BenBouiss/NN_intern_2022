@@ -162,7 +162,7 @@ def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
 def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None):
     if Models_paths == None:
         Models_paths = Get_model_path_json(index = index, **NN_attributes)
-    
+        print(Models_paths)
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t, uniq_id = [], [], [], [], [], [], [], []
     #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
