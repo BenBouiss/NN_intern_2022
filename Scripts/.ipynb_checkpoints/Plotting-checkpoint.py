@@ -86,7 +86,6 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white')
         
 def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False, **kwargs):
-    print('Ben')
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
     Vmin = min(np.append(Melts, Modded_melts))
