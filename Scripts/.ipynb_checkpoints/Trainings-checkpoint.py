@@ -15,11 +15,23 @@ import itertools
 
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
+
+
+def sizeof_fmt(num, suffix='B'):
+    ''' by Fred Cirera,  https://stackoverflow.com/a/1094933/1870254, modified'''
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f %s%s" % (num, 'Yi', suffix)
+
+
+
 def Getpath_dataset(Dataset, Oc_mod_type, Method = None):
     Bet_path = '/bettik/bouissob/'
     if Method == None:
         return os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Oc_mod_type))
-    elif Method == 4 or Method == 2:
+    elif Method == 4 or Method == 2 or Method == 5:
         return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}_lite.csv'
     else:
         return Bet_path + f'Method_Data/{Oc_mod_type}/Method_{Method}/{Dataset}.csv'
@@ -37,7 +49,7 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -56,7 +68,7 @@ class model_NN():
         self.Method_data = Method_data
         self.Method_extent = Method_extent
         self.Scaling_lr = Scaling_lr
-        
+        self.TensorBoard_logs = TensorBoard_logs
         if self.Scaling_lr == True:
             self.Frequence_scaling_change = Frequence_scaling_change
             self.Scaling_change = Scaling_change
@@ -116,6 +128,8 @@ class model_NN():
     def Fetch_data(self, Datasets, Oc_mod_type):
         li = []
         for ind, Data in enumerate(Datasets):
+            for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
+                print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
             if self.Method_data == None:
                 
                 Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
@@ -180,7 +194,7 @@ class model_NN():
         del X, Y
         print('Begin Norma')
         if self.Choix == 0:
-            if self.Method_data != 4 and self.Method_data != 2:
+            if self.Method_data != 4 and self.Method_data != 2 and self.Method_data != 5:
                 self.meanX, self.stdX = X_train.mean(), X_train.std() 
             else:
                 #Arr = X_train.drop(self.Big_Var, axis = 1)
@@ -235,6 +249,10 @@ class model_NN():
             Callbacks = [saver, New_lr]
         else:
             Callbacks = [saver]
+        if self.TensorBoard_logs == True:
+            logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
+            tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
+            Callbacks.append(tensorboard_callback)
         Start = time.perf_counter()
         Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=Callbacks,

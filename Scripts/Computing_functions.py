@@ -152,7 +152,7 @@ def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
         if Method == None:
             D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
         else:
-            Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
+            D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
         df = pd.read_csv(D_path)
         if save_index:
             df['Oc'] = Ind + 1
