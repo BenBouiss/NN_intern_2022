@@ -199,19 +199,21 @@ class model_NN():
             else:
                 #Arr = X_train.drop(self.Big_Var, axis = 1)
                 Means, Stds = [], []
-                for i, Var in enumerate(self.Big_Var):
-                    if i == 0:
-                        Arr = X_train.drop(Var, axis = 1)
-                    else:
-                        Arr = Arr.drop(Var, axis = 1)
-                    Means.append(X_train[Var].to_numpy().mean())
-                    Stds.append(X_train[Var].to_numpy().std())
+                Var_drop = [Var for Vars in self.Big_Var for Var in Vars]
+                Arr = X_train.drop(Var_drop, axis = 1)
+                #for i, Var in enumerate(self.Big_Var):
+                    #if i == 0:
+                    #    Arr = X_train.drop(Var, axis = 1)
+                    #else:
+                    #    Arr = Arr.drop(Var, axis = 1)
+                #    Means.append(X_train[Var].to_numpy().mean())
+                #    Stds.append(X_train[Var].to_numpy().std())
                         
                 M = Arr.mean().to_frame().T
                 Std = Arr.std().to_frame().T
                 for i, Var in enumerate(self.Big_Var):
-                    M[Var] = Means[i]
-                    Std[Var] = Stds[i]
+                    M[Var] = X_train[Var].to_numpy().mean()
+                    Std[Var] = X_train[Var].to_numpy().std()
                 self.meanX = M.mean()
                 self.stdX = Std.mean()
                 del Arr, M, Std
@@ -410,6 +412,21 @@ def Better_neur_gen(Extent):
     Seq = Verify_string_tuple(permut, Extent)
     return ['_'.join(i) for i in Seq]
 
+def Convert_big_to_var(Var, data):
+    if data.get('Big_Var') is not None and Var != None:
+        if len(data.get('Big_Var')) != 0:
+            #print(data.get('Big_Var'), type(data.get('Big_Var')), print(data.get('Uniq_id')))
+            if 'Big_T' in Var:
+                Var.remove('Big_T')
+                Var.extend(data['Big_Var'][0])
+            if 'Big_S' in Var:
+                Var.remove('Big_S')
+                Var.extend(data['Big_Var'][1])
+                #print(f'After transf {Var}')
+    return Var
+    
+    
+    return 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
             Method_data = None, Scaling_lr = None , Pick_Best = False):
@@ -424,7 +441,8 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
     for f in list(Model_paths):
         data = Get_model_attributes(f)
         if data != None:
-            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Var))):
+
+            if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Convert_big_to_var(list(Var), data)))):
                 Model_paths.remove(f)
                 #print(f"{f} removed because either Choix or Var")
                 continue
@@ -463,7 +481,9 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
         if index >= len(Model_paths):
             index = len(Model_paths) - 1
         Model_paths = [Model_paths[index]]
-        
+    data = Get_model_attributes(Model_paths[0])
+    #print(Var)
+    #print(data['Var_X'])
     if Pick_Best == True:
         hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
         Best = np.argmin(hist['val_mse'])
