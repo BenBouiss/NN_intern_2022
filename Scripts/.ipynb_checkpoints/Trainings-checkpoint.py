@@ -49,7 +49,7 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Epoch_lim = 15):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -75,7 +75,10 @@ class model_NN():
         
         self.Multi_thread = Multi_thread
         self.Workers = Workers
-        
+        self.Hybrid = Hybrid
+        if Hybrid:
+            self.Epoch_lim = Epoch_lim
+            
         if Method_data == 4 or Method_data == 2:
             Big_Var = []
             if 'Big_T' in self.Var_X:
@@ -99,14 +102,14 @@ class model_NN():
         Drop_seq = []
         #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
         if self.Drop != None:
-            optimizer = tf.keras.optimizers.Adam(lr=0.01) #x100
+            optimizer = tf.keras.optimizers.Adam(lr=0.01) #x10
             
         for i, Order in enumerate(Orders):
             if int(Order)!=0:
                 self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
-                if self.Drop != None:
+                if self.Drop != None or self.Hybrid == True:
                     if i < len(Orders) - 1 : 
-                        if self.Drop == 'Default':
+                        if self.Drop == 'Default' or self.Hybrid == True:
                             self.model.add(tf.keras.layers.Dropout(self.Default_drop))
                             Drop_seq.append(self.Default_drop)
                         elif self.Drop == 'Scaling':
@@ -200,15 +203,7 @@ class model_NN():
                 #Arr = X_train.drop(self.Big_Var, axis = 1)
                 Means, Stds = [], []
                 Var_drop = [Var for Vars in self.Big_Var for Var in Vars]
-                Arr = X_train.drop(Var_drop, axis = 1)
-                #for i, Var in enumerate(self.Big_Var):
-                    #if i == 0:
-                    #    Arr = X_train.drop(Var, axis = 1)
-                    #else:
-                    #    Arr = Arr.drop(Var, axis = 1)
-                #    Means.append(X_train[Var].to_numpy().mean())
-                #    Stds.append(X_train[Var].to_numpy().std())
-                        
+                Arr = X_train.drop(Var_drop, axis = 1) 
                 M = Arr.mean().to_frame().T
                 Std = Arr.std().to_frame().T
                 for i, Var in enumerate(self.Big_Var):
@@ -255,8 +250,10 @@ class model_NN():
             logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
             Callbacks.append(tensorboard_callback)
+            
         Start = time.perf_counter()
-        Mod = self.model.fit(self.X_train, self.Y_train,
+        if not self.Hybrid:
+            Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=Callbacks,
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
@@ -264,15 +261,49 @@ class model_NN():
                    verbose = self.verbose,
                    use_multiprocessing = self.Multi_thread,
                    workers = self.Workers)
+            
+        else:
+            Epochs = [self.Epoch_lim, self.Epoch-self.Epoch_lim]
+            for i,Ep in enumerate(Epochs):
+                if i == 0:
+                    Epoch_init = 0
+                else:
+                    Epoch_init = Epochs[i-1]
+                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = Epoch_init)
+                Mod = self.model.fit(self.X_train, self.Y_train,
+                   callbacks=Callbacks,
+                   epochs = Ep,
+                   batch_size = self.batch_size,
+                   validation_data = (self.X_valid, self.Y_valid),
+                   verbose = self.verbose,
+                   use_multiprocessing = self.Multi_thread,
+                   workers = self.Workers)
+                if i == 0:
+                    for i,layer in enumerate(self.model.layers):
+                        if layer.name[:7] == 'dropout':
+                            self.model.layers[i].rate = 0
+                    clone = tf.keras.models.clone_model(self.model)
+                    clone.set_weights(self.model.get_weights())
+                    self.model = clone
+                    self.model.compile(optimizer='adam',
+                     loss = 'mse',
+                        metrics = ['mae', 'mse'])
+                    
         self.Js['Training_time'] = time.perf_counter() - Start
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
         
     def scheduler(self, epoch, lr):
-        if (epoch+1) % self.Frequence_scaling_change == 0:
-            return lr / self.Scaling_change
+        if not self.Hybrid:
+            if (epoch+1) % self.Frequence_scaling_change == 0:
+                return lr / self.Scaling_change
+            else:
+                return lr
         else:
-            return lr
+            if (epoch+1 - self.Epoch_lim) % self.Frequence_scaling_change == 0 and epoch + 1 > self.Epoch_lim:
+                return lr / self.Scaling_change
+            else:
+                return lr
         
         
     def Data_save(self):
@@ -304,7 +335,16 @@ class model_NN():
         with open(self.Path + 'config.json', 'w') as f:
             json.dump(self.Js, f)
         
-
+class CustomCallback(tf.keras.callbacks.Callback):
+    def __init__(self,Epoch_lim):
+        self.Epoch_lim = Epoch_lim
+    
+    def on_epoch_begin(self, epoch, logs = None):
+        for i,layer in enumerate(self.model.layers):
+            if layer.name[:7] == 'dropout' and (epoch+1) == self.Epoch_lim:
+                self.model.layers[i].rate = 0
+                
+                
 class Sequencial_training():
     def __init__(self, Model):
         self.Model = Model
@@ -375,12 +415,13 @@ class Sequencial_training():
         
         
 class CustomSaver(tf.keras.callbacks.Callback):
-    def __init__(self, path, Epoch_max):
+    def __init__(self, path, Epoch_max, Epoch_init = 0):
         self.path = path
         self.Epoch_max = Epoch_max
+        self.Epoch_init = Epoch_init
     def on_epoch_end(self, epoch, logs={}):
         if epoch + 1 != self.Epoch_max:
-            self.model.save(self.path + "model_{}.h5".format(epoch + 1))
+            self.model.save(self.path + "model_{}.h5".format(epoch + 1 + self.Epoch_init))
             
 
                         

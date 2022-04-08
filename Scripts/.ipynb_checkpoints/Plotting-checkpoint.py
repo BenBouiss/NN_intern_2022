@@ -142,6 +142,7 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight')
+    return hist
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)
     cmap = plt.get_cmap('seismic')
