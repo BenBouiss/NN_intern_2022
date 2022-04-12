@@ -49,7 +49,8 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Epoch_lim = 15):
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, 
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -72,7 +73,11 @@ class model_NN():
         if self.Scaling_lr == True:
             self.Frequence_scaling_change = Frequence_scaling_change
             self.Scaling_change = Scaling_change
-        
+            self.Scaling_type = Scaling_type
+            if self.Scaling_type == 'Plateau':
+                self.LR_Patience = LR_Patience
+                self.LR_min = LR_min
+                self.LR_Factor = LR_Factor
         self.Multi_thread = Multi_thread
         self.Workers = Workers
         self.Hybrid = Hybrid
@@ -101,7 +106,7 @@ class model_NN():
         self.model.add(tf.keras.layers.Input(Shape))
         Drop_seq = []
         #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
-        if self.Drop != None:
+        if self.Drop == 'Scaling':
             optimizer = tf.keras.optimizers.Adam(lr=0.01) #x10
             
         for i, Order in enumerate(Orders):
@@ -118,7 +123,7 @@ class model_NN():
                             Drop_seq.append(Dropout)
         self.Js['Drop_seq'] = Drop_seq
         self.model.add(tf.keras.layers.Dense(1))
-        if self.Drop != None:
+        if self.Drop == 'Scaling':
             self.model.compile(optimizer=optimizer,
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
@@ -241,8 +246,10 @@ class model_NN():
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
         if self.Scaling_lr == True:
-            New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
-                                                              
+            if self.Scaling_type == 'Linear':
+                New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
+            if self.Scaling_type == 'Plateau':
+                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, Factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min)
             Callbacks = [saver, New_lr]
         else:
             Callbacks = [saver]
@@ -264,12 +271,13 @@ class model_NN():
             
         else:
             Epochs = [self.Epoch_lim, self.Epoch-self.Epoch_lim]
+            self.histories = []
             for i,Ep in enumerate(Epochs):
                 if i == 0:
-                    Epoch_init = 0
+                    self.Epoch_init = 0
                 else:
-                    Epoch_init = Epochs[i-1]
-                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = Epoch_init)
+                    self.Epoch_init = Epochs[i-1]
+                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init)
                 Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=Callbacks,
                    epochs = Ep,
@@ -288,7 +296,8 @@ class model_NN():
                     self.model.compile(optimizer='adam',
                      loss = 'mse',
                         metrics = ['mae', 'mse'])
-                    
+                self.histories.append(Mod.history)
+                
         self.Js['Training_time'] = time.perf_counter() - Start
         del self.X_train, self.Y_train, self.X_valid, self.Y_valid
         self.Model_save(Mod)
@@ -300,7 +309,7 @@ class model_NN():
             else:
                 return lr
         else:
-            if (epoch+1 - self.Epoch_lim) % self.Frequence_scaling_change == 0 and epoch + 1 > self.Epoch_lim:
+            if (epoch+1) % self.Frequence_scaling_change == 0 and self.Epoch_init == self.Epoch_lim:
                 return lr / self.Scaling_change
             else:
                 return lr
@@ -330,8 +339,15 @@ class model_NN():
         self.model.save(self.Path + 'model_{}.h5'.format(self.Epoch))
         hist = self.model.history
         #json.dump(hist, open(self.path + 'History_log.json'), 'w')
-        with open(self.Path + 'TrainingHistory', 'wb') as file_p:
-            pickle.dump(Mod.history, file_p)
+        if not self.Hybrid :
+            with open(self.Path + 'TrainingHistory', 'wb') as file_p:
+                pickle.dump(Mod.history, file_p)
+        else:
+            d = {}
+            for k in self.histories[0].keys():
+                d[k] = np.concatenate(list(d[k] for d in self.histories))
+            with open(self.Path + 'TrainingHistory', 'wb') as file_p:
+                pickle.dump(d, file_p)
         with open(self.Path + 'config.json', 'w') as f:
             json.dump(self.Js, f)
         
@@ -470,7 +486,7 @@ def Convert_big_to_var(Var, data):
     return 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = None , Pick_Best = False):
+            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -515,6 +531,9 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                     Model_paths.remove(f)
                     #print(f"{f} removed because Scaling")
                     continue
+            if Hybrid != None:
+                if data.get('Hybrid') is None and Hybrid == True or data.get('Hybrid') is not None and Hybrid != data.get('Hybrid'):
+                    Model_paths.remove(f)
         else:
             Model_paths.remove(f)
     #print(f"Validated paths : {Model_paths}")

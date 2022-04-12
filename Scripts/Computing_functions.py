@@ -152,7 +152,10 @@ def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
         if Method == None:
             D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
         else:
-            D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
+            if Method == 4 or Method == 2 or Method == 5:
+                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
+            else:
+                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}.csv'
         df = pd.read_csv(D_path)
         if save_index:
             df['Oc'] = Ind + 1
@@ -180,7 +183,10 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
         else:
             print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
         for ind_o, Oc in enumerate(Ocean_target):
-            Oc_m = int(Oc[-1])
+            if Oc[0:5] == 'Ocean':
+                Oc_m = int(Oc[-1])
+            else:
+                Oc_m = re.findall('CPL_EXP(\d+)_rst', Oc)[0]
             data = Get_model_attributes(model_p)
             if '.h5' in model_p:
                 Model = Fetch_model(model_p)
