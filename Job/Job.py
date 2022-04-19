@@ -1,5 +1,5 @@
-#OAR -n Nightly training
-#OAR -l /nodes=1/core=6,walltime=07:00:30 
+#OAR -n Nightly_training
+#OAR -l /nodes=1/core=5,walltime=18:00:00 
 #OAR --project pr-ice_speed
 #OAR --property team='ige'
 #OAR --property network_address='luke62'

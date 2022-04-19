@@ -486,7 +486,7 @@ def Convert_big_to_var(Var, data):
     return 
 def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None):
+            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -537,6 +537,9 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
         else:
             Model_paths.remove(f)
     #print(f"Validated paths : {Model_paths}")
+    if return_all:
+        return Model_paths
+        
     if index != None:
         if index >= len(Model_paths):
             index = len(Model_paths) - 1

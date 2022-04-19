@@ -110,8 +110,8 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
     Melts, Modded_melts = [], []
     if Compute_at_t == False:
         for t in range(tmx):
-            if message and (t+1)%int(tmx/5) == 0:
-                print('Starting {} / {}'.format(t+1, tmx) , end='/r')
+            if (t+1)%int(tmx/5) == 0:
+                print('Starting {} / {}'.format(t+1, tmx) , end='\r')
                 
             Cur = Data.loc[Data.date == t].reset_index(drop = True)
             Melt, Modded = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = True)
@@ -166,6 +166,9 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
     if Models_paths == None:
         Models_paths = Get_model_path_json(index = index, **NN_attributes)
         print(Models_paths)
+    
+    if type(Models_paths) != list:
+        Models_paths = [Models_paths]
     RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t, uniq_id = [], [], [], [], [], [], [], []
     #print(path + '/Ep_{}'.format(Epoch))
     if type(Ocean_target) != list:
@@ -250,3 +253,20 @@ def Compute_RMSEs_Total_Param(**kwargs):
     T = t
     print(f"T size {len(T)} \n RMSE size : {len(RMSE)} \n Param size : {len(Param)}")
     return Param, T, RMSE, Neurs
+
+
+def Compute_benchmark(name : str, Oc, Compute_at_ind = False, NN_attributes = {}):
+    Models_p = Get_model_path_json(Extra_n = name, return_all = True, **NN_attributes)
+    
+    li_RMSE = []
+    
+    for i, mod in enumerate(Models_p):
+        print(f'Starting {mod}        {i+1}/{len(Models_p)}')
+        RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = mod)
+        
+        config = Get_model_attributes(mod)
+        
+        li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), config['Var_X']])
+        
+    return li_RMSE
+        

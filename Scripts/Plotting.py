@@ -80,7 +80,7 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
     #print(Concat_Oc_names(Oc_train))
 
     plt.legend()
-    print(RMSE)
+    print(f'{Oc_tar} : {RMSE} Gt/yr \n')
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white')
@@ -191,7 +191,7 @@ class MidpointNormalize(mcolors.Normalize):
     
 def Concat_Oc_names(Strs):
     if type(Strs) == list:
-        return 'Ocean' + '-'.join(i[-1] for i in Strs)
+        return 'Ocean' + '-'.join(i[-1] if 'Ocean' in i else re.findall('CPL_(\w+)_rst', i)[0] for i in Strs)
     else:
         return Strs
     
@@ -316,6 +316,9 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
         vmin, vmax = VMins[t], VMaxs[t]
         
         for i, d in enumerate(Datasets):
+            d = d.assign_coords({'x':  d.x/1000,
+                             'y':  d.y/1000
+                            })
             if i == 0:
                 A = d.Mod_melt.plot(ax = axes[0],add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
                 
