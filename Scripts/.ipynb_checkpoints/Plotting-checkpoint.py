@@ -12,7 +12,8 @@ import pathlib
 import matplotlib.colors as mcolors
 import json
 import itertools
-
+import seaborn as sns
+sns.set_context('paper')
 from .Computing_functions import *
 from .Trainings import *
 
@@ -64,8 +65,11 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
     if Indep != True:
         plt.plot(x, Melts, label = Concat_Oc_names(Oc_tar))
     else:
-        plt.figure()
+        #plt.figure()
+        f = plt.figure()
+        f.set_size_inches(8.75/4 * 2.4, 8.75/4 * 3* 0.5)
         plt.plot(x, Melts, label = 'Modeled melts')
+        f.tight_layout()
     if Nothing == False:
         plt.plot(x, Modded_Melts, label = 'NN emulated melts')
         plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
@@ -76,6 +80,7 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
             plt.title(f'Integrated melt rates over the iceshelf \n under all scenario')
     plt.xlabel('Time (month)')
     plt.ylabel('Mass loss(Gt/yr)')
+    sns.despine()
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
 
@@ -83,8 +88,8 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
     print(f'{Oc_tar} : {RMSE} Gt/yr \n')
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 
-                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white')
-        
+                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white', bbox_inches = "tight")
+    return RMSE
 def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False, **kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
@@ -141,7 +146,7 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
     plt.show()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight')
+            f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     return hist
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)

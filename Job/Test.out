@@ -1,6 +1,145 @@
 Switching to nixos-21.05
 Switching to nixos-21.05
-Switching to nixos-21.05
-Switching to nixos-21.05
-Switching to nixos-21.05
-Switching to nixos-21.05
+Projected training regiment :
+ ['96_96_96_96_96']
+Starting training for neurone : 96_96_96_96_96, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+                             X: 468.6 MiB
+                             Y:  5.3 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   55.0 B
+                           ind:   24.0 B
+Finished dataset : Ocean1
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+                             X:  1.0 GiB
+                             Y: 11.6 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   55.0 B
+                          name:   52.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : Ocean2
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+                             X:  3.5 GiB
+                             Y: 41.0 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   55.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : Ocean3
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+                             X:  6.1 GiB
+                             Y: 71.4 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   55.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : Ocean4
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+                             X:  8.4 GiB
+                             Y: 98.2 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   62.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : CPL_EXP10_rst
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+                             X: 11.2 GiB
+                             Y: 130.9 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   62.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : CPL_EXP13_rst
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+                             X: 13.7 GiB
+                             Y: 159.1 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   62.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : CPL_EXP22_rst
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+                             X: 16.5 GiB
+                             Y: 191.6 MiB
+                      Datasets:  136.0 B
+                            li:   72.0 B
+                          self:   64.0 B
+                   Oc_mod_type:   62.0 B
+                          Data:   62.0 B
+                          name:   53.0 B
+                           ind:   28.0 B
+                          size:   28.0 B
+Finished dataset : CPL_EXP23_rst
+Check index
+Begin Norma
+
+Epoch 00045: ReduceLROnPlateau reducing learning rate to 0.00010000000474974513.
+
+Epoch 00087: ReduceLROnPlateau reducing learning rate to 1.0000000474974514e-05.
+
+Epoch 00098: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00108: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00118: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00128: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00138: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00148: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00158: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00168: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00178: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00188: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00198: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00208: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00218: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00228: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00238: ReduceLROnPlateau reducing learning rate to 1.6e-06.
+
+Epoch 00248: ReduceLROnPlateau reducing learning rate to 1.6e-06.

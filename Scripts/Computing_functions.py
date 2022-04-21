@@ -94,11 +94,15 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         return None
     return Y
     
-def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None):
+def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None, shuffle = []):
     if Compute_at_ind :
         Data = Datas
     else:
         Data = Fetch_data(Ocean_target, Type_tar, Method)
+        
+        Data[shuffle] = np.random.permutation(Data[shuffle].values)
+        
+        
     tmx = int(max(np.array(Data.date)))
     
     if Model == None:
@@ -162,7 +166,7 @@ def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
         li.append(df)
     return pd.concat(li, ignore_index= True)
 
-def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None):
+def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None, shuffle = []):
     if Models_paths == None:
         Models_paths = Get_model_path_json(index = index, **NN_attributes)
         print(Models_paths)
@@ -188,6 +192,9 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
         for ind_o, Oc in enumerate(Ocean_target):
             if Oc[0:5] == 'Ocean':
                 Oc_m = int(Oc[-1])
+            elif 'IceOcean' in Oc:
+                Oc_m = re.findall('IceOcean(\d+)', Oc)[0]
+                'IceOcean1r_ElmerIce'
             else:
                 Oc_m = re.findall('CPL_EXP(\d+)_rst', Oc)[0]
             data = Get_model_attributes(model_p)
@@ -205,9 +212,9 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
                 Model = Fetch_model(os.path.join(model_p, 'model_{}.h5'.format(Epoch)))
             if Compute_at_ind:
                 Datas = DF.loc[DF.Oc == Oc_m]
-                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas)
+                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas, shuffle = shuffle)
             else:
-                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Method = data.get('Method_data'))
+                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Method = data.get('Method_data'), shuffle = shuffle)
             Melt, Modded_melt, RMSE, Param = Comp
             RMSEs.append(RMSE)
             
@@ -257,16 +264,45 @@ def Compute_RMSEs_Total_Param(**kwargs):
 
 def Compute_benchmark(name : str, Oc, Compute_at_ind = False, NN_attributes = {}):
     Models_p = Get_model_path_json(Extra_n = name, return_all = True, **NN_attributes)
-    
     li_RMSE = []
-    
     for i, mod in enumerate(Models_p):
         print(f'Starting {mod}        {i+1}/{len(Models_p)}')
         RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = mod)
-        
         config = Get_model_attributes(mod)
-        
         li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), config['Var_X']])
-        
     return li_RMSE
         
+
+def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}):
+    Model_p = Get_model_path_json(return_all = False, **NN_attributes)[0]
+    li_RMSE = []
+    print(f'Model selected : {Model_p}')
+    Config = Get_model_attributes(Model_p)
+    Vars = Config.get('Var_X')
+    if 'T_0' in Vars:
+        inst = []
+        for i in range(40):
+            Vars.remove(f'T_{i}')
+            inst.append(f'T_{i}')
+        Vars.append(inst)
+    if 'S_0' in Vars:
+        inst = []
+        for i in range(40):
+            Vars.remove(f'S_{i}')
+            inst.append(f'S_{i}')
+        Vars.append(inst)
+    if 'Slope_iceDraft_x' in Vars:
+        Vars.remove('Slope_iceDraft_x')
+        Vars.remove('Slope_iceDraft_y')
+        Vars.append(['Slope_iceDraft_x', 'Slope_iceDraft_y'])
+        
+    if 'Slope_bathymetry_x' in Vars:
+        Vars.remove('Slope_bathymetry_x')
+        Vars.remove('Slope_bathymetry_y')
+        Vars.append(['Slope_bathymetry_x', 'Slope_bathymetry_y'])
+    
+    for i, shuffle in enumerate(Vars):
+        print(f'Starting {shuffle}        {i+1}/{len(Vars)}')
+        RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle)
+        li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), shuffle])
+    return li_RMSE

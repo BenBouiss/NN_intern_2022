@@ -12,6 +12,7 @@ import pathlib
 import matplotlib.colors as mcolors
 import json
 import itertools
+import random 
 
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
@@ -49,7 +50,7 @@ def Generate_Var_name(Str, Extent):
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
 class model_NN():
-    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, 
+    def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = 1, Fraction_save = None,
 Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
@@ -83,7 +84,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Hybrid = Hybrid
         if Hybrid:
             self.Epoch_lim = Epoch_lim
-            
+        self.Fraction = Fraction
         if Method_data == 4 or Method_data == 2:
             Big_Var = []
             if 'Big_T' in self.Var_X:
@@ -98,6 +99,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                 self.Var_X.extend(All_name)
             self.Big_Var = Big_Var
         
+        self.Fraction_save = Fraction_save
         self.Js = dict(self.__dict__)
         
     def Init_mod(self, Shape):
@@ -136,10 +138,8 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
     def Fetch_data(self, Datasets, Oc_mod_type):
         li = []
         for ind, Data in enumerate(Datasets):
-            for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
-                print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+
             if self.Method_data == None:
-                
                 Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
                 if self.Cutting == 'Same_t':
                     Current = Current.loc[Current.date <= 250]
@@ -157,13 +157,23 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                     if ind == 0:
                         X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)
                         Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])
-
+#                            X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = 
+#                                self.Var_X,
+#                                skiprows=lambda i: i>0 and random.random() > self.Fraction)
+#                            Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = 
+#                                [self.Var_Y]).loc[X.index]
                     else:
                         X = pd.concat([X, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)], ignore_index= True)
                         Y = pd.concat([Y, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])], ignore_index= True)
+                        
+                for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
+                    print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
                 print(f"Finished dataset : {Data}")
-
+            
         if self.Method_data == 4 or self.Method_data == 2:
+            if self.Fraction != 1:
+                X = X.sample(frac = self.Fraction)
+                Y = Y.loc[X.index]
             return X, Y
         
         if self.Method_data == None:
@@ -244,15 +254,15 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Init_mod(Shape)
         self.Prepare_data(Indexs)
         self.Data_save()
-        saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch)
+        saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Fraction = self.Fraction_save)
+        Callbacks = []
+        Callbacks.append(saver)
         if self.Scaling_lr == True:
             if self.Scaling_type == 'Linear':
                 New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
-            if self.Scaling_type == 'Plateau':
-                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, Factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min)
-            Callbacks = [saver, New_lr]
-        else:
-            Callbacks = [saver]
+            elif self.Scaling_type == 'Plateau':
+                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=0.007)
+            Callbacks.append(New_lr)
         if self.TensorBoard_logs == True:
             logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
@@ -277,7 +287,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                     self.Epoch_init = 0
                 else:
                     self.Epoch_init = Epochs[i-1]
-                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init)
+                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init, Fraction = self.Fraction_save)
                 Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=Callbacks,
                    epochs = Ep,
@@ -431,13 +441,15 @@ class Sequencial_training():
         
         
 class CustomSaver(tf.keras.callbacks.Callback):
-    def __init__(self, path, Epoch_max, Epoch_init = 0):
+    def __init__(self, path, Epoch_max, Epoch_init = 0, Fraction = None):
         self.path = path
         self.Epoch_max = Epoch_max
         self.Epoch_init = Epoch_init
+        self.Fraction = Fraction
     def on_epoch_end(self, epoch, logs={}):
-        if epoch + 1 != self.Epoch_max:
-            self.model.save(self.path + "model_{}.h5".format(epoch + 1 + self.Epoch_init))
+        if self.Fraction == None or (self.Fraction != None and (epoch + 1) % self.Fraction == 0):
+            if epoch + 1 != self.Epoch_max:
+                self.model.save(self.path + "model_{}.h5".format(epoch + 1 + self.Epoch_init))
             
 
                         

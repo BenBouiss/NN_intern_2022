@@ -28,6 +28,8 @@ Var_X_BIG_Extra = ['iceDraft', 'bathymetry', 'Slope_iceDraft_x', 'Slope_bathymet
                    'Slope_iceDraft_y', 'Slope_bathymetry_y', 'Big_T', 'Big_S',
                   'Distances_ground_line', 'Distances_front_line']
 CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
+
+#CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst']
 #Drops = [0,4, 0.2]
 #for i in range(2):
 
@@ -38,15 +40,16 @@ CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 #Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8,
 #Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, 
 #Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2):
+## Submit job oarsub -S ./Job.py
 
 
 Training = Trainings.Sequencial_training(Trainings.model_NN)
-#Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
-Best_Neur = ['128_128_128_128_128']
-Training.training(training_extent = 0, verbose = 1, batch_size = 1024, Exact = 1, message = 1,
-            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
-            Var_X = Var_X_BIG_Extra, Verify = 0,
-            Similar_training = False, Norm_Choix = 0, Method_data = 4,activ_fct= "swish", 
+Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
+#Best_Neur = ['128_128_128_128_128']
+Training.training(training_extent = 0, verbose = 1, batch_size = 3096, Exact = 1, message = 1,
+            Standard_train = Best_Neur, Dataset_train = ['Ocean1'], Epoch = 90, 
+            Var_X = Var_X_slopexy, Verify = 0, Fraction = 0.6,
+            Similar_training = False, Norm_Choix = 0, Method_data = 3,activ_fct= "swish", 
             Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
-            TensorBoard_logs = True , Hybrid = False, Scaling_type = 'Plateau', 
-            LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 3)
+            TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Plateau', 
+            LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 3, Fraction_save = 10)
