@@ -304,5 +304,5 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}):
     for i, shuffle in enumerate(Vars):
         print(f'Starting {shuffle}        {i+1}/{len(Vars)}')
         RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle)
-        li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), shuffle])
+        li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), shuffle, Ocean_target])
     return li_RMSE

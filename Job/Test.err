@@ -8,3 +8,4 @@ WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the 
 ./Job.py: line 10:  7339 Killed                  python Train_big.py
 ./Job.py: error reading input file: Stale file handle
 ## OAR [2022-04-21 00:24:40] Job 71298247 KILLED ##
+./Job.py: error reading input file: Stale file handle
