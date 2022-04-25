@@ -2,4 +2,4 @@
 
 
 
-Ongoing development, more user friendly features and function coming soon™
+Ongoing development, more user friendly features and functions coming soon™
