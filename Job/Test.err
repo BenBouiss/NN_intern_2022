@@ -1,11 +1,4 @@
-WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0145s vs `on_train_batch_end` time: 0.0146s). Check your callbacks.
-WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0099s vs `on_train_batch_end` time: 0.0150s). Check your callbacks.
-WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0089s vs `on_train_batch_end` time: 0.0137s). Check your callbacks.
-## OAR [2022-04-15 10:15:50] Job 71086952 KILLED ##
-## OAR [2022-04-15 10:20:39] Job 71087111 KILLED ##
-WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0094s vs `on_train_batch_end` time: 0.0138s). Check your callbacks.
-WARNING:tensorflow:Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0097s vs `on_train_batch_end` time: 0.0201s). Check your callbacks.
-./Job.py: line 10:  7339 Killed                  python Train_big.py
-./Job.py: error reading input file: Stale file handle
-## OAR [2022-04-21 00:24:40] Job 71298247 KILLED ##
-./Job.py: error reading input file: Stale file handle
+Traceback (most recent call last):
+  File "Job_benchmark.py", line 65, in <module>
+    RMSE_tot.append(l[1])
+IndexError: list index out of range

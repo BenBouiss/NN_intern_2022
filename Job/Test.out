@@ -1,304 +1,15 @@
 Switching to nixos-21.05
 Switching to nixos-21.05
-Projected training regiment :
- ['96_96_96_96_96']
-Starting training for neurone : 96_96_96_96_96, 0/1 (Previous step : 0.000 s)
-Getting dataset : Ocean1
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
-                             X: 468.6 MiB
-                             Y:  5.3 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                           ind:   24.0 B
-Finished dataset : Ocean1
-Getting dataset : Ocean2
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
-                             X:  1.0 GiB
-                             Y: 11.6 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   52.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean2
-Getting dataset : Ocean3
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
-                             X:  3.5 GiB
-                             Y: 41.0 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean3
-Getting dataset : Ocean4
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
-                             X:  6.1 GiB
-                             Y: 71.4 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean4
-Getting dataset : CPL_EXP10_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
-                             X:  8.4 GiB
-                             Y: 98.2 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP10_rst
-Getting dataset : CPL_EXP13_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
-                             X: 11.2 GiB
-                             Y: 130.9 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP13_rst
-Getting dataset : CPL_EXP22_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
-                             X: 13.7 GiB
-                             Y: 159.1 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP22_rst
-Getting dataset : CPL_EXP23_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
-                             X: 16.5 GiB
-                             Y: 191.6 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP23_rst
-Check index
-Begin Norma
-
-Epoch 00045: ReduceLROnPlateau reducing learning rate to 0.00010000000474974513.
-
-Epoch 00087: ReduceLROnPlateau reducing learning rate to 1.0000000474974514e-05.
-
-Epoch 00098: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00108: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00118: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00128: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00138: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00148: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00158: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00168: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00178: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00188: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00198: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00208: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00218: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00228: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00238: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00248: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-Switching to nixos-21.05
-Switching to nixos-21.05
-Projected training regiment :
- ['128_128_128_128_128_128']
-Starting training for neurone : 128_128_128_128_128_128, 0/1 (Previous step : 0.000 s)
-Getting dataset : Ocean1
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
-                             X: 468.6 MiB
-                             Y:  5.3 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                           ind:   24.0 B
-Finished dataset : Ocean1
-Getting dataset : Ocean2
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
-                             X:  1.0 GiB
-                             Y: 11.6 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   52.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean2
-Getting dataset : Ocean3
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
-                             X:  3.5 GiB
-                             Y: 41.0 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean3
-Getting dataset : Ocean4
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
-                             X:  6.1 GiB
-                             Y: 71.4 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   55.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : Ocean4
-Getting dataset : CPL_EXP10_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
-                             X:  8.4 GiB
-                             Y: 98.2 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP10_rst
-Getting dataset : CPL_EXP13_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
-                             X: 11.2 GiB
-                             Y: 130.9 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP13_rst
-Getting dataset : CPL_EXP22_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
-                             X: 13.7 GiB
-                             Y: 159.1 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP22_rst
-Getting dataset : CPL_EXP23_rst
-Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
-                             X: 16.5 GiB
-                             Y: 191.6 MiB
-                      Datasets:  136.0 B
-                            li:   72.0 B
-                          self:   64.0 B
-                   Oc_mod_type:   62.0 B
-                          Data:   62.0 B
-                          name:   53.0 B
-                           ind:   28.0 B
-                          size:   28.0 B
-Finished dataset : CPL_EXP23_rst
-Check index
-Begin Norma
-
-Epoch 00016: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
-
-Epoch 00027: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
-
-Epoch 00042: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
-
-Epoch 00052: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
-
-Epoch 00062: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
-
-Epoch 00072: ReduceLROnPlateau reducing learning rate to 1.5625000742147677e-05.
-
-Epoch 00082: ReduceLROnPlateau reducing learning rate to 7.812500371073838e-06.
-
-Epoch 00092: ReduceLROnPlateau reducing learning rate to 3.906250185536919e-06.
-
-Epoch 00102: ReduceLROnPlateau reducing learning rate to 1.9531250927684596e-06.
-
-Epoch 00112: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00122: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00132: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00142: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00152: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00162: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00172: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00182: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00192: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00202: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00212: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00222: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00232: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00242: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-
-Epoch 00252: ReduceLROnPlateau reducing learning rate to 1.6e-06.
-Switching to nixos-21.05
+Model selected : /home/bouissob/Code/Auto_model/COM_NEMO-CNRS/Ocean1_Ocean2_Ocean3_Ocean4_CPL_EXP10_rst_CPL_EXP13_rst_CPL_EXP22_rst_CPL_EXP23_rst/Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_
+Starting iceDraft        1/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting bathymetry        2/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting Distances_ground_line        3/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting Distances_front_line        4/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting ['T_0', 'T_1', 'T_2', 'T_3', 'T_4', 'T_5', 'T_6', 'T_7', 'T_8', 'T_9', 'T_10', 'T_11', 'T_12', 'T_13', 'T_14', 'T_15', 'T_16', 'T_17', 'T_18', 'T_19', 'T_20', 'T_21', 'T_22', 'T_23', 'T_24', 'T_25', 'T_26', 'T_27', 'T_28', 'T_29', 'T_30', 'T_31', 'T_32', 'T_33', 'T_34', 'T_35', 'T_36', 'T_37', 'T_38', 'T_39']        5/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting ['S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_10', 'S_11', 'S_12', 'S_13', 'S_14', 'S_15', 'S_16', 'S_17', 'S_18', 'S_19', 'S_20', 'S_21', 'S_22', 'S_23', 'S_24', 'S_25', 'S_26', 'S_27', 'S_28', 'S_29', 'S_30', 'S_31', 'S_32', 'S_33', 'S_34', 'S_35', 'S_36', 'S_37', 'S_38', 'S_39']        6/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting ['Slope_iceDraft_x', 'Slope_iceDraft_y']        7/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting ['Slope_bathymetry_x', 'Slope_bathymetry_y']        8/8
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Model selected : /home/bouissob/Code/Auto_model/COM_NEMO-CNRS/Ocean1_Ocean2_Ocean3_Ocean4_CPL_EXP10_rst_CPL_EXP13_rst_CPL_EXP22_rst_CPL_EXP23_rst/Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_
+Starting ['bathymetry', 'iceDraft']        1/1
+Starting 1/1 model Ep_128_N_96_96_96_96_96_Ch_0-1650407902_Ex_                                                   Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 47 / 239Starting 94 / 239Starting 141 / 239Starting 188 / 239Starting 235 / 239Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Starting 239 / 1199Starting 478 / 1199Starting 717 / 1199Starting 956 / 1199Starting 1195 / 1199Switching to nixos-21.05
 Switching to nixos-21.05

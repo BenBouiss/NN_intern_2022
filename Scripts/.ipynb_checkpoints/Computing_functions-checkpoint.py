@@ -94,14 +94,15 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         return None
     return Y
     
-def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None, shuffle = []):
+def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None, shuffle = [], return_df = False):
     if Compute_at_ind :
         Data = Datas
     else:
         Data = Fetch_data(Ocean_target, Type_tar, Method)
         
-        Data[shuffle] = np.random.permutation(Data[shuffle].values)
-        
+        #Data[shuffle] = np.random.permutation(Data[shuffle].values)
+        Data[shuffle] = Data[shuffle].sample(frac=1).values
+        #df1['HS_FIRST_NAME'] = df[4].sample(frac=1).values
         
     tmx = int(max(np.array(Data.date)))
     
@@ -131,6 +132,9 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
             return Dataset
         else:
             d = []
+            if Compute_at_t == 'ALL':
+                Dataset = Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = False)
+                return Dataset
             for t in Compute_at_t:
                 print(f"Starting {t} / {Compute_at_t}        ", end = '\r')
                 Cur = Data.loc[Data.date == t].reset_index(drop = True)
@@ -273,7 +277,7 @@ def Compute_benchmark(name : str, Oc, Compute_at_ind = False, NN_attributes = {}
     return li_RMSE
         
 
-def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}):
+def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}, Specific_shuffle = []):
     Model_p = Get_model_path_json(return_all = False, **NN_attributes)[0]
     li_RMSE = []
     print(f'Model selected : {Model_p}')
@@ -300,7 +304,11 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}):
         Vars.remove('Slope_bathymetry_x')
         Vars.remove('Slope_bathymetry_y')
         Vars.append(['Slope_bathymetry_x', 'Slope_bathymetry_y'])
-    
+        
+    if Specific_shuffle != []:
+        Vars = [Specific_shuffle]
+        
+        
     for i, shuffle in enumerate(Vars):
         print(f'Starting {shuffle}        {i+1}/{len(Vars)}')
         RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle)

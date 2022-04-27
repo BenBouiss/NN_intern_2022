@@ -272,15 +272,18 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     return Datasets
 
 def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
-        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False, Title = [], sharing = False):
+        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False):
     Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
     cmap = plt.get_cmap('seismic')
     nTime = len(list(T))
+    size = len(Attribs) + 1
+    if Only_reference:
+        size = 1
     if sharing :
-        fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime), sharex=True, sharey=True)
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=True, sharey=True)
     else:
-        fig, axes_t = plt.subplots(nrows=nTime, ncols=len(Attribs) + 1, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
     plt.subplots_adjust(hspace = 0.15)
     Datasets = []
     for Index, Att in enumerate(Attribs):
@@ -319,7 +322,13 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             axes = axes_t[t]
         norm = MidpointNormalize( midpoint = 0 )
         vmin, vmax = VMins[t], VMaxs[t]
-        
+        if Only_reference:
+            d = Datasets[-1]
+            d = d.assign_coords({'x':  d.x/1000,
+                             'y':  d.y/1000
+                            })
+            d.meltRate.plot(ax = axes, add_colorbar=True, robust=False, cmap = cmap, norm = norm, extend='min')
+            continue
         for i, d in enumerate(Datasets):
             d = d.assign_coords({'x':  d.x/1000,
                              'y':  d.y/1000
