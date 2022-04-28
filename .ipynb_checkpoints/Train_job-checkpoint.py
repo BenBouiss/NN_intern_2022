@@ -1,7 +1,10 @@
+import sys
+#sys.path.append('../')
+import os
+os.chdir('../')
 from Scripts import Trainings
 from Scripts import Plotting
 from Scripts import Computing_functions
-import os
 import importlib
 import glob
 import pandas as pd
