@@ -42,9 +42,6 @@ def Make_dire(file_path):
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
 
-def find_iqr(x):
-  return np.subtract(*np.percentile(x, [75, 25]))
-
 def Generate_Var_name(Str, Extent):
     Min, Max = Extent
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
@@ -143,12 +140,17 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                 Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
                 if self.Cutting == 'Same_t':
                     Current = Current.loc[Current.date <= 250]
+                elif '%' in self.Cutting:
+                    percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
+                    print(self.Cutting, percent)
+                    tmx = int(max(np.array(Current.date)))
+                    Current = Current.loc[Current.date <= int(percent * tmx) | Current.date >= int((1 - percent) * tmx)]
                 li.append(Current)
                 del Current
             else:
                 print(f"Getting dataset : {Data}")
                 print(f"Dataset used : {Getpath_dataset(Data, Oc_mod_type, self.Method_data)}")
-                if self.Method_data != 4 and self.Method_data != 2:
+                if (self.Method_data != 4 and self.Method_data != 2):
                     if ind == 0:
                         df = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
                     else:
@@ -157,15 +159,29 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                     if ind == 0:
                         X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)
                         Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])
-#                            X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = 
-#                                self.Var_X,
-#                                skiprows=lambda i: i>0 and random.random() > self.Fraction)
-#                            Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = 
-#                                [self.Var_Y]).loc[X.index]
-                    else:
-                        X = pd.concat([X, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)], ignore_index= True)
-                        Y = pd.concat([Y, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])], ignore_index= True)
+                        if '%' in self.Cutting:
+                            percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
+                            print(self.Cutting, percent)
+                            Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                            tmx = int(max(np.array(Current.date)))
+                            Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
+                            X = Current[self.Var_X]
+                            Y = Current[self.Var_Y]
                         
+                    else:
+                        if self.Cutting == False:
+                            X = pd.concat([X, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)], ignore_index= True)
+                            Y = pd.concat([Y, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])], ignore_index= True)
+                        else:
+                            Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                            if '%' in self.Cutting:
+                                percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
+                                print(self.Cutting, percent)
+                                tmx = int(max(np.array(Current.date)))
+                                Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
+                            X = pd.concat([X, Current[self.Var_X]], ignore_index= True)
+                            Y = pd.concat([Y, Current[self.Var_Y]], ignore_index= True)
+                            
                 for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
                     print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
                 print(f"Finished dataset : {Data}")

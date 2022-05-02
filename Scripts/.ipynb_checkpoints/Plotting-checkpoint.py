@@ -13,6 +13,7 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 import seaborn as sns
+from matplotlib.colors import BoundaryNorm
 sns.set_context('paper')
 from .Computing_functions import *
 from .Trainings import *
@@ -343,13 +344,14 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             else:
                 axes[i].set_xlabel('')
                 axes[i].set_ylabel('')
-            if t == 0:
-                axes[i].set_title(f"{Title[i]}")
-                pass
+            if Title != []:
+                if t == 0:
+                    axes[i].set_title(f"{Title[i]}")
+                    pass
                 #axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i] if Config.get('Method_data') == None])} \n {Title[i] if Title != [] else ''}")
                 #axes[i].set_title(f"{} = month", loc = 'left')
-            else:
-                axes[i].set_title('')
+                else:
+                    axes[i].set_title('')
             if t != 0 or i != 0:
                 axes[i].set_xlabel('')
         d.meltRate.plot(ax = axes[-1], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
@@ -389,3 +391,33 @@ def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
                 Dicts.append(Dict)
                 RMSEs.append(RMSE)
                 Params.append(Param)
+                
+
+def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
+        Type_tar = 'COM_NEMO-CNRS', message = 0, save = False, Title = []):
+    #Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ"}
+    s_to_yr = 3600 * 24 * 365
+    cmap = plt.get_cmap('seismic')
+    Datasets = []
+    File = Get_model_path_json(index = ind, **NN_attrib)[0]
+    Config = Get_model_attributes(File)
+    Choix, Epoch = Config['Choix'], Config['Epoch']
+    Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
+    print(f"Started computing for {File}")
+    Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+                    Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+    print(f"Finished computing for {File}")
+    Diff = (Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
+    Diff = Diff.assign_coords({'x':  Diff.x/1000,
+                             'y': Diff.y/1000
+                            }) * s_to_yr
+    vmin = float(Diff.min())
+    vmax = float(Diff.max())
+    norm = MidpointNormalize( midpoint = 0 )
+    #norm=mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0., vmax=vmax)
+    ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+    A = Diff.plot(add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
+    cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2),
+    norm = norm, ticks = ticks)
+    #cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2))#, ticks = ticks)
+    return Dataset

@@ -45,11 +45,12 @@ CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
+#Best_Neur = ['0'] 
 #Best_Neur = ['128_128_128_128_128']
-Training.training(training_extent = 0, verbose = 1, batch_size = 3096, Exact = 1, message = 1,
-            Standard_train = Best_Neur, Dataset_train = ['Ocean1'], Epoch = 90, 
-            Var_X = Var_X_slopexy, Verify = 0, Fraction = 0.6,
-            Similar_training = False, Norm_Choix = 0, Method_data = 3,activ_fct= "swish", 
+Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
+            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
+            Var_X = Var_X_BIG_Extra, Verify = 0, Better_cutting = '10%', Extra_n = '10percent',
+            Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
             Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
             TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Plateau', 
             LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 3, Fraction_save = 10)

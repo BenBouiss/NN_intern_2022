@@ -147,6 +147,7 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
 def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
     X, Var_X = Normalizer(Data, Choix, Data_norm)
     Data['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
+    print('Done computing')
     if Integrate:
         Melts = (Data['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
         Modded_melts = (Data['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)

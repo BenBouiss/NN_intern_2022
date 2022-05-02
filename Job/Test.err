@@ -20,3 +20,5 @@ ModuleNotFoundError: No module named 'Scripts'
     from ../Scripts import Trainings
            ^
 SyntaxError: invalid syntax
+./Job.py: line 11: ain_big.py: command not found
+/bin/bash: ./bench.py: Permission denied
