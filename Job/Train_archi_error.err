@@ -1,0 +1,11 @@
+/bin/bash: ./Job_architecture.py: Permission denied
+Traceback (most recent call last):
+  File "Train_architecture_bench.py", line 52, in <module>
+    Similar_training = True, Norm_Choix = 0, Method_data = 3, activ_fct= "swish", 
+  File "/home/bouissob/Code/Scripts/Trainings.py", line 407, in training
+    Neur_seqs = self.Verify_current_regiment(Neur_seqs, self.Model, Exact, message, **kwargs)
+  File "/home/bouissob/Code/Scripts/Trainings.py", line 434, in Verify_current_regiment
+    Template.Oc_mod_type, Exact = Exact, Choix = Template.Choix, Extra_n = Template.Extra_n)
+  File "/home/bouissob/Code/Scripts/Trainings.py", line 575, in Get_model_path_json
+    data = Get_model_attributes(Model_paths[0])
+IndexError: list index out of range

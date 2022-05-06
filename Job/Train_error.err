@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "Job_benchmark.py", line 49, in <module>
+    li = Computing_functions.Compute_shuffle_benchmark(Oc = oc, NN_attributes = NN_attributes)
+  File "/home/bouissob/Code/Scripts/Computing_functions.py", line 323, in Compute_shuffle_benchmark
+    RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle.copy())
+AttributeError: 'str' object has no attribute 'copy'
+Traceback (most recent call last):
+  File "Job_benchmark.py", line 49, in <module>
+    li = Computing_functions.Compute_shuffle_benchmark(Oc = oc, NN_attributes = NN_attributes)
+  File "/home/bouissob/Code/Scripts/Computing_functions.py", line 323, in Compute_shuffle_benchmark
+    RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = [shuffle if type(shuffle) != list else shuffle.copy()])
+  File "/home/bouissob/Code/Scripts/Computing_functions.py", line 228, in Compute_RMSE_from_model_ocean
+    Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Method = data.get('Method_data'), shuffle = shuffle)
+  File "/home/bouissob/Code/Scripts/Computing_functions.py", line 110, in Compute_datas
+    Data[shuffle] = Data[shuffle].sample(frac=1).values
+  File "/home/bouissob/miniconda3/envs/py37/lib/python3.7/site-packages/pandas/core/frame.py", line 3464, in __getitem__
+    indexer = self.loc._get_listlike_indexer(key, axis=1)[1]
+  File "/home/bouissob/miniconda3/envs/py37/lib/python3.7/site-packages/pandas/core/indexing.py", line 1314, in _get_listlike_indexer
+    self._validate_read_indexer(keyarr, indexer, axis)
+  File "/home/bouissob/miniconda3/envs/py37/lib/python3.7/site-packages/pandas/core/indexing.py", line 1374, in _validate_read_indexer
+    raise KeyError(f"None of [{key}] are in the [{axis_name}]")
+KeyError: "None of [Index([('T_0', 'T_1', 'T_2', 'T_3', 'T_4', 'T_5', 'T_6', 'T_7', 'T_8', 'T_9', 'T_10', 'T_11', 'T_12', 'T_13', 'T_14', 'T_15', 'T_16', 'T_17', 'T_18', 'T_19', 'T_20', 'T_21', 'T_22', 'T_23', 'T_24', 'T_25', 'T_26', 'T_27', 'T_28', 'T_29', 'T_30', 'T_31', 'T_32', 'T_33', 'T_34', 'T_35', 'T_36', 'T_37', 'T_38', 'T_39')], dtype='object')] are in the [columns]"

@@ -36,16 +36,32 @@ def Plot_RMSE_to_param(save = False, **kwargs):
         plt.savefig(os.path.join(PWD, 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
-def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = False, **kwargs):
-    if load:
+def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = False,NN_attributes = {}, **kwargs):
+    if load == True:
         Path = os.path.join(os.getcwd(), 'Cached_data', 'Total_RMSE_Ep_8_Ch_0_OcT_VarX_non_posit_same_ind.csv')
         df = pd.read_csv(Path)
         Neur = df['Neur'].values
         Param = df['Params'].values
         RMSE = df['RMSE'].values
         T = df['T'].values
+    elif load == 'Hist':
+        print('Loading histories')
+        Paths = Get_model_path_json(**NN_attributes, return_all = True)
+        Param = []
+        RMSE = []
+        T = []
+        Neur = []
+        for p in Paths:
+            Train_hist = pd.read_pickle(p + '/TrainingHistory')
+            Data = Get_model_attributes(p)
+            #Param.append(Data.get('Param'))
+            Model = Fetch_model(os.path.join(p, 'model_{}.h5'.format(Data.get('Epoch'))))
+            Param.append(Model.count_params())
+            RMSE.append(Train_hist['loss'][-1])
+            T.append(Data.get('Training_time'))
+            Neur.append(Data.get('Neur_seq'))
     else:
-        Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(**kwargs)
+        Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(NN_attributes = NN_attributes, **kwargs)
     fig, ax = plt.subplots()
     ax.scatter(Param, RMSE)
     ax2 = ax.twinx()
@@ -394,10 +410,12 @@ def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
                 
 
 def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
-        Type_tar = 'COM_NEMO-CNRS', message = 0, save = False, Title = []):
+        Type_tar = 'COM_NEMO-CNRS', message = 0, save = False, Title = [], Type = 'Mean'):
     #Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ"}
     s_to_yr = 3600 * 24 * 365
+    fig, ax = plt.subplots()
     cmap = plt.get_cmap('seismic')
+    
     Datasets = []
     File = Get_model_path_json(index = ind, **NN_attrib)[0]
     Config = Get_model_attributes(File)
@@ -407,7 +425,10 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
     Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
                     Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
     print(f"Finished computing for {File}")
-    Diff = (Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
+    if Type == 'Mean':
+        Diff = (Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
+    if Type == 'Abs_mean':
+        Diff = abs(Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
     Diff = Diff.assign_coords({'x':  Diff.x/1000,
                              'y': Diff.y/1000
                             }) * s_to_yr
@@ -416,8 +437,13 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
     norm = MidpointNormalize( midpoint = 0 )
     #norm=mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0., vmax=vmax)
     ticks = np.linspace(vmin, vmax, 5, endpoint=True)
-    A = Diff.plot(add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
+    A = Diff.plot(ax = ax, add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
     cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2),
     norm = norm, ticks = ticks)
     #cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2))#, ticks = ticks)
+    Oc_trained = Concat_Oc_names(Config.get('Dataset_train'))
+    if save:
+        fig.savefig(os.path.join(PWD, 'Image_output', 
+            'Spatial_error_{}_M_{}_{}_{}.png'.format(Type, Oc_tar,Oc_trained, Config.get('Uniq_id'))), facecolor='white', bbox_inches='tight')
+    
     return Dataset

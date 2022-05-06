@@ -572,13 +572,14 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
         if index >= len(Model_paths):
             index = len(Model_paths) - 1
         Model_paths = [Model_paths[index]]
-    data = Get_model_attributes(Model_paths[0])
-    #print(Var)
-    #print(data['Var_X'])
-    if Pick_Best == True:
-        hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
-        Best = np.argmin(hist['val_mse'])
-        Model_paths = [f"{Model_paths[0]}/model_{Best + 1}.h5"]
+    if Model_paths != []:
+        data = Get_model_attributes(Model_paths[0])
+        #print(Var)
+        #print(data['Var_X'])
+        if Pick_Best == True:
+            hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
+            Best = np.argmin(hist['val_mse'])
+            Model_paths = [f"{Model_paths[0]}/model_{Best + 1}.h5"]
     return Model_paths
 
 def Get_model_path_json_exp(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 

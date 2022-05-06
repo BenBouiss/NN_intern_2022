@@ -101,7 +101,13 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
         Data = Fetch_data(Ocean_target, Type_tar, Method)
         
         #Data[shuffle] = np.random.permutation(Data[shuffle].values)
-        Data[shuffle] = Data[shuffle].sample(frac=1).values
+        if '-ms' in shuffle:
+            print('Mixed shuffling')
+            shuffle.remove('-ms')
+            for v in shuffle:
+                Data[v] = Data[v].sample(frac=1).values    
+        else :
+            Data[shuffle] = Data[shuffle].sample(frac=1).values
         #df1['HS_FIRST_NAME'] = df[4].sample(frac=1).values
         
     tmx = int(max(np.array(Data.date)))
@@ -147,12 +153,12 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
 def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
     X, Var_X = Normalizer(Data, Choix, Data_norm)
     Data['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
-    print('Done computing')
     if Integrate:
         Melts = (Data['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
         Modded_melts = (Data['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         return Melts, Modded_melts
     else:
+        print('Done computing')
         return Data.set_index(['date', 'y', 'x']).to_xarray()
 
 def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
@@ -290,12 +296,14 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}, Sp
             Vars.remove(f'T_{i}')
             inst.append(f'T_{i}')
         Vars.append(inst)
+        Vars.append(inst + ['-ms'])
     if 'S_0' in Vars:
         inst = []
         for i in range(40):
             Vars.remove(f'S_{i}')
             inst.append(f'S_{i}')
         Vars.append(inst)
+        Vars.append(inst + ['-ms'])
     if 'Slope_iceDraft_x' in Vars:
         Vars.remove('Slope_iceDraft_x')
         Vars.remove('Slope_iceDraft_y')
@@ -312,6 +320,6 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}, Sp
         
     for i, shuffle in enumerate(Vars):
         print(f'Starting {shuffle}        {i+1}/{len(Vars)}')
-        RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle)
+        RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle if type(shuffle) != list else shuffle.copy())
         li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), shuffle, Ocean_target])
     return li_RMSE

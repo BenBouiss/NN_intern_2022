@@ -41,7 +41,13 @@ Uniq_id = int(time.time())
 li = []
 ALL_OC = OcT + ALL_EXP
 oc = ALL_OC
-NN_attributes = {'Epoch' : 128, 'Ocean' : Train_oc_exp, 'Exact' : 1, 'Method_data' : 3}
+NN_attributes = {'Epoch' : 128, 'Ocean' : Train_oc_exp, 'Exact' : 1, 'Method_data' : 4}
+Mod_p = Trainings.Get_model_path_json(**NN_attributes)[0]
+Data = Trainings.Get_model_attributes(Mod_p)
+Ident = Data.get('Uniq_id')
+folder_p = f'{os.getcwd()}/Cached_data/Shuffle_benchmark/Var_benchmark_{Ident}/'
+Trainings.Make_dire(folder_p)
+
 for i in range(5):
     
     li = Computing_functions.Compute_shuffle_benchmark(Oc = oc, NN_attributes = NN_attributes)
@@ -56,11 +62,7 @@ for i in range(5):
     
     #p = f'{os.getcwd()}/Cached_data/Shuffle_benchmark/Var_benchmark_{i}_.csv'
     #df.to_csv(p, index = False)
-    
-    Mod_p = Trainings.Get_model_path_json(**NN_attributes)[0]
-    Data = Trainings.Get_model_attributes(Mod_p)
-    Ident = Data.get('Uniq_id')
-    p = f'{os.getcwd()}/Cached_data/Shuffle_benchmark/Var_benchmark_{Ident}_{i}_.csv'
+    p = f'{folder_p}Var_benchmark_{Ident}_{i}_.csv'
     
     RMSEs, RMSE_tot, Var, Oc,  = [], [], [], []
     
