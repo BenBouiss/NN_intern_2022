@@ -3,8 +3,8 @@
 #OAR --project pr-ice_speed
 #OAR --property team='ige'
 #OAR --property network_address='luke60'
-#OAR --stdout Train_archi_output.out
-#OAR --stderr Train_archi_error.err
+#OAR --stdout Logs/Train_archi_output.out
+#OAR --stderr Logs/Train_archi_error.err
 cd ..
 conda activate py37
 python Train_architecture_bench.py

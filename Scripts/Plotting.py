@@ -165,6 +165,43 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
         fig.savefig(os.path.join(PWD, 'Image_output', 
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     return hist
+
+def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = []):
+
+    li = []
+    fig, ax = plt.subplots()
+    for mod in Mods:
+        Model_p = Get_model_path_json(index = ind, **mod)[0]
+        print(Model_p)
+        Hist = Get_model_attributes(Model_p)
+        Cur_li = []
+        for k in Hist.keys():
+            if k in Desired_comparaison:
+                Cur_li.append(Hist[k])
+        li.append(Cur_li)
+    
+    for i, Data in enumerate(li):
+        if type(Data[0]) != list:
+            ax.plot(Data, label = Desired_comparaison[i])
+        else:
+            for j,d in enumerate(Data):
+                ax.plot(Data, label = f'{Desired_comparaison[i]}_{label[j]}')
+        
+                        
+    
+#    if Second_axis != []:
+#        ax2 = ax.twinx()
+#        for k in Second_axis:
+#            ax2.plot(hist[k], label = k, color = 'slategrey')
+        #ax2.legend(loc = 'upper left')
+#        ax2.set_ylabel("Learning rate",color="slategrey")
+#        h1, l1 = ax.get_legend_handles_labels()
+#        h2, l2 = ax2.get_legend_handles_labels()
+#        ax.legend(h1+h2, l1+l2, loc=0)
+        
+        
+        
+        
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)
     cmap = plt.get_cmap('seismic')

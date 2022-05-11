@@ -180,7 +180,10 @@ def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
 def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None, shuffle = []):
     if Models_paths == None:
         Models_paths = Get_model_path_json(index = index, **NN_attributes)
-        print(Models_paths)
+        if message == 1:
+            print(Models_paths)
+        else:
+            print(f'Number of model used : {len(Models_paths)}')
     
     if type(Models_paths) != list:
         Models_paths = [Models_paths]
@@ -323,3 +326,37 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}, Sp
         RMSEs, _, Melts, Modded_melts, _, Oc_mask, Ocean_trained, Ocean_target, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, Ocean_target = Oc, Type_tar = 'COM_NEMO-CNRS', message = 0, Models_paths = Model_p, shuffle = shuffle if type(shuffle) != list else shuffle.copy())
         li_RMSE.append([RMSEs, Compute_rmse(Melts, Modded_melts), shuffle, Ocean_target])
     return li_RMSE
+
+
+
+def Compute_benchmark_function(NN_attributes = {}, li_activation = [], Ocean = 'Ocean1', Compute_at_ind = False, message = 1, Get_time = False):
+    
+    
+    Tot = []
+    li_fct = []
+    for indAc, Activation in enumerate(li_activation):
+        li_fct.append(Activation)
+        NN_attributes['Activation_fct'] = Activation
+        Model_ps = Get_model_path_json(return_all = True, **NN_attributes)
+        P = []
+        RMSEs_tot = []
+        Time = []
+        Neur = []
+        for indp, p in enumerate(Model_ps):
+            print(f'{Activation}  : {indAc+1}/{len(li_activation)}            {p}  :  {indp+1}/{len(Model_ps)}')
+            if Get_time:
+                Data = Get_model_attributes(p)
+                Time.append(Data.get('Training_time'))
+                P.append(Data.get('Param'))
+                Neur.append(Data.get('Neur_seq'))
+                print(Neur)
+            else:
+                RMSEs, Param, Melts, Modded_melts, _, _, _, _, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, 
+                                        Ocean_target = Ocean, Type_tar = 'COM_NEMO-CNRS', message = message, Models_paths = p)
+                P.append(np.unique(Param).astype(int)[0])
+                RMSEs_tot.append(Compute_rmse(Melts, Modded_melts))
+        if Get_time:
+            Tot.append([Time, P, Neur])
+        else:
+            Tot.append([P, RMSEs_tot])
+    return Tot

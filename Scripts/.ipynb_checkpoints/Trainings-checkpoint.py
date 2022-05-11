@@ -15,6 +15,8 @@ import itertools
 import random 
 
 PWD = os.getcwd()
+PWD = '/home/bouissob/Code'
+print(f'PWD : {PWD}')
 Bet_path = '/bettik/bouissob/'
 
 
@@ -140,11 +142,12 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                 Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
                 if self.Cutting == 'Same_t':
                     Current = Current.loc[Current.date <= 250]
-                elif '%' in self.Cutting:
-                    percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
-                    print(self.Cutting, percent)
-                    tmx = int(max(np.array(Current.date)))
-                    Current = Current.loc[Current.date <= int(percent * tmx) | Current.date >= int((1 - percent) * tmx)]
+                elif self.Cutting != False:
+                    if '%' in self.Cutting:
+                        percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
+                        print(self.Cutting, percent)
+                        tmx = int(max(np.array(Current.date)))
+                        Current = Current.loc[Current.date <= int(percent * tmx) | Current.date >= int((1 - percent) * tmx)]
                 li.append(Current)
                 del Current
             else:
@@ -159,14 +162,15 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                     if ind == 0:
                         X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)
                         Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])
-                        if '%' in self.Cutting:
-                            percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
-                            print(self.Cutting, percent)
-                            Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
-                            tmx = int(max(np.array(Current.date)))
-                            Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
-                            X = Current[self.Var_X]
-                            Y = Current[self.Var_Y]
+                        if self.Cutting != False:
+                            if '%' in self.Cutting:
+                                percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
+                                print(self.Cutting, percent)
+                                Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
+                                tmx = int(max(np.array(Current.date)))
+                                Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
+                                X = Current[self.Var_X]
+                                Y = Current[self.Var_Y]
                         
                     else:
                         if self.Cutting == False:
@@ -182,9 +186,9 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                             X = pd.concat([X, Current[self.Var_X]], ignore_index= True)
                             Y = pd.concat([Y, Current[self.Var_Y]], ignore_index= True)
                             
-                for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
-                    print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
-                print(f"Finished dataset : {Data}")
+                #for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
+                #    print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+                #print(f"Finished dataset : {Data}")
             
         if self.Method_data == 4 or self.Method_data == 2:
             if self.Fraction != 1:
@@ -450,6 +454,8 @@ class Sequencial_training():
         Template = self.Model(**kwargs)
         Path = PWD + '/Auto_model/tmp/'+ '_'.join(Template.Dataset_train) + '/'
         Make_dire(Path)
+        #print(PWD)
+        #print(Path, glob.glob(Path + '*'))
         if len(glob.glob(Path + '*.csv')) == 0 :
             df = Template.Fetch_data(Template.Dataset_train, Template.Oc_mod_type)
             index = df.sample(frac = 0.2).index
@@ -512,13 +518,13 @@ def Convert_big_to_var(Var, data):
     
     
     return 
-def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
+def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = True, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False):
+            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False, Activation_fct = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
-    if Exact == 1:
+    if Exact == True:
         Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
     else:
         Model_paths = glob.glob(path + '/Ep_*')
@@ -535,10 +541,15 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
                 Model_paths.remove(f)
                 #print(f"{f} removed because either Neur or Batch")
                 continue
-            if (Exact != 1 and data['Epoch'] < Epoch) or (Extra_n != None and data['Extra_n'] != Extra_n):
+            if (Extra_n != None and data['Extra_n'] != Extra_n) :
                 Model_paths.remove(f)
-                #print(f"{f} removed because either Epoch or Extra_n")
+                #print(f"{f} removed because Extra_n")
                 continue
+            if Epoch != None:
+                if (Exact == True and data['Epoch'] != Epoch) or (Exact == False and data['Epoch'] < Epoch):
+                    Model_paths.remove(f)
+                    #print(f"{f} removed because Epoch")
+                    continue
             if Cutting != None:
                 if (data.get('Cutting') is None and Cutting != '') or (data.get('Cutting') is not None and data['Cutting'] != Cutting) or (Cutting == '' and (data.get('Cutting') is not None and data['Cutting'] != Cutting)):
                     Model_paths.remove(f)
@@ -562,6 +573,11 @@ def Get_model_path_json(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 
             if Hybrid != None:
                 if data.get('Hybrid') is None and Hybrid == True or data.get('Hybrid') is not None and Hybrid != data.get('Hybrid'):
                     Model_paths.remove(f)
+                    continue
+            if Activation_fct != None:
+                if data.get('activ_fct') != Activation_fct:
+                    Model_paths.remove(f)
+                    continue
         else:
             Model_paths.remove(f)
     #print(f"Validated paths : {Model_paths}")

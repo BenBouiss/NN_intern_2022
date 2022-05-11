@@ -48,6 +48,6 @@ Training = Trainings.Sequencial_training(Trainings.model_NN)
 
 Training.training(training_extent = 5, verbose = 0, batch_size = 1028, Exact = 1, message = 1,
             Dataset_train = OcT, Epoch = 8, Fraction_save = 10,
-            Var_X = Var_X_slopexy, Verify = 1, Extra_n = 'Archi_bench',
+            Var_X = Var_X_non_position, Verify = 1, Extra_n = 'Archi_bench_ep8_Var_X_nonposit',
             Similar_training = True, Norm_Choix = 0, Method_data = 3, activ_fct= "swish", 
             )
