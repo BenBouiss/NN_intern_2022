@@ -20,6 +20,7 @@ from .Trainings import *
 
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
+SIZE = 13
 def Plot_RMSE_to_param(save = False, **kwargs):
     RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_RMSE_from_model_ocean(**kwargs)
     fig, ax = plt.subplots()
@@ -36,7 +37,7 @@ def Plot_RMSE_to_param(save = False, **kwargs):
         plt.savefig(os.path.join(PWD, 'Image_output', 'RMSE_param_Ep{}_Tr{}_Tar{}_{}'.format(Ep, 
                     Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()))), facecolor = 'white')
     return RMSEs, Params, Neurs, t
-def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = False,NN_attributes = {}, **kwargs):
+def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = False,NN_attributes = {},Axis_type = False, **kwargs):
     if load == True:
         Path = os.path.join(os.getcwd(), 'Cached_data', 'Total_RMSE_Ep_8_Ch_0_OcT_VarX_non_posit_same_ind.csv')
         df = pd.read_csv(Path)
@@ -69,6 +70,9 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
     ax2.set_ylabel("Training time(s)",color="red")
     ax.set_xlabel('Number of parameters')
     ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)')
+    if Axis_type == 'Log':
+        ax.set_xscale('log')
+        ax2.set_xscale('log')
     if See_best:
         Bests = RMSE.argsort()[:4]
         ax.scatter(Param[Bests], RMSE[Bests])
@@ -94,14 +98,15 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
         if Indep == True:
             plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
         else:
-            plt.title(f'Integrated melt rates over the iceshelf \n under all scenario')
-    plt.xlabel('Time (month)')
-    plt.ylabel('Mass loss(Gt/yr)')
+            plt.title(f'Integrated melt rates over the iceshelf', fontsize = SIZE)
+    plt.xlabel('Time (month)', fontsize = SIZE)
+    plt.ylabel('Mass loss(Gt/yr)', fontsize = SIZE)
     sns.despine()
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
 
-    plt.legend()
+    plt.legend(fontsize = SIZE - 2)
+    plt.gca().tick_params(labelsize = SIZE - 2)
     print(f'{Oc_tar} : {RMSE} Gt/yr \n')
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 

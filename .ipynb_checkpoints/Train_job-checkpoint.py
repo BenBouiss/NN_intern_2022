@@ -18,6 +18,8 @@ OcTPlus = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst']
 Var_X1 = ['x', 'y', 'thermalDriving', 'halineDriving', 'iceDraft']
 Var_X2 = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft']
 Var_X_non_position = ['temperatureYZ', 'salinityYZ', 'iceDraft']
+Var_X = ['temperatureYZ', 'salinityYZ']
+
 Var_X_BIG = ['iceDraft', 'Slope_iceDraft', 'Slope_bathymetry', 'Distances', 'Big_T', 'Big_S']
 Var_X_Extra = ['iceDraft', 'Slope_iceDraft', 'Slope_bathymetry', 'Distances', 'temperatureYZ', 'salinityYZ']
 Var_X_BIG_test = ['iceDraft','Big_T', 'Big_S']
@@ -45,16 +47,24 @@ CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 #Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
-Best_Neur = ['128_128_128_128_128_128']
+#Best_Neur = ['128_128_128_128_128_128']
 
 Neur_bench = ['1', '8', '4_4', '16_16', '32_32', '16_16_16', '32_32_32', '64_64_64', '64_64_64_64', '96_96_96_96', '96_96_96_96_96', '128_128_128_128_128']
 Neur_bench = ['8']
 Activ_fct = ['relu', 'swish']
 Activ_fct = ['swish']
-for act in Activ_fct:
-    Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
-            Standard_train = Neur_bench, Dataset_train = OcT, Epoch = 50, 
-            Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'Benchmark_swish_relu',
-            Similar_training = True, Norm_Choix = 0, Method_data = 4,activ_fct = act, 
-            Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
-            TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Linear', Fraction_save = 10)
+Best_Neur = ['256_256_256_256_256_256']
+#Best_Neur = ['32_64_32']
+#for act in Activ_fct:
+#Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
+#            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 150, 
+#            Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = '',Drop = 'Default',
+#            Similar_training = True, Norm_Choix = 0, Method_data = 4,activ_fct = 'swish', 
+#            Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
+#            TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Linear', Fraction_save = 10)
+
+Training.training(training_extent = 0, verbose = 0, batch_size = 1028, Exact = 1, message = 1,
+            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 256, 
+            Var_X = Var_X_non_position, Verify = 0, Extra_n = 'Swish_overfit_quest', 
+            Similar_training = 0, Norm_Choix = 0, Method_data = 3, Fraction_save = 50,
+            Scaling_lr = False)

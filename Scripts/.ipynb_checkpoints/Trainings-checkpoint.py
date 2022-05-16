@@ -524,7 +524,7 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
-    if Exact == True:
+    if Exact == True and Epoch != None:
         Model_paths = glob.glob(path + '/Ep_{}*'.format(Epoch))
     else:
         Model_paths = glob.glob(path + '/Ep_*')

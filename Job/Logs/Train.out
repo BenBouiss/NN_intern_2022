@@ -1,0 +1,82 @@
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['32_64_32']
+Starting training for neurone : 32_64_32, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean1.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean2.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean3.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean4.csv
+Check index
+Begin Norma
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['32_64_32']
+Starting training for neurone : 32_64_32, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean1.csv
+Check index
+Begin Norma
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean1.csv
+Check index
+Begin Norma
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean1.csv
+Check index
+Begin Norma
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean1.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean2.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean3.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_3/Ocean4.csv
+Check index
+Begin Norma
