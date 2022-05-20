@@ -7,4 +7,4 @@
 #OAR --stderr Logs/Train.err
 cd ..
 conda activate py37
-python Train_architecture_bench.py
+python Train_var_benchmark.py

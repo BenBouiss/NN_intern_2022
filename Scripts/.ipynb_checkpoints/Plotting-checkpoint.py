@@ -13,6 +13,7 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 import seaborn as sns
+import xarray as xr
 from matplotlib.colors import BoundaryNorm
 sns.set_context('paper')
 from .Computing_functions import *
@@ -64,41 +65,75 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
     else:
         Param, T, RMSE, Neur = Compute_RMSEs_Total_Param(NN_attributes = NN_attributes, **kwargs)
     fig, ax = plt.subplots()
+    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    fig.set_size_inches(dim)
     ax.scatter(Param, RMSE)
     ax2 = ax.twinx()
     ax2.scatter(Param, T, s = 10, color = 'red')
-    ax2.set_ylabel("Training time(s)",color="red")
-    ax.set_xlabel('Number of parameters')
-    ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)')
+    ax2.set_ylabel("Training time(s)",color="red", fontsize = SIZE)
+    ax.set_xlabel('Number of parameters', fontsize = SIZE)
+    ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)', fontsize = SIZE)
+    
     if Axis_type == 'Log':
         ax.set_xscale('log')
         ax2.set_xscale('log')
     if See_best:
         Bests = RMSE.argsort()[:4]
         ax.scatter(Param[Bests], RMSE[Bests])
+    
+    #sns.despine()
+    ax.tick_params(labelsize = SIZE - 2)
+    ax2.tick_params(labelsize = SIZE - 2)
+    fig.tight_layout()
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_{}'.format(int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur, T
     
-def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, **kwargs):
-    RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, **kwargs)
-    x = np.arange(1, len(Modded_Melts) + 1)
-    if Indep != True:
-        plt.plot(x, Melts, label = Concat_Oc_names(Oc_tar))
-    else:
-        #plt.figure()
-        f = plt.figure()
-        f.set_size_inches(8.75/4 * 2.4, 8.75/4 * 3* 0.5)
-        plt.plot(x, Melts, label = 'Modeled melts')
-        f.tight_layout()
-    if Nothing == False:
-        plt.plot(x, Modded_Melts, label = 'NN emulated melts')
-        plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
-    else:
-        if Indep == True:
-            plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
+def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, 
+                            NN_attributes = {},Labels = [], Display_title = True,Title = None, **kwargs):
+    li_NN = [NN_attributes] if type(NN_attributes) != list else NN_attributes
+    f = plt.figure()
+    dim = (8.75/4 * 2.4, 8.75/4 * 3* 0.5)
+    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    f.set_size_inches(dim)
+    RMSEs = []
+    for i, NN in enumerate(li_NN):
+        RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, NN_attributes = NN, **kwargs)
+        RMSEs.append(RMSE)
+        x = np.arange(1, len(Modded_Melts) + 1)
+        if len(Labels) == len(li_NN):
+            label = Labels[i]
         else:
-            plt.title(f'Integrated melt rates over the iceshelf', fontsize = SIZE)
+            label = f'NN trained on {Concat_Oc_names(Oc_train)}'
+          
+        if i == 0:
+            if Indep != True:
+                plt.plot(x, Melts, label = f'Reference melt') #{Concat_Oc_names(Oc_tar)}')
+            else:
+            #plt.figure()
+
+                plt.plot(x, Melts, label = f'Reference melt')# {Concat_Oc_names(Oc_tar)}')
+            
+            
+            
+        if Nothing == False:
+            plt.plot(x, Modded_Melts, label = label)
+            if Display_title :
+                if Title == None:
+                    plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(
+                        Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
+                else:
+                    plt.title(Title)
+        else:
+            if Display_title :
+                if Indep == True:
+                    plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
+                else:
+                    plt.title(f'Integrated melt rates over the iceshelf', fontsize = SIZE)
+
+
+    f.tight_layout()
+
     plt.xlabel('Time (month)', fontsize = SIZE)
     plt.ylabel('Mass loss(Gt/yr)', fontsize = SIZE)
     sns.despine()
@@ -110,28 +145,37 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
     print(f'{Oc_tar} : {RMSE} Gt/yr \n')
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 
-                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white', bbox_inches = "tight")
-    return RMSE
-def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False, **kwargs):
+                    Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white', bbox_inches = "tight", dpi = 300)
+    return RMSEs
+def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False,Display_label= True,Display_title = True, **kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
     fig, ax = plt.subplots()
+    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    fig.set_size_inches(dim)
     Vmin = min(np.append(Melts, Modded_melts))
     Vmax = max(np.append(Melts, Modded_melts))
     for v in np.unique(Oc_mask):
         idx = np.where(Oc_mask == v)
-        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = f'Ocean{int(v)} R = {np.round(np.corrcoef(Modded_melts[idx],Melts[idx])[0,1], 4)}')
+        if Display_label:
+            label =  f'R = {np.round(np.corrcoef(Modded_melts[idx],Melts[idx])[0,1], 4)}'
+        else:
+            label = ''
+        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = f'Ocean{int(v)} {label}')
         ax.legend(Oc_mask)
     linex, liney = [Vmin, Vmax], [Vmin, Vmax]
     ax.plot(linex, liney, c = 'red', ls = '-', linewidth = 0.8)
-    ax.legend(loc = 'upper left')
-    plt.xlabel('NN emulated melt rate (Gt/yr)')
-    plt.ylabel('Modeled melt rate(Gt/yr)')
-    plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)))
+    ax.legend(loc = 'upper left', fontsize = SIZE - 2)
+    plt.gca().tick_params(labelsize = SIZE - 2)
+    plt.xlabel('NN emulated melt (Gt/yr)', fontsize = SIZE)
+    plt.ylabel('Reference melt (Gt/yr)', fontsize = SIZE)
+    sns.despine()
+    if Display_title:
+        plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)), fontsize = SIZE)
     plt.show()
     print(Compute_rmse(Melts, Modded_melts))
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}_{}_Ex_{}'.format(np.unique(Neurs), 
-                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()), Save_name)), facecolor = 'white')
+                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()), Save_name)), facecolor = 'white', dpi = 300)
     return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
 
 
@@ -140,6 +184,8 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
     fig, ax = plt.subplots()
+    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    fig.set_size_inches(dim)
     if ind >= len(Models_p):
         ind = len(Models_p) - 1
     Model_p = Models_p[ind]
@@ -155,16 +201,19 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
         for k in Second_axis:
             ax2.plot(hist[k], label = k, color = 'slategrey')
         #ax2.legend(loc = 'upper left')
-        ax2.set_ylabel("Learning rate",color="slategrey")
+        ax2.set_ylabel("Learning rate",color="slategrey", fontsize = SIZE)
         h1, l1 = ax.get_legend_handles_labels()
         h2, l2 = ax2.get_legend_handles_labels()
-        ax.legend(h1+h2, l1+l2, loc=0)
+        ax.legend(h1+h2, l1+l2, loc=0, fontsize = SIZE)
+        ax2.tick_params(labelsize = SIZE - 2)
     else:
-        ax.legend(loc = 'upper right')
+        ax.legend(fontsize = SIZE, loc = 'upper right')
     print(Model_p.split('/')[-1])
     if Title:
         plt.title('Loss graph for model : {}'.format(Model_p.split('/')[-1]))
-    ax.set_xlabel('Epoch')
+    ax.set_xlabel('Epoch', fontsize = SIZE)
+    ax.tick_params(labelsize = SIZE - 2)
+    sns.despine()
     plt.show()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
@@ -175,24 +224,38 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
 
     li = []
     fig, ax = plt.subplots()
+    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    fig.set_size_inches(dim)
     for mod in Mods:
         Model_p = Get_model_path_json(index = ind, **mod)[0]
         print(Model_p)
-        Hist = Get_model_attributes(Model_p)
+        data = Get_model_attributes(Model_p)
+        Hist = pd.read_pickle(Model_p + '/TrainingHistory')
         Cur_li = []
         for k in Hist.keys():
             if k in Desired_comparaison:
                 Cur_li.append(Hist[k])
         li.append(Cur_li)
-    
+    #print(li)
     for i, Data in enumerate(li):
         if type(Data[0]) != list:
             ax.plot(Data, label = Desired_comparaison[i])
         else:
             for j,d in enumerate(Data):
-                ax.plot(Data, label = f'{Desired_comparaison[i]}_{label[j]}')
-        
-                        
+                #print(d)
+                if label == []:
+                    ax.plot(d, label = f'{Desired_comparaison[j]}')
+                else:
+                    ax.plot(d, label = f'{Desired_comparaison[j]} {label[i]}')
+                    
+    ax.legend(fontsize = SIZE-3)
+    ax.tick_params(labelsize = SIZE - 2)
+    ax.set_xlabel('Epoch', fontsize = SIZE)
+    sns.despine()
+    
+    if save:
+        fig.savefig(os.path.join(PWD, 'Image_output', 
+            f"Multiple_Loss_graph_M_{int(time.time())}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     
 #    if Second_axis != []:
 #        ax2 = ax.twinx()
@@ -330,12 +393,15 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 
-def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
-        ,Type_tar = 'COM_NEMO-CNRS', message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False):
+def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_tar = 'COM_NEMO-CNRS', 
+        message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False, One_profile = False, Single_type = 'Mean'):
     Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
     cmap = plt.get_cmap('seismic')
-    nTime = len(list(T))
+    if One_profile:
+        nTime = 1
+    else:
+        nTime = len(list(T))
     size = len(Attribs) + 1
     if Only_reference:
         size = 1
@@ -354,11 +420,28 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
 #(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
         Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
         print(f"Started computing for {File}")
-        Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+        if One_profile:
+            Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+                        Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+            
+            if Single_type == 'Sum':
+                Modded = Dataset.Mod_melt.sum(dim = 'date', skipna= True)
+                Real = Dataset.meltRate.sum(dim = 'date', skipna= True)
+            if Single_type == 'Mean':
+                Modded = Dataset.Mod_melt.mean(dim = 'date', skipna= True)
+                Real = Dataset.meltRate.mean(dim = 'date', skipna= True)
+                
+            Dataset = xr.Dataset()
+            Dataset = Dataset.assign(Mod_melt = Modded)
+            Dataset = [ Dataset.assign(meltRate = Real) ]
+        else:
+            
+            Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
                         Type_tar, Epoch, message, Compute_at_t = T, Method = Config.get('Method_data'))
         Datasets.append(Dataset)
         print(f"Finished computing for {File}")
     #return Datasets
+    
     Plotting_grid = []
     VMins = []
     VMaxs = []
@@ -366,14 +449,14 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
         Current_grid = []
         Mins, Maxs = [], []
         for Mod in Mods:
-            Mod[['Mod_melt', 'meltRate']] = Mod[['Mod_melt', 'meltRate']] * s_to_yr
+            Mod['Mod_melt'] = Mod['Mod_melt'] * s_to_yr
+            Mod['meltRate'] = Mod['meltRate'] * s_to_yr
             Current_grid.append(Mod)
             Mins.append(float(Mod.Mod_melt.min()))
             Maxs.append(float(Mod.Mod_melt.max()))
         Plotting_grid.append(Current_grid)
         VMins.append(min(Mins))
         VMaxs.append(max(Maxs))
-        
     for t, Datasets in enumerate(Plotting_grid):
         if nTime == 1:
             axes = axes_t
@@ -422,6 +505,7 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     #fig.supylabel('y')
     fig.text(0.45, 0.095, 'X', ha='center')
     fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
+    sns.despine()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
             'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
@@ -455,7 +539,11 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
         Type_tar = 'COM_NEMO-CNRS', message = 0, save = False, Title = [], Type = 'Mean'):
     #Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ"}
     s_to_yr = 3600 * 24 * 365
-    fig, ax = plt.subplots()
+    if Type == 'CumSum':
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 3), sharex=True, sharey=True)
+    else:
+        fig, ax = plt.subplots()
+    
     cmap = plt.get_cmap('seismic')
     
     Datasets = []
@@ -469,20 +557,43 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
     print(f"Finished computing for {File}")
     if Type == 'Mean':
         Diff = (Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
-    if Type == 'Abs_mean':
+    elif Type == 'Abs_mean':
         Diff = abs(Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
-    Diff = Diff.assign_coords({'x':  Diff.x/1000,
-                             'y': Diff.y/1000
-                            }) * s_to_yr
-    vmin = float(Diff.min())
-    vmax = float(Diff.max())
-    norm = MidpointNormalize( midpoint = 0 )
-    #norm=mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0., vmax=vmax)
-    ticks = np.linspace(vmin, vmax, 5, endpoint=True)
-    A = Diff.plot(ax = ax, add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
-    cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2),
-    norm = norm, ticks = ticks)
-    #cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2))#, ticks = ticks)
+    if Type != 'CumSum':
+        Diff = Diff.assign_coords({'x':  Diff.x/1000,
+                                 'y': Diff.y/1000
+                                }) * s_to_yr
+        vmin = float(Diff.min())
+        vmax = float(Diff.max())
+        norm = MidpointNormalize( midpoint = 0 )
+        #norm=mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0., vmax=vmax)
+        ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+        A = Diff.plot(ax = ax, add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
+        cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2),
+        norm = norm, ticks = ticks)
+        #cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2))#, ticks = ticks)
+    
+    else:
+        Summed_melts = Dataset.meltRate.sum(dim = 'date', skipna= True)
+        Summed_melts = Summed_melts.assign_coords({'x':  Summed_melts.x/1000,
+                         'y': Summed_melts.y/1000
+                        }) * s_to_yr
+        Summed_modded_melts = Dataset.Mod_melt.sum(dim = 'date', skipna= True)
+        Summed_modded_melts = Summed_modded_melts.assign_coords({'x':  Summed_modded_melts.x/1000,
+                         'y': Summed_modded_melts.y/1000
+                        }) * s_to_yr
+        vmax = float(Summed_modded_melts.max())
+        vmin = float(Summed_modded_melts.min())
+        norm = MidpointNormalize( midpoint = 0 )
+        ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+        
+        A = Summed_modded_melts.plot(ax = axes[0],add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+                
+        Summed_melts.plot(ax = axes[1], add_colorbar=False, robust=False, cmap = cmap, norm = norm, vmin = vmin, vmax = vmax,extend='both')
+        
+        cbar = plt.colorbar(A, cmap = cmap, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (0, -0.2),
+        norm = norm, ticks = ticks)
+        
     Oc_trained = Concat_Oc_names(Config.get('Dataset_train'))
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 

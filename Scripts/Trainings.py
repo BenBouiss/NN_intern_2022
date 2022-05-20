@@ -50,7 +50,7 @@ def Generate_Var_name(Str, Extent):
 
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = 1, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -65,7 +65,8 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Extra_n = Extra_n
         self.Cutting = Better_cutting
         self.Drop = Drop
-        self.Default_drop = Default_drop
+        if Drop != None:
+            self.Default_drop = Default_drop
         self.Method_data = Method_data
         self.Method_extent = Method_extent
         self.Scaling_lr = Scaling_lr
@@ -74,12 +75,13 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             self.Frequence_scaling_change = Frequence_scaling_change
             self.Scaling_change = Scaling_change
             self.Scaling_type = Scaling_type
+            self.LR_min = LR_min
             if self.Scaling_type == 'Plateau':
                 self.LR_Patience = LR_Patience
-                self.LR_min = LR_min
                 self.LR_Factor = LR_Factor
-        self.Multi_thread = Multi_thread
-        self.Workers = Workers
+                self.min_delta = min_delta
+        #self.Multi_thread = Multi_thread
+        #self.Workers = Workers
         self.Hybrid = Hybrid
         if Hybrid:
             self.Epoch_lim = Epoch_lim
@@ -281,7 +283,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             if self.Scaling_type == 'Linear':
                 New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
             elif self.Scaling_type == 'Plateau':
-                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=0.007)
+                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=self.min_delta)
             Callbacks.append(New_lr)
         if self.TensorBoard_logs == True:
             logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
@@ -295,9 +297,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
-                   verbose = self.verbose,
-                   use_multiprocessing = self.Multi_thread,
-                   workers = self.Workers)
+                   verbose = self.verbose)
             
         else:
             Epochs = [self.Epoch_lim, self.Epoch-self.Epoch_lim]
@@ -313,9 +313,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                    epochs = Ep,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
-                   verbose = self.verbose,
-                   use_multiprocessing = self.Multi_thread,
-                   workers = self.Workers)
+                   verbose = self.verbose)
                 if i == 0:
                     for i,layer in enumerate(self.model.layers):
                         if layer.name[:7] == 'dropout':
@@ -334,8 +332,10 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         
     def scheduler(self, epoch, lr):
         if not self.Hybrid:
-            if (epoch+1) % self.Frequence_scaling_change == 0:
+            if (epoch+1) % self.Frequence_scaling_change == 0 and lr/self.Scaling_change >= self.LR_min:
                 return lr / self.Scaling_change
+            if lr/self.Scaling_change < self.LR_min:
+                return self.LR_min
             else:
                 return lr
         else:
@@ -509,18 +509,23 @@ def Convert_big_to_var(Var, data):
             #print(data.get('Big_Var'), type(data.get('Big_Var')), print(data.get('Uniq_id')))
             if 'Big_T' in Var:
                 Var.remove('Big_T')
-                Var.extend(data['Big_Var'][0])
+                if 'T_0' in data.get('Var_X'):
+                    Var.extend(data['Big_Var'][0])
             if 'Big_S' in Var:
                 Var.remove('Big_S')
-                Var.extend(data['Big_Var'][1])
+                if 'S_0' in data.get('Var_X'):
+                    #print(data.get('Uniq_id'))
+                    Var.extend(data['Big_Var'][min(len(data['Big_Var'])-1, 1)])
+                
                 #print(f'After transf {Var}')
     return Var
     
     
     return 
 def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = True, 
-            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = None, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False, Activation_fct = None):
+            Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = 0, Cutting = None, Drop = None, 
+            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False, Activation_fct = None,
+            Uniq_id = None, Specific_epoch = None, Scaling_type = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -533,6 +538,11 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
         data = Get_model_attributes(f)
         if data != None:
 
+            if Uniq_id != None:
+                if Uniq_id != data.get('Uniq_id'):
+                    Model_paths.remove(f)
+                    continue
+                    
             if ((Choix != None and data['Choix'] != int(Choix)) or (Var != None and sorted(data['Var_X']) != sorted(Convert_big_to_var(list(Var), data)))):
                 Model_paths.remove(f)
                 #print(f"{f} removed because either Choix or Var")
@@ -570,6 +580,13 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
                     Model_paths.remove(f)
                     #print(f"{f} removed because Scaling")
                     continue
+            if Scaling_type != None:
+                if data.get('Scaling_type') is None and data.get('Scaling_lr') == True or (data.get('Scaling_type') is not None and Scaling_type != data.get('Scaling_type')):
+                    Model_paths.remove(f)
+                    #print(f"{f} removed because Scaling type")
+                    continue
+                
+                
             if Hybrid != None:
                 if data.get('Hybrid') is None and Hybrid == True or data.get('Hybrid') is not None and Hybrid != data.get('Hybrid'):
                     Model_paths.remove(f)
@@ -596,6 +613,8 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
             hist = pd.read_pickle(Model_paths[0] + '/TrainingHistory')
             Best = np.argmin(hist['val_mse'])
             Model_paths = [f"{Model_paths[0]}/model_{Best + 1}.h5"]
+        elif Specific_epoch != None :
+            Model_paths = [f"{Model_paths[0]}/model_{Specific_epoch}.h5"]
     return Model_paths
 
 def Get_model_path_json_exp(Var = None, Epoch = 4, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = 0, 
