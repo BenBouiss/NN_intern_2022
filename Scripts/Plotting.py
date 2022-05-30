@@ -15,9 +15,17 @@ import itertools
 import seaborn as sns
 import xarray as xr
 from matplotlib.colors import BoundaryNorm
+from matplotlib import ticker
+import matplotlib
+
 sns.set_context('paper')
 from .Computing_functions import *
 from .Trainings import *
+
+
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
 
 PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
@@ -72,7 +80,7 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
     ax2.scatter(Param, T, s = 10, color = 'red')
     ax2.set_ylabel("Training time(s)",color="red", fontsize = SIZE)
     ax.set_xlabel('Number of parameters', fontsize = SIZE)
-    ax.set_ylabel('RMSE of NN vs modeled melt rates(Gt/yr)', fontsize = SIZE)
+    ax.set_ylabel('RMSE of NN vs reference \n integrated melt rates(Gt/yr)', fontsize = SIZE)
     
     if Axis_type == 'Log':
         ax.set_xscale('log')
@@ -89,30 +97,49 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
         plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_{}'.format(int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur, T
     
-def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, 
-                            NN_attributes = {},Labels = [], Display_title = True,Title = None, **kwargs):
+def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, Display_label = True,
+                            NN_attributes = {},Labels = [], Display_title = True,Title = None, SLC = False, Axis_type = None, **kwargs):
     li_NN = [NN_attributes] if type(NN_attributes) != list else NN_attributes
-    f = plt.figure()
+    
+    Gt_ice_to_mm = 1 / 361.8
+    if Indep == False:
+        f = plt.figure(1)
+    else:
+        f = plt.figure()
     dim = (8.75/4 * 2.4, 8.75/4 * 3* 0.5)
     dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
     f.set_size_inches(dim)
     RMSEs = []
+    RMSE_SLC = []
     for i, NN in enumerate(li_NN):
         RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, NN_attributes = NN, **kwargs)
         RMSEs.append(RMSE)
         x = np.arange(1, len(Modded_Melts) + 1)
-        if len(Labels) == len(li_NN):
+        if len(Labels) >= len(li_NN):
             label = Labels[i]
         else:
             label = f'NN trained on {Concat_Oc_names(Oc_train)}'
-          
+        
+        if SLC:
+            Real = np.cumsum(Melts) * (1/12) * Gt_ice_to_mm
+            Mod = np.cumsum(Modded_Melts) * (1/12) * Gt_ice_to_mm
+            
+            Melts = Real
+            Modded_Melts = Mod
+            Cur_RMSE_SLC = Compute_rmse(Real, Mod)
+            print(f' RMSE : {Cur_RMSE_SLC} mm')
+            RMSE_SLC.append(Cur_RMSE_SLC)
         if i == 0:
+            if SLC:
+                lab = 'SLC'
+            else:
+                lab = 'melt'
             if Indep != True:
-                plt.plot(x, Melts, label = f'Reference melt') #{Concat_Oc_names(Oc_tar)}')
+                plt.plot(x, Melts, label = f'Reference {lab}') #{Concat_Oc_names(Oc_tar)}')
             else:
             #plt.figure()
 
-                plt.plot(x, Melts, label = f'Reference melt')# {Concat_Oc_names(Oc_tar)}')
+                plt.plot(x, Melts, label = f'Reference {lab}')# {Concat_Oc_names(Oc_tar)}')
             
             
             
@@ -123,7 +150,7 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
                     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(
                         Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_train)))
                 else:
-                    plt.title(Title)
+                    plt.title(Title, fontsize = SIZE)
         else:
             if Display_title :
                 if Indep == True:
@@ -133,19 +160,26 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
 
 
     f.tight_layout()
-
+    if Axis_type == 'Log':
+        plt.gca().set_yscale('log')
+        print('Log y')
     plt.xlabel('Time (month)', fontsize = SIZE)
-    plt.ylabel('Mass loss(Gt/yr)', fontsize = SIZE)
+    if SLC:
+        plt.ylabel('SLC(mm)', fontsize = SIZE)
+    else:
+        plt.ylabel('Mass loss(Gt/yr)', fontsize = SIZE)
     sns.despine()
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
-
-    plt.legend(fontsize = SIZE - 2)
+    if Display_label :
+        plt.legend(fontsize = SIZE - 2)
     plt.gca().tick_params(labelsize = SIZE - 2)
     print(f'{Oc_tar} : {RMSE} Gt/yr \n')
     if save:
         plt.savefig(os.path.join(PWD, 'Image_output', 'Melt_time_fct_M_{}_{}={}_Ex{}.png'.format(int(time.time()), 
                     Concat_Oc_names(Oc_train), Concat_Oc_names(Oc_tar), Save_name)),facecolor='white', bbox_inches = "tight", dpi = 300)
+    if SLC:
+        return RMSEs, RMSE_SLC
     return RMSEs
 def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False,Display_label= True,Display_title = True, **kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
@@ -180,7 +214,7 @@ def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False
 
 
     
-def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title = True, **kwargs):
+def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title = True, Desired_length = None, **kwargs):
     #Models_p, _ = Get_model_path_condition(**kwargs)
     Models_p = Get_model_path_json(**kwargs)
     fig, ax = plt.subplots()
@@ -194,12 +228,18 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
     data = Get_model_attributes(Model_p)
     for k in hist.keys():
         if k not in Forbid_key and k not in Second_axis:
-            ax.plot(hist[k], label = k)
+            if Desired_length != None:
+                ax.plot(hist[k][:Desired_length], label = k)                
+            else:
+                ax.plot(hist[k], label = k)
             
     if Second_axis != []:
         ax2 = ax.twinx()
         for k in Second_axis:
-            ax2.plot(hist[k], label = k, color = 'slategrey')
+            if Desired_length != None:
+                ax2.plot(hist[k][:Desired_length], label = k, color = 'slategrey')
+            else:
+                ax2.plot(hist[k], label = k, color = 'slategrey')
         #ax2.legend(loc = 'upper left')
         ax2.set_ylabel("Learning rate",color="slategrey", fontsize = SIZE)
         h1, l1 = ax.get_legend_handles_labels()
@@ -220,12 +260,17 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     return hist
 
-def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = []):
+def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = [], Desired_length = None):
 
     li = []
     fig, ax = plt.subplots()
     dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
     fig.set_size_inches(dim)
+    
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+    Uniqs = np.unique(label)
+    
     for mod in Mods:
         Model_p = Get_model_path_json(index = ind, **mod)[0]
         print(Model_p)
@@ -234,9 +279,13 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
         Cur_li = []
         for k in Hist.keys():
             if k in Desired_comparaison:
-                Cur_li.append(Hist[k])
+                if Desired_length == None:
+                    Cur_li.append(Hist[k])
+                else:
+                    Cur_li.append(Hist[k][:Desired_length])
         li.append(Cur_li)
     #print(li)
+    Plotted_labels = []
     for i, Data in enumerate(li):
         if type(Data[0]) != list:
             ax.plot(Data, label = Desired_comparaison[i])
@@ -246,7 +295,11 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
                 if label == []:
                     ax.plot(d, label = f'{Desired_comparaison[j]}')
                 else:
-                    ax.plot(d, label = f'{Desired_comparaison[j]} {label[i]}')
+                    if label[i] not in Plotted_labels:
+                        Plotted_labels.append(label[i])
+                        ax.plot(d, label = f'{label[i]}', c = colors[int(np.where(Uniqs == label[i])[0])])
+                    else:
+                        ax.plot(d, c = colors[int(np.where(Uniqs == label[i])[0])])
                     
     ax.legend(fontsize = SIZE-3)
     ax.tick_params(labelsize = SIZE - 2)
@@ -365,6 +418,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             else:
                 d.Mod_melt.plot(ax = axes[i], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
             if i == 0:
+                
                 axes[i].set_ylabel(f"T = {t} month")
             else:
                 axes[i].set_xlabel('')
@@ -394,7 +448,7 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
     return Datasets
 
 def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_tar = 'COM_NEMO-CNRS', 
-        message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False, One_profile = False, Single_type = 'Mean'):
+        message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False, One_profile = False, Single_type = 'Mean', Display_label = True, Dimensions = None, size = None):
     Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
     cmap = plt.get_cmap('seismic')
@@ -405,10 +459,18 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
     size = len(Attribs) + 1
     if Only_reference:
         size = 1
-    if sharing :
-        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=True, sharey=True)
+    if Dimensions != None:
+        x, y = Dimensions
     else:
-        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
+        x, y = 10, 3
+        
+    if sharing == True:
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(x * len(Attribs), y * nTime), sharex=True, sharey=True)
+    else:
+        print(sharing)
+        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(x * len(Attribs), y * nTime), sharex=sharing, sharey=sharing)
+   # else:
+#        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
     plt.subplots_adjust(hspace = 0.15)
     Datasets = []
     for Index, Att in enumerate(Attribs):
@@ -480,14 +542,31 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
                 
             else:
                 d.Mod_melt.plot(ax = axes[i], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
+
             if i == 0:
-                axes[i].set_ylabel(f"T = {T[t]} month")
+                if One_profile == True:
+                    if Display_label:
+                        axes[i].set_ylabel('y(km)', fontsize = SIZE-2)
+                        axes[i].set_xlabel('x(km)', fontsize = SIZE-2)
+                    else:
+                        #axes[i].set_xticklabels([])
+                        #axes[i].set_yticklabels([])
+                        axes[i].set_xlabel('')
+                        axes[i].set_ylabel('')
+                        
+                    axes[i].tick_params(labelsize = SIZE - 2)
+                else:
+                    axes[i].set_ylabel(f"T = {T[t]} month")
+                    axes[i].set_xlabel('')
             else:
                 axes[i].set_xlabel('')
                 axes[i].set_ylabel('')
+                axes[i].set_xticklabels([])
+                axes[i].set_yticklabels([])
+                axes[i].tick_params(labelsize = SIZE - 2)
             if Title != []:
                 if t == 0:
-                    axes[i].set_title(f"{Title[i]}")
+                    axes[i].set_title(f"{Title[i]}", fontsize = SIZE)
                     pass
                 #axes[i].set_title( f" Var trained : {'_'.join( [ Titles[n] for n in Vars[i] if Config.get('Method_data') == None])} \n {Title[i] if Title != [] else ''}")
                 #axes[i].set_title(f"{} = month", loc = 'left')
@@ -496,16 +575,35 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
             if t != 0 or i != 0:
                 axes[i].set_xlabel('')
         d.meltRate.plot(ax = axes[-1], add_colorbar=False, robust=False, vmin = vmin, vmax = vmax, cmap = cmap, norm = norm, extend='min')
-        axes[-1].set_title('')
+        if Title != [] and t == 0:
+            axes[-1].set_title(f"{Title[i+1]}", fontsize = SIZE)
+        else:
+            axes[-1].set_title('')
+        axes[-1].set_xticklabels([])
+        axes[-1].set_yticklabels([])
+        axes[-1].tick_params(labelsize = SIZE - 2)
         axes[-1].set_ylabel('')
         axes[-1].set_xlabel('')
-        ticks = np.linspace(vmin, vmax, 5, endpoint=True)
+        ticks = np.round(np.linspace(vmin, vmax, 5, endpoint=True), decimals = 1)
+        #divider = make_axes_locatable(axes[-1])
+        #cax = divider.append_axes('right', size = '5%')
         cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', location = 'right', extend='both', anchor = (-0.3, 0), ticks = ticks)#, fraction=0.16, pad=0.15)
+        #cbar = plt.colorbar(A, cmap = cmap, ax = axes, label = 'Melt rate (m/yr)', extend='both', anchor = (-0.3, 0), ticks = ticks, cax = cax)#, fraction=0.16, pad=0.15)
+        #tick_locator = ticker.MaxNLocator(nbins = 4)
+        #cbar.locator = tick_locator
+        #cbar.ax.yaxis.set_major_locator(matplotlib.ticker.AutoLocator())
+        #cbar.update_ticks()
+        cbar.ax.tick_params(labelsize=SIZE-2)
+        if Dimensions == None:
+            cbar.set_label(label = 'Melt rate (m/yr)', size = SIZE)
+        else:
+            cbar.set_label(label = 'Melt rate (m/yr)', size = SIZE)
     #fig.supxlabel('x')
     #fig.supylabel('y')
-    fig.text(0.45, 0.095, 'X', ha='center')
-    fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
-    sns.despine()
+    #fig.text(0.45, 0.095, 'X', ha='center')
+    #fig.text(0.095, 0.5, 'Y', va='center', rotation='vertical')
+    if Dimensions == None:
+        sns.despine()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
             'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')

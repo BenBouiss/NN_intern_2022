@@ -46,7 +46,7 @@ i = 0
 #                'Big_T', 'Big_S', 'Distances_ground_line', 'Distances_front_line']
 Uniq_var = ['iceDraft', 'bathymetry', 'Slope_iceDraft', 'Slope_bathymetry',
                 'Big_T', 'Big_S', 'Distances_ground_line', 'Distances_front_line', ['Big_T', 'Big_S']]
-for var in Uniq_var:
+for var in Uniq_var[2:]:
     li = list(Var_X_BIG_Extra)
     for v in li:
         if type(var) != list:
@@ -66,7 +66,7 @@ for var in Uniq_var:
     Best_Neur = ['128_128_128_128_128']
     Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
                 Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
-                Var_X = li, Verify = 0, Extra_n = 'Drop_Var_bench_128',
+                Var_X = li, Verify = 0, Extra_n = 'Drop_Var_bench_128', Fraction_save = 100,
                 Similar_training = True, Norm_Choix = 0, Method_data = 4,activ_fct= "swish", 
                 Scaling_lr = True, TensorBoard_logs = True , Hybrid = False, Scaling_type = 'Plateau', 
-                LR_Patience = 8, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.001)
+                LR_Patience = 8, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.0001)

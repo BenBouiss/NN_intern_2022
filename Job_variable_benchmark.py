@@ -41,15 +41,17 @@ Uniq_id = int(time.time())
 li = []
 ALL_OC = OcT + ALL_EXP
 oc = ALL_OC
-NN_attributes = {'Epoch' : 128, 'Ocean' : Train_oc_exp, 'Exact' : 1, 'Method_data' : 4}
+#oc = OcT
+NN_attributes = {'Ocean' : OcT, 'Uniq_id' : 1651148926}
+#NN_attributes = {'Ocean' : OcT, 'Uniq_id' : 1653044112}
 Mod_p = Trainings.Get_model_path_json(**NN_attributes)[0]
 Data = Trainings.Get_model_attributes(Mod_p)
 Ident = Data.get('Uniq_id')
 folder_p = f'{os.getcwd()}/Cached_data/Shuffle_benchmark/Var_benchmark_{Ident}/'
 Trainings.Make_dire(folder_p)
 
-for i in range(5):
-    
+for i in range(4):
+    print(i)
     li = Computing_functions.Compute_shuffle_benchmark(Oc = oc, NN_attributes = NN_attributes)
     
     li.extend(Computing_functions.Compute_shuffle_benchmark(Oc = oc, NN_attributes = NN_attributes,

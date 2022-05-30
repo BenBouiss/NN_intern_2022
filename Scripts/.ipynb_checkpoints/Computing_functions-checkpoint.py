@@ -158,7 +158,7 @@ def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
         Modded_melts = (Data['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         return Melts, Modded_melts
     else:
-        print('Done computing')
+        print('Done computing                                                                  ', end = '\r')
         return Data.set_index(['date', 'y', 'x']).to_xarray()
 
 def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
@@ -192,7 +192,8 @@ def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1
     if type(Ocean_target) != list:
         Ocean_target = [Ocean_target]
     if Compute_at_ind:
-        data = Get_model_attributes(Models_paths)
+        print(Models_paths)
+        data = Get_model_attributes(Models_paths[0])
         DF = Gather_datasets(Ocean_target, Type_tar, save_index = True, Method = data.get('Method_data'))
         Att = Get_model_attributes(Models_paths[0])
         Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_target), f"ind_{Att['Similar_training']}.csv")

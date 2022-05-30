@@ -41,7 +41,7 @@ Var_X_BIG_Slopexy = ['iceDraft', 'bathymetry', 'Slope_iceDraft_x', 'Slope_bathym
                   'Distances_ground_line', 'Distances_front_line']
 CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
 
-
+Only_CPLs = ['CPL_EXP10_rst','CPL_EXP13_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
 #class model_NN():
 #def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS',
 #Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', 
@@ -62,17 +62,12 @@ Activ_fct = ['relu', 'swish']
 Activ_fct = ['swish']
 #Best_Neur = ['128_128_128_128_128']
 Best_Neur = ['32_32_96_96']
-Vars = [Var_X_non_position, Var_X_BIG_test, Var_X_BIG_Step2,Var_X_BIG_Slope, Var_X_slopexy]
+
 
 #Best_Neur = ['32_64_32']
 #for act in Activ_fct:
-#Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
-#            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 150, 
-#            Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = '',Drop = 'Default',
-#            Similar_training = True, Norm_Choix = 0, Method_data = 4,activ_fct = 'swish', 
-#            Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
-#            TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Linear', Fraction_save = 10)
-
+#def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = 1, Fraction_save = None,
+#Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007):
 #New_oc = [['Ocean1', 'Ocean2'], ['Ocean3', 'Ocean4']]
 
 #for oc in New_oc:
@@ -83,11 +78,42 @@ Vars = [Var_X_non_position, Var_X_BIG_test, Var_X_BIG_Step2,Var_X_BIG_Slope, Var
 #         Method = 3
 #     else:
 #         Method = 4   
-Vars = [Var_X_BIG_Slope, Var_X_BIG_Slopexy]
-#for v in Vars:
+#Vars = [Var_X_BIG_Slope, Var_X_BIG_Slopexy]
 
-Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
-            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
-            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Comparison_multiple_lrschedultech', 
-            Similar_training = True, Norm_Choix = 0, Method_data = 4, Fraction_save = 1,
-            Scaling_lr = True, Scaling_type = 'Linear', Scaling_change = 2, Frequence_scaling_change = 10)
+#CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP11_rst','CPL_EXP12_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
+
+#Only_CPLs = ['CPL_EXP11_rst','CPL_EXP12_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
+
+#Best_Neur = ['32_64_32']
+#Best_Neur = ['128_128_128_128_128_128']
+
+for i in range(2):
+    print(f'Init training {i}')
+    Training.training(training_extent = 0, verbose = 1, batch_size = 128, Exact = 1, message = 1,
+            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 32, 
+            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Varxy',
+            Similar_training = True, Norm_Choix = 0, Method_data = 4, 
+            Fraction_save = 1, LR_min = 4*10**(-5),
+            Scaling_lr = False)
+
+
+# Training.training(training_extent = 0, verbose = 0, batch_size = 2048, Exact = 1, message = 1,
+#             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
+#             Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Scalinglrforbatch2048',
+#             Similar_training = True, Norm_Choix = 0, Method_data = 4, 
+#             Fraction_save = 50, LR_min = 4*10**(-5),
+#             Scaling_lr = False)
+
+# Training.training(training_extent = 0, verbose = 0, batch_size = 1024, Exact = 1, message = 1,
+#             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
+#             Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Scalinglrforbatch1024',
+#             Similar_training = True, Norm_Choix = 0, Method_data = 4, 
+#             Fraction_save = 50, LR_min = 4*10**(-5),
+#             Scaling_lr = False)
+
+# Training.training(training_extent = 0, verbose = 0, batch_size = 128, Exact = 1, message = 1,
+#             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
+#             Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Scalinglrforbatch128',
+#             Similar_training = True, Norm_Choix = 0, Method_data = 4, 
+#             Fraction_save = 50, LR_min = 4*10**(-5),
+#             Scaling_lr = False)
