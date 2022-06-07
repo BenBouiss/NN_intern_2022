@@ -77,10 +77,14 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
     fig.set_size_inches(dim)
     ax.scatter(Param, RMSE)
     ax2 = ax.twinx()
+    #ax.spines['left'].set_color('blue')
+    ax.tick_params(axis='y', colors='blue')
     ax2.scatter(Param, T, s = 10, color = 'red')
     ax2.set_ylabel("Training time(s)",color="red", fontsize = SIZE)
+    #ax2.spines['right'].set_color('red')
+    ax2.tick_params(axis='y', colors='red')
     ax.set_xlabel('Number of parameters', fontsize = SIZE)
-    ax.set_ylabel('RMSE of NN vs reference \n integrated melt rates(Gt/yr)', fontsize = SIZE)
+    ax.set_ylabel('RMSE of NN vs reference \n integrated melt rates(Gt/yr)', fontsize = SIZE, color="blue")
     
     if Axis_type == 'Log':
         ax.set_xscale('log')
@@ -153,10 +157,11 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
                     plt.title(Title, fontsize = SIZE)
         else:
             if Display_title :
-                if Indep == True:
-                    plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
+                if Title == None:
+                    if Indep == True:
+                        plt.title(f'Integrated melt rates over the iceshelf \n under {Concat_Oc_names(Oc_tar)} scenario')
                 else:
-                    plt.title(f'Integrated melt rates over the iceshelf', fontsize = SIZE)
+                    plt.title(Title, fontsize = SIZE)
 
 
     f.tight_layout()
@@ -269,8 +274,8 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
     
     prop_cycle = plt.rcParams['axes.prop_cycle']
     colors = prop_cycle.by_key()['color']
-    Uniqs = np.unique(label)
-    
+    indexes = np.unique(label, return_index = True)[1]
+    Uniqs = np.array([label[i] for i in sorted(indexes)])
     for mod in Mods:
         Model_p = Get_model_path_json(index = ind, **mod)[0]
         print(Model_p)

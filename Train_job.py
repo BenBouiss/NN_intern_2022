@@ -85,16 +85,16 @@ Best_Neur = ['32_32_96_96']
 #Only_CPLs = ['CPL_EXP11_rst','CPL_EXP12_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
 
 #Best_Neur = ['32_64_32']
-#Best_Neur = ['128_128_128_128_128_128']
+#Best_Neur = ['256_256_256_256_256_256']
 
-for i in range(2):
+for i in range(1):
     print(f'Init training {i}')
-    Training.training(training_extent = 0, verbose = 1, batch_size = 128, Exact = 1, message = 1,
-            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 32, 
-            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Varxy',
-            Similar_training = True, Norm_Choix = 0, Method_data = 4, 
-            Fraction_save = 1, LR_min = 4*10**(-5),
-            Scaling_lr = False)
+    Training.training(training_extent = 0, verbose = 0, batch_size = 128, Exact = 1, message = 1,
+            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
+            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = '',
+            Similar_training = True, Norm_Choix = 0, Method_data = 4,
+            Fraction_save = 1, Scaling_type = 'Plateau',
+            Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007)
 
 
 # Training.training(training_extent = 0, verbose = 0, batch_size = 2048, Exact = 1, message = 1,
