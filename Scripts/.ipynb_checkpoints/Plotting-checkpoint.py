@@ -472,7 +472,8 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
     if sharing == True:
         fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(x * len(Attribs), y * nTime), sharex=True, sharey=True)
     else:
-        print(sharing)
+        if message == True:
+            print(sharing)
         fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(x * len(Attribs), y * nTime), sharex=sharing, sharey=sharing)
    # else:
 #        fig, axes_t = plt.subplots(nrows=nTime, ncols=size, figsize=(10 * len(Attribs), 3 * nTime), sharex=False, sharey=False)
@@ -486,7 +487,8 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
         Choix, Epoch = Config['Choix'], Config['Epoch']
 #(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
         Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
-        print(f"Started computing for {File}")
+        if message == True:
+            print(f"Started computing for {File}", end = "/r")
         if One_profile:
             Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
                         Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
@@ -506,7 +508,8 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
             Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
                         Type_tar, Epoch, message, Compute_at_t = T, Method = Config.get('Method_data'))
         Datasets.append(Dataset)
-        print(f"Finished computing for {File}")
+        if message == True:
+            print(f"Finished computing for {File}", end = "\r")
     #return Datasets
     
     Plotting_grid = []

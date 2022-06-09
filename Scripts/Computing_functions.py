@@ -147,7 +147,7 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
                 Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
                 d.append(Dataset)
                 if t != Compute_at_t[-1]:
-                    print(" ######################################################## ", end = '\r')
+                    print(" ######################################################## ", end = "\r")
             return d
         
 def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
