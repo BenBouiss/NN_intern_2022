@@ -6,5 +6,6 @@
 #OAR --stdout Logs/Train.out
 #OAR --stderr Logs/Train.err
 cd ..
+cd Job_script
 conda activate py37
 python Train_job.py

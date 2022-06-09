@@ -6,5 +6,6 @@
 #OAR --stdout Test.out
 #OAR --stderr Test.err
 cd ..
+cd Job_script
 conda activate py37
 python Job_variable_benchmark.py
