@@ -101,7 +101,7 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
         plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_{}'.format(int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur, T
     
-def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, Display_label = True,
+def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, Display_label = True, SIZE = SIZE,
                             NN_attributes = {},Labels = [], Display_title = True,Title = None, SLC = False, Axis_type = None, **kwargs):
     li_NN = [NN_attributes] if type(NN_attributes) != list else NN_attributes
     
@@ -148,7 +148,12 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
             
             
         if Nothing == False:
-            plt.plot(x, Modded_Melts, label = label)
+            if i == 3:
+                plt.plot(x, Modded_Melts, label = label, color = '#8c564b')
+            elif i == 4:
+                plt.plot(x, Modded_Melts, label = label, color = 'black')
+            else:
+                plt.plot(x, Modded_Melts, label = label)
             if Display_title :
                 if Title == None:
                     plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(
@@ -173,6 +178,7 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
         plt.ylabel('SLC(mm)', fontsize = SIZE)
     else:
         plt.ylabel('Mass loss(Gt/yr)', fontsize = SIZE)
+        plt.ylabel('Integrated melt rate (Gt/yr)', fontsize = SIZE)
     sns.despine()
     #print(Concat_Oc_names(Oc_tar))
     #print(Concat_Oc_names(Oc_train))
@@ -614,7 +620,7 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
         sns.despine()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
+            'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight', dpi = 300)
     return Datasets
 
 def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):

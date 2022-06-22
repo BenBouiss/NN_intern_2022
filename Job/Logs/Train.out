@@ -1,0 +1,78 @@
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Init training 0
+Projected training regiment :
+ ['256_256_256_256_256']
+Starting training for neurone : 256_256_256_256_256, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 00022: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 00040: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 00050: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 00060: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 00070: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+
+Epoch 00080: ReduceLROnPlateau reducing learning rate to 1.5625000742147677e-05.
+
+Epoch 00090: ReduceLROnPlateau reducing learning rate to 7.812500371073838e-06.
+
+Epoch 00100: ReduceLROnPlateau reducing learning rate to 3.906250185536919e-06.
+
+Epoch 00110: ReduceLROnPlateau reducing learning rate to 1.9531250927684596e-06.
+
+Epoch 00120: ReduceLROnPlateau reducing learning rate to 9.765625463842298e-07.
+PWD : /home/bouissob/Code
+Init training 0
+Projected training regiment :
+ ['128_128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 00023: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 00041: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 00051: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 00061: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 00071: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+
+Epoch 00081: ReduceLROnPlateau reducing learning rate to 1.5625000742147677e-05.
+
+Epoch 00091: ReduceLROnPlateau reducing learning rate to 7.812500371073838e-06.
+
+Epoch 00101: ReduceLROnPlateau reducing learning rate to 3.906250185536919e-06.
+
+Epoch 00111: ReduceLROnPlateau reducing learning rate to 1.9531250927684596e-06.
+
+Epoch 00121: ReduceLROnPlateau reducing learning rate to 9.765625463842298e-07.

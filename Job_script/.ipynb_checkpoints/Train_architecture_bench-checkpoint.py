@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 from Scripts import Trainings
 from Scripts import Plotting
 from Scripts import Computing_functions
