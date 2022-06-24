@@ -36,23 +36,23 @@ CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 #for i in range(2):
 
 #class model_NN():
-#def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS',
-#Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', 
-#Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5,
-#Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8,
-#Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, 
-#Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2):
+#def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
+#Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5)
 ## Submit job oarsub -S ./Job.py
 
 
 Training = Trainings.Sequencial_training(Trainings.model_NN)
-Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
+#Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
 #Best_Neur = ['0'] 
 #Best_Neur = ['128_128_128_128_128']
+Best_Neur = ['32_32_96_96']
+# Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
+#             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
+#             Var_X = Var_X_BIG_Extra, Verify = 0, Better_cutting = '10%', Extra_n = '10percent',
+#             Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+#             Scaling_lr = True, Fraction_save = 10)
 Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
-            Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
-            Var_X = Var_X_BIG_Extra, Verify = 0, Better_cutting = '10%', Extra_n = '10percent',
-            Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-            Scaling_lr = True, Frequence_scaling_change = 10, Scaling_change = 2, 
-            TensorBoard_logs = False , Hybrid = False, Scaling_type = 'Plateau', 
-            LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 3, Fraction_save = 10)
+             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 32, 
+             Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'First_prune',
+             Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+             Scaling_lr = True, Fraction_save = 10, Pruning = True, Pruning_type = 'Constant', target_sparsity = 0.8)

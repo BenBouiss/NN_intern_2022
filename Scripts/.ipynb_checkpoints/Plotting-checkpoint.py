@@ -139,7 +139,10 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
             else:
                 lab = 'melt'
             if Indep != True:
-                plt.plot(x, Melts, label = f'Reference {lab}') #{Concat_Oc_names(Oc_tar)}')
+                if Labels != []:
+                    plt.plot(x, Melts, label = f'{Labels[i]}')
+                else:
+                    plt.plot(x, Melts, label = f'Reference {lab}') #{Concat_Oc_names(Oc_tar)}')
             else:
             #plt.figure()
 

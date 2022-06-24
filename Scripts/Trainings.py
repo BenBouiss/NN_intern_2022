@@ -13,7 +13,9 @@ import matplotlib.colors as mcolors
 import json
 import itertools
 import random 
-
+import tensorflow_model_optimization as tfmot
+import tempfile
+import math 
 PWD = os.getcwd()
 PWD = '/home/bouissob/Code'
 print(f'PWD : {PWD}')
@@ -50,7 +52,7 @@ def Generate_Var_name(Str, Extent):
 
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -101,8 +103,42 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             self.Big_Var = Big_Var
         
         self.Fraction_save = Fraction_save
+        self.Pruning = Pruning
+        if self.Pruning == True:
+            self.Pruning_type = Pruning_type
+            if self.Pruning_type == 'Polynomial':
+                self.initial_sparsity = initial_sparsity
+            self.target_sparsity = target_sparsity
         self.Js = dict(self.__dict__)
+        self.Callback = []
         
+    def Add_pruning(self):
+        logdir = tempfile.mkdtemp()
+        prune_low_magnitude = tfmot.sparsity.keras.prune_low_magnitude
+        #self.model = prune_low_magnitude(self.model, **pruning_params)
+#        self.Training_sample_size Correspond au nombre de points present dans le dataset d'entrainement
+        Frequency = math.ceil(self.Training_sample_size / self.Batch_size)
+        if self.Pruning_type == 'Constant':
+            
+            
+            pruning_params = {
+            'pruning_schedule': tfmot.sparsity.keras.ConstantSparsity(
+                self.target_sparsity, 1, end_step=-1, frequency=Frequency
+        )}
+
+        if self.Pruning_type == 'Polynomial':
+            Total_step = Frequency * self.Epoch
+            pruning_params = {
+      'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=self.initial_sparsity,
+                                                               final_sparsity=self.target_sparsity,
+                                                               begin_step=0,
+                                                               end_step=Total_step)}
+
+        self.model = prune_low_magnitude(self.model, **pruning_params)
+        self.Callback.append(tfmot.sparsity.keras.UpdatePruningStep())
+        self.Callback.append(tfmot.sparsity.keras.PruningSummaries(log_dir=logdir))
+        print('Engaging pruning procedure!')
+                
     def Init_mod(self, Shape):
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
@@ -111,6 +147,9 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
         if self.Drop == 'Scaling':
             optimizer = tf.keras.optimizers.Adam(lr=0.01) #x10
+        
+        if self.Pruning == True:
+            self.Add_pruning()
             
         for i, Order in enumerate(Orders):
             if int(Order)!=0:
@@ -271,29 +310,30 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                                           np.array((X_valid - self.MedX)/(self.iqrX)))
             self.Y_train, self.Y_valid = (np.array((Y_train - self.MedY)/(self.iqrY)),
                                           np.array((Y_valid - self.MedY)/(self.iqrY)))
+        self.Training_sample_size = len(Y_train)
+        self.Js['Training_sample_size'] = self.Training_sample_size
     def train(self, Indexs = None):
         Shape = len(self.Var_X)
-        self.Init_mod(Shape)
         self.Prepare_data(Indexs)
+        self.Init_mod(Shape)
         self.Data_save()
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Fraction = self.Fraction_save)
-        Callbacks = []
-        Callbacks.append(saver)
+        self.Callback.append(saver)
         if self.Scaling_lr == True:
             if self.Scaling_type == 'Linear':
                 New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
             elif self.Scaling_type == 'Plateau':
                 New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=self.min_delta)
-            Callbacks.append(New_lr)
+            self.Callback.append(New_lr)
         if self.TensorBoard_logs == True:
             logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
-            Callbacks.append(tensorboard_callback)
+            self.Callback.append(tensorboard_callback)
             
         Start = time.perf_counter()
         if not self.Hybrid:
             Mod = self.model.fit(self.X_train, self.Y_train,
-                   callbacks=Callbacks,
+                   callbacks=self.Callback,
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
@@ -307,9 +347,9 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                     self.Epoch_init = 0
                 else:
                     self.Epoch_init = Epochs[i-1]
-                Callbacks[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init, Fraction = self.Fraction_save)
+                self.Callback[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init, Fraction = self.Fraction_save)
                 Mod = self.model.fit(self.X_train, self.Y_train,
-                   callbacks=Callbacks,
+                   callbacks=self.Callback,
                    epochs = Ep,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
