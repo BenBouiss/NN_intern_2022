@@ -117,7 +117,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         prune_low_magnitude = tfmot.sparsity.keras.prune_low_magnitude
         #self.model = prune_low_magnitude(self.model, **pruning_params)
 #        self.Training_sample_size Correspond au nombre de points present dans le dataset d'entrainement
-        Frequency = math.ceil(self.Training_sample_size / self.Batch_size)
+        Frequency = math.ceil(self.Training_sample_size / self.batch_size)
         if self.Pruning_type == 'Constant':
             
             
@@ -148,8 +148,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         if self.Drop == 'Scaling':
             optimizer = tf.keras.optimizers.Adam(lr=0.01) #x10
         
-        if self.Pruning == True:
-            self.Add_pruning()
+
             
         for i, Order in enumerate(Orders):
             if int(Order)!=0:
@@ -164,7 +163,10 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                             self.model.add(tf.keras.layers.Dropout(Dropout))
                             Drop_seq.append(Dropout)
         self.Js['Drop_seq'] = Drop_seq
+        if self.Pruning == True:
+            self.Add_pruning()
         self.model.add(tf.keras.layers.Dense(1))
+
         if self.Drop == 'Scaling':
             self.model.compile(optimizer=optimizer,
                      loss = 'mse',
@@ -406,6 +408,9 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             np.savetxt(self.Path + 'iqrY.csv', np.array(self.iqrY).reshape(1, ))
                                                    
     def Model_save(self, Mod):
+        if self.Pruning == True:
+            self.model = tfmot.sparsity.keras.strip_pruning(self.model)
+
         self.model.save(self.Path + 'model_{}.h5'.format(self.Epoch))
         hist = self.model.history
         #json.dump(hist, open(self.path + 'History_log.json'), 'w')
@@ -564,8 +569,7 @@ def Convert_big_to_var(Var, data):
     return 
 def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained = 'COM_NEMO-CNRS', Exact = True, 
             Extra_n = None, Choix = None, Neur = None, Batch_size = None, index = 0, Cutting = None, Drop = None, 
-            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False, Activation_fct = None,
-            Uniq_id = None, Specific_epoch = None, Scaling_type = None):
+            Method_data = None, Scaling_lr = None , Pick_Best = False, Hybrid = None, return_all = False, Activation_fct = None, Uniq_id = None, Specific_epoch = None, Scaling_type = None, Pruning = None):
     if type(Ocean) != list:
         Ocean = [Ocean]
     path = os.path.join(PWD, 'Auto_model', Type_trained, '_'.join(Ocean))
@@ -633,6 +637,10 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
                     continue
             if Activation_fct != None:
                 if data.get('activ_fct') != Activation_fct:
+                    Model_paths.remove(f)
+                    continue
+            if Pruning != None:
+                if data.get('Pruning') != Pruning:
                     Model_paths.remove(f)
                     continue
         else:

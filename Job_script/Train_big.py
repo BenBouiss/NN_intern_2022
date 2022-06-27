@@ -29,7 +29,7 @@ Var_X_slopexy = ['iceDraft', 'bathymetry', 'Slope_iceDraft_x', 'Slope_bathymetry
 Var_X_BIG_Extra = ['iceDraft', 'bathymetry', 'Slope_iceDraft_x', 'Slope_bathymetry_x',
                    'Slope_iceDraft_y', 'Slope_bathymetry_y', 'Big_T', 'Big_S',
                   'Distances_ground_line', 'Distances_front_line']
-CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
+Composite = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_rst', 'CPL_EXP22_rst', 'CPL_EXP23_rst']
 
 #CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst']
 #Drops = [0,4, 0.2]
@@ -44,15 +44,27 @@ CPLs_test = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 #Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
 #Best_Neur = ['0'] 
-#Best_Neur = ['128_128_128_128_128']
-Best_Neur = ['32_32_96_96']
+Best_Neur = ['128_128_128_128_128']
+#Best_Neur = ['32_32_96_96']
 # Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
 #             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
 #             Var_X = Var_X_BIG_Extra, Verify = 0, Better_cutting = '10%', Extra_n = '10percent',
 #             Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
 #             Scaling_lr = True, Fraction_save = 10)
-Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
-             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 32, 
-             Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'First_prune',
-             Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-             Scaling_lr = True, Fraction_save = 10, Pruning = True, Pruning_type = 'Constant', target_sparsity = 0.8)
+
+prunes = (1 - np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
+
+Best_Neur = ['96_96_96_96_96', '32_32_96_96']
+
+#for pr in prunes:
+for _ in range(2):
+    # Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
+    #          Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
+    #          Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'Prune_benchmark_Composite',
+    #          Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+    #          Scaling_lr = True, Fraction_save = 32, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
+    Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
+              Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
+              Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'Complexity_downgrade_composite',
+              Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)

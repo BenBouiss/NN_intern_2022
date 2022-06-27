@@ -34,9 +34,9 @@ def Fetch_data(Ocean_target, Type_tar, Method):
 
 def Fetch_model(model_path):
     if os.path.isfile(model_path):
-        return tf.keras.models.load_model(model_path)
+        return tf.keras.models.load_model(model_path, compile=False)
     elif os.path.isfile(model_path + '/' + 'model.h5'):
-        return tf.keras.models.load_model(model_path + '/' + 'model.h5')
+        return tf.keras.models.load_model(model_path + '/' + 'model.h5', compile=False)
     else:
         print('File {} not found'.format(model_path))
         files = glob.glob(model_path + '/*')
@@ -330,7 +330,7 @@ def Compute_shuffle_benchmark(Oc, Compute_at_ind = False, NN_attributes = {}, Sp
 
 
 
-def Compute_benchmark_function(NN_attributes = {}, li_activation = [], Ocean = 'Ocean1', Compute_at_ind = False, message = 1, Get_time = False):
+def Compute_benchmark_function(NN_attributes = {}, li_activation = [], Ocean_target = 'Ocean1', Compute_at_ind = False, message = 1, Get_time = False):
     
     
     Tot = []
@@ -353,7 +353,7 @@ def Compute_benchmark_function(NN_attributes = {}, li_activation = [], Ocean = '
                 print(Neur)
             else:
                 RMSEs, Param, Melts, Modded_melts, _, _, _, _, _, _, _ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, 
-                                        Ocean_target = Ocean, Type_tar = 'COM_NEMO-CNRS', message = message, Models_paths = p)
+                                        Ocean_target = Ocean_target, Type_tar = 'COM_NEMO-CNRS', message = message, Models_paths = p)
                 P.append(np.unique(Param).astype(int)[0])
                 RMSEs_tot.append(Compute_rmse(Melts, Modded_melts))
         if Get_time:
@@ -361,3 +361,20 @@ def Compute_benchmark_function(NN_attributes = {}, li_activation = [], Ocean = '
         else:
             Tot.append([P, RMSEs_tot])
     return Tot
+
+def Compute_general_benchmark(Var_to_bench : str, NN_attributes = {}, **kwargs):
+
+    Model_paths = Get_model_path_json(return_all = True, **NN_attributes)
+    Interest = []
+    ALL_RMSEs = []
+    Overall_RMSE = []
+    for i, p in enumerate(Model_paths):
+        print(f'Model : {p}, ( {i+1} / {len(Model_paths)})')
+        Config = Get_model_attributes(p)
+        RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(**kwargs, Models_paths = p)
+        Interest.append(Config[Var_to_bench])
+        ALL_RMSEs.append(RMSEs)
+        Overall_RMSE.append(Compute_rmse(Melts, Modded_melts))
+        
+    return Interest, ALL_RMSEs, Overall_RMSE
+        
