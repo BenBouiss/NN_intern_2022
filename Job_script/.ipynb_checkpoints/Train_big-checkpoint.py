@@ -44,7 +44,7 @@ Composite = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 #Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
 #Best_Neur = ['0'] 
-Best_Neur = ['128_128_128_128_128']
+#Best_Neur = ['128_128_128_128_128']
 #Best_Neur = ['32_32_96_96']
 # Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
 #             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 128, 
@@ -54,17 +54,29 @@ Best_Neur = ['128_128_128_128_128']
 
 prunes = (1 - np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
 
-Best_Neur = ['96_96_96_96_96', '32_32_96_96']
+Best_Neur = ['128_128_128_128_128']
+Frac = (np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
 
 #for pr in prunes:
-for _ in range(2):
-    # Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
-    #          Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
-    #          Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'Prune_benchmark_Composite',
-    #          Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-    #          Scaling_lr = True, Fraction_save = 32, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
-    Training.training(training_extent = 0, verbose = 1, batch_size = 1028, Exact = 1, message = 1,
-              Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
-              Var_X = Var_X_BIG_Extra, Verify = 0, Extra_n = 'Complexity_downgrade_composite',
-              Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+for _ in range(3):
+    #for F in Frac:
+    for Batch in [64, 128, 1024, 2048]:
+        ### Batch size benchmark
+        Training.training(verbose = 0, batch_size = Batch, message = 1,
+              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
+              Var_X = Var_X_BIG_Extra, Extra_n = 'Batch_Size_Benchmark',
+              Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
               Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
+    
+        # Training.training(verbose = 1, batch_size = 1028, message = 1,
+        #       Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
+        #       Var_X = Var_X_BIG_Extra, Extra_n = 'Complexity_downgrade_composite',
+        #       Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+        #       Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
+        
+        ### Fraction benchmark
+        # Training.training(verbose = 0, batch_size = 1028, message = 1,
+        #       Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, Fraction = F,
+        #       Var_X = Var_X_BIG_Extra, Extra_n = 'Fraction_dataset_Benchmark',
+        #       Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+        #       Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)

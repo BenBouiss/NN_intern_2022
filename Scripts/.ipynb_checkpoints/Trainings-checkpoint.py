@@ -267,10 +267,16 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             else:
                 inds = glob.glob(ind_p + '/ind_*.csv')
             Inds = np.loadtxt(inds[0]).astype(int)
-            X_valid = X.loc[Inds]
-            Y_valid = Y.loc[Inds]
-            X_train = X.drop(Inds)
-            Y_train = Y.drop(Inds)
+#            X_valid = X.loc[Inds]
+            X_valid = X.loc[X.index.isin(Inds)]
+            
+            #Y_valid = Y.loc[Inds]
+            Y_valid = Y.loc[Y.index.isin(Inds)]
+            
+            X_train = X.loc[~X.index.isin(Inds)]
+            Y_train = Y.loc[~Y.index.isin(Inds)]
+            #X_train = X.drop(Inds)
+            #Y_train = Y.drop(Inds)
             self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
         del X, Y
         print('Begin Norma')
@@ -443,7 +449,7 @@ class Sequencial_training():
     def Train_more_Models(self, Model_list = ['COM_NEMO-CNRS'], **kwargs):
         for Mod_name in Model_list:
             self.training(Oc_mod_type = Mod_name, **kwargs)
-    def training(self, training_extent = 1, verbose = 1, Verify = 1,message = 1,
+    def training(self, training_extent = 0, verbose = 1, Verify = 1,message = 1,
                  Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = 0, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
@@ -640,7 +646,7 @@ def Get_model_path_json(Var = None, Epoch = None, Ocean = 'Ocean1', Type_trained
                     Model_paths.remove(f)
                     continue
             if Pruning != None:
-                if data.get('Pruning') != Pruning:
+                if data.get('Pruning') is None and Pruning == True or data.get('Pruning') is not None and Pruning != data.get('Pruning'):
                     Model_paths.remove(f)
                     continue
         else:

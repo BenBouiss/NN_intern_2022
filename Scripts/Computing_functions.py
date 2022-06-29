@@ -44,7 +44,7 @@ def Fetch_model(model_path):
 
 
                      
-def Fetch_model_data(model_path, Choix):
+def Fetch_model_stats(model_path, Choix):
     if str(Choix) == '0':
         StdY = np.loadtxt(model_path + '/' + 'StdY.csv')
         MeanY = np.loadtxt(model_path + '/' + 'MeanY.csv')
@@ -64,21 +64,40 @@ def Fetch_model_data(model_path, Choix):
         iqrX = pd.read_pickle(model_path + '/' + 'iqrX.pkl')
         return MedX, iqrX, MedY, iqrY, MedX.index
     
+def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
+    li = []
+    if type(Datasets) != list:
+        Datasets = [Datasets]
+    for Ind, Dataset in enumerate(Datasets):
+        if Method == None:
+            D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
+        else:
+            if Method == 4 or Method == 2 or Method == 5:
+                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
+            else:
+                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}.csv'
+        print(D_path)
+        df = pd.read_csv(D_path)
+        if save_index:
+            df['Oc'] = Ind + 1
+        li.append(df)
+    return pd.concat(li, ignore_index= True)
     
-def Normalizer(d, Choix, Data_Norm):
+def Normalize_dataset(Dataset, Choix, Path):
+    Data_Norm = Fetch_model_stats(Path, Choix)
     if str(Choix) == '0':
         MeanX, MeanY, StdX, StdY, Var_X = Data_Norm
-        X = d[Var_X]
+        X = Dataset[Var_X]
         X = np.array((X - MeanX)/StdX).reshape(-1, len(Var_X), )
     elif str(Choix) == '1':
         MaxX, MinX, MaxY, MinY, Var_X = Data_Norm
-        X = d[Var_X]
+        X = Dataset[Var_X]
         X = np.array((X - MinX)/(MaxX - MinX)).reshape(-1, len(Var_X), )
     elif str(Choix) == '2':
         MedX, iqrX, MedY, iqrY, Var_X = Data_Norm
-        X = d[Var_X]
+        X = Dataset[Var_X]
         X = np.array((X - MedX)/(iqrX)).reshape(-1, len(Var_X), )
-    return X, Var_X
+    return X
 
 def Compute_rmse(Tar, Mod):
     return np.sqrt(np.mean((Mod-Tar)**2))
@@ -94,162 +113,80 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
         return None
     return Y
     
-def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = False, Compute_at_ind = False, Datas = None, Method = None, shuffle = [], return_df = False):
-    if Compute_at_ind :
-        Data = Datas
+
+def Get_paths_from_attributes(NN_attributes):
+    NN_path_directory = Get_model_path_json(**NN_attributes)[0]
+    if '.h5' in NN_path_directory:
+        NN_model_path = NN_path_directory
+        NN_path_directory = os.path.dirname(NN_path_directory)
     else:
-        Data = Fetch_data(Ocean_target, Type_tar, Method)
-        
-        #Data[shuffle] = np.random.permutation(Data[shuffle].values)
-        if '-ms' in shuffle:
-            print('Mixed shuffling')
-            shuffle.remove('-ms')
-            for v in shuffle:
-                Data[v] = Data[v].sample(frac=1).values    
-        else :
-            Data[shuffle] = Data[shuffle].sample(frac=1).values
-        #df1['HS_FIRST_NAME'] = df[4].sample(frac=1).values
-        
-    tmx = int(max(np.array(Data.date)))
+        Config = Get_model_attributes(NN_path_directory)
+        NN_model_path = os.path.join(NN_path_directory, 'model_{}.h5'.format(Config['Epoch']))
+    return NN_path_directory, NN_model_path
+
+def Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEMO-CNRS',  T = None, shuffle = None):
+    if type(Ocean_target) != list:Ocean_target = [Ocean_target]
+    NN_path_directory, NN_model_path = Get_paths_from_attributes(NN_attributes)
+    print(f'Model used : {NN_model_path}')
+    Config = Get_model_attributes(NN_path_directory)    
     
-    if Model == None:
-        return None
-    Data_norm = Fetch_model_data(Model_path, Choix)
-    Var_X = Data_norm[-1]
-    if message:
-        print('Data variables used : {}'.format(' '.join(Var_X)))
-    Melts, Modded_melts = [], []
-    if Compute_at_t == False:
-        for t in range(tmx):
-            if (t+1)%int(tmx/5) == 0:
-                print('Starting {} / {}'.format(t+1, tmx) , end='\r')
-                
-            Cur = Data.loc[Data.date == t].reset_index(drop = True)
-            Melt, Modded = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = True)
-            Melts.append(Melt)
-            Modded_melts.append(Modded)
-        Melts = np.array(Melts)
-        Modded_melts = np.array(Modded_melts)
-        return Melts, Modded_melts, Compute_rmse(Melts, Modded_melts), Model.count_params()
-    else:
-        if type(Compute_at_t) == int:
-            Cur = Data.loc[Data.date == Compute_at_t].reset_index(drop = True)
-            Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
-            return Dataset
-        else:
-            d = []
-            if Compute_at_t == 'ALL':
-                Dataset = Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = False)
-                return Dataset
-            for t in Compute_at_t:
-                print(f"Starting {t} / {Compute_at_t}        ", end = '\r')
-                Cur = Data.loc[Data.date == t].reset_index(drop = True)
-                Dataset = Apply_NN_to_data(Model, Cur, Choix, Data_norm, Integrate = False)
-                d.append(Dataset)
-                if t != Compute_at_t[-1]:
-                    print(" ######################################################## ", end = "\r")
-            return d
-        
-def Apply_NN_to_data(Model, Data, Choix, Data_norm, Integrate = True):
-    X, Var_X = Normalizer(Data, Choix, Data_norm)
-    Data['Mod_melt'] = Compute_data_from_model(X, Model, Choix, Data_norm)
-    if Integrate:
-        Melts = (Data['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
-        Modded_melts = (Data['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
+#    Data = Load_dataset(Ocean_target, Ocean_type)
+    
+#     if T != None:
+#         Data = Data.isel(nTime = T)
+    All_melts, All_reference_melts, RMSEs = [], [], []
+    for Ocean in Ocean_target:
+        Start = time.time()
+        Dataset = Fetch_data(Ocean, Type_target, Method = Config['Method_data'])
+        Melts, Reference_melts, RMSE = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, Dataset, shuffle)
+        print(f'Done computing for {Ocean} in : {int(time.time() - Start)} s')
+        All_melts.append(Melts.to_list())
+        All_reference_melts.append(Reference_melts.to_list())
+        RMSEs.append(RMSE)
+    Overall_RMSE = Compute_rmse(np.array(np.concatenate(All_melts).flat), np.array(np.concatenate(All_reference_melts).flat))
+    return All_melts, All_reference_melts, RMSEs, Overall_RMSE
+                                  
+def Shuffling_variables(Data, shuffle):
+    if '-ms' in shuffle:
+        print('Mixed shuffling')
+        shuffle.remove('-ms')
+        for v in shuffle:
+            Data[v] = Data[v].sample(frac=1).values    
+    else :
+        Data[shuffle] = Data[shuffle].sample(frac=1).values
+    return Data
+                                  
+def Compute_RMSE_from_model_ocean(NN_path_directory, NN_path : str, Config, Dataset, shuffle):
+    NN = Fetch_model(NN_path)
+    X = Normalize_dataset(Dataset, Config['Choix'], NN_path_directory)
+    if shuffle != None:
+        X = Shuffling(X, shuffle)
+    Melts, Reference_melts = Compute_NN_results(NN, X, Config, NN_path_directory, Dataset)
+    RMSE = Compute_rmse(Melts, Reference_melts)
+    return Melts, Reference_melts, RMSE
+
+def Compute_NN_results(NN, X, Config, NN_path_directory, Dataset, integrate = True):
+    #print(Dataset.head())
+    Dataset['Mod_melt'] = Compute_data_from_model(X, NN, Config, NN_path_directory)
+    if integrate == True:
+        Melts = (Dataset.groupby('date')['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
+        Modded_melts = (Dataset.groupby('date')['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         return Melts, Modded_melts
+                                  
+def Compute_data_from_model(X, Model, Config, NN_path_directory):
+    Choix = Config['Choix']
+    Data_norm = Fetch_model_stats(NN_path_directory, Choix)
+    if str(Choix) == '0': # (X-mean / std) Mean/standard deviation normalisation method
+        Y = np.array((Model(X) * Data_norm[3]) + Data_norm[1])
+    elif str(Choix) == '1': #X-min/(Max-min) normalisation method
+        Y = np.array(Model(X) * (Data_norm[2] - Data_norm[3]) + Data_norm[3]) 
+    elif str(Choix) == '2': #X-med/(iqr) interquartile normalisation method
+        Y = np.array(Model(X) * (Data_norm[3]) + Data_norm[2]) 
     else:
-        print('Done computing                                                                  ', end = '\r')
-        return Data.set_index(['date', 'y', 'x']).to_xarray()
-
-def Gather_datasets(Datasets, Type_tar, save_index = False, Method = None):
-    li = []
-    for Ind, Dataset in enumerate(Datasets):
-        if Method == None:
-            D_path = os.path.join(Bet_path, 'Data', 'data_{}_{}.csv'.format(Dataset, Type_tar))
-        else:
-            if Method == 4 or Method == 2 or Method == 5:
-                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}_lite.csv'
-            else:
-                D_path = Bet_path + f'Method_Data/{Type_tar}/Method_{Method}/{Dataset}.csv'
-        df = pd.read_csv(D_path)
-        if save_index:
-            df['Oc'] = Ind + 1
-        li.append(df)
-    return pd.concat(li, ignore_index= True)
-
-def Compute_RMSE_from_model_ocean(Compute_at_ind = False, Ocean_target = 'Ocean1', Type_tar = 'COM_NEMO-CNRS', message = 1, index = None, Time = False, NN_attributes = {}, Models_paths = None, shuffle = []):
-    if Models_paths == None:
-        Models_paths = Get_model_path_json(**NN_attributes)
-        if message == 1:
-            print(Models_paths)
-        else:
-            print(f'Number of model used : {len(Models_paths)}')
-    
-    if type(Models_paths) != list:
-        Models_paths = [Models_paths]
-    RMSEs, Params, Neurs, Melts, Modded_melts, Oc_mask, t, uniq_id = [], [], [], [], [], [], [], []
-    #print(path + '/Ep_{}'.format(Epoch))
-    if type(Ocean_target) != list:
-        Ocean_target = [Ocean_target]
-    if Compute_at_ind:
-        print(Models_paths)
-        data = Get_model_attributes(Models_paths[0])
-        DF = Gather_datasets(Ocean_target, Type_tar, save_index = True, Method = data.get('Method_data'))
-        Att = Get_model_attributes(Models_paths[0])
-        Masks = os.path.join(PWD, 'Auto_model', 'tmp', '_'.join(Ocean_target), f"ind_{Att['Similar_training']}.csv")
-        DF = DF.loc[np.loadtxt(Masks).astype(int)]
-
-    for ind, model_p in enumerate(Models_paths):
-        if '.h5' in model_p:
-            print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), '/'.join(model_p.split('/')[-2:])), end = '\r')
-        else:
-            print('Starting {}/{} model {}                                                   '.format(ind + 1, len(Models_paths), model_p.split('/')[-1]), end = '\r')
-        for ind_o, Oc in enumerate(Ocean_target):
-            if Oc[0:5] == 'Ocean':
-                Oc_m = int(Oc[-1])
-            elif 'IceOcean' in Oc:
-                Oc_m = re.findall('IceOcean(\d+)', Oc)[0]
-                'IceOcean1r_ElmerIce'
-            else:
-                Oc_m = re.findall('CPL_EXP(\d+)_rst', Oc)[0]
-            data = Get_model_attributes(model_p)
-            if '.h5' in model_p:
-                Model = Fetch_model(model_p)
-                Model_name = model_p.split('/')[-2]
-                Neur, Choix = re.findall('N_(\w+)_Ch_(\d+)', Model_name)[0]
-                Mod = model_p.split('/')[-1]
-                Epoch = re.findall('model_(\d+).h5', Mod)[0]
-                model_p = os.path.dirname(model_p)
-                data = Get_model_attributes(model_p)
-            else:
-                Model_name = model_p.split('/')[-1]
-                Epoch, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
-                Model = Fetch_model(os.path.join(model_p, 'model_{}.h5'.format(Epoch)))
-            if Compute_at_ind:
-                Datas = DF.loc[DF.Oc == Oc_m]
-                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Compute_at_ind = True, Datas = Datas, shuffle = shuffle)
-            else:
-                Comp = Compute_datas(Model,model_p, Choix, Oc, Type_tar, Epoch, message, Method = data.get('Method_data'), shuffle = shuffle)
-            Melt, Modded_melt, RMSE, Param = Comp
-            RMSEs.append(RMSE)
-            
-            if len(Ocean_target) != 1:
-                Params = np.append(Params, np.full_like(Melt, Param))
-                #Neurs = np.append(Neurs, np.full_like(Melt, Neur))
-                Neurs.extend([Neur] * len(Melt))
-                uniq_id = np.append(uniq_id, np.full_like(Melt, data['Uniq_id']))
-            else:
-                Params.append(Param)
-                Neurs.append(Neur)
-                uniq_id.append(data['Uniq_id'])
-            Melts = np.append(Melts, Melt)
-            Modded_melts = np.append(Modded_melts, Modded_melt)
-            Oc_mask = np.append(Oc_mask, np.full_like(Melt, Oc_m))
-        t.append(data['Training_time'])
-        Ocean_trained = data['Dataset_train']
-    return np.array(RMSEs), np.array(Params), Melts, Modded_melts, Neurs, Oc_mask, Ocean_trained, Ocean_target, Epoch, t, uniq_id
-
-
+        print('No valid normalisation choice was found.')
+        return None
+    return Y
+                                  
 def Compute_RMSEs_Total_Param(**kwargs):
     RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, _, t, ids = Compute_RMSE_from_model_ocean(**kwargs)
     if len(Params) == len(Melts):
@@ -368,13 +305,20 @@ def Compute_general_benchmark(Var_to_bench : str, NN_attributes = {}, **kwargs):
     Interest = []
     ALL_RMSEs = []
     Overall_RMSE = []
+    dfT = pd.DataFrame()
     for i, p in enumerate(Model_paths):
         print(f'Model : {p}, ( {i+1} / {len(Model_paths)})')
         Config = Get_model_attributes(p)
         RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(**kwargs, Models_paths = p)
-        Interest.append(Config[Var_to_bench])
+        Interest.append(Config.get(Var_to_bench))
         ALL_RMSEs.append(RMSEs)
         Overall_RMSE.append(Compute_rmse(Melts, Modded_melts))
-        
-    return Interest, ALL_RMSEs, Overall_RMSE
+        Path = PWD + '/Cached_data/Generic_benchmark/'
+    df = pd.DataFrame()
+    df[Var_to_bench] = Interest
+    df['Overall_RMSE'] = Overall_RMSE
+    df[Oc_tar] = ALL_RMSEs
+#    return Interest, ALL_RMSEs, Overall_RMSE, Oc_tar
+    pd.DataFrame.to_csv(df, Path + f'{Var_to_bench}_{int(time.time())}.csv', index = False)
+    return df
         
