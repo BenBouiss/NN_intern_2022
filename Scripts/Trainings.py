@@ -52,7 +52,7 @@ def Generate_Var_name(Str, Extent):
 
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -67,6 +67,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Extra_n = Extra_n
         self.Cutting = Better_cutting
         self.Drop = Drop
+        self.Random_seed = Random_seed
         if Drop != None:
             self.Default_drop = Default_drop
         self.Method_data = Method_data
@@ -255,7 +256,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         del df
         print('Check index')
         if Indexs == None:
-            X_train = X.sample(frac = 0.8)
+            X_train = X.sample(frac = 0.8, random_state = self.Random_seed)
             X_valid = X.drop(X_train.index)
             Y_train = Y.loc[X_train.index]
             Y_valid = Y.drop(X_train.index)
@@ -321,6 +322,10 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Training_sample_size = len(Y_train)
         self.Js['Training_sample_size'] = self.Training_sample_size
     def train(self, Indexs = None):
+        
+        if self.Random_seed != None:
+            tf.random.set_seed(self.Random_seed)
+            
         Shape = len(self.Var_X)
         self.Prepare_data(Indexs)
         self.Init_mod(Shape)

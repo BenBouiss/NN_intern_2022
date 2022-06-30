@@ -114,8 +114,9 @@ def Compute_data_from_model(X, Model, Choix, Data_norm):
     return Y
     
 
-def Get_paths_from_attributes(NN_attributes):
-    NN_path_directory = Get_model_path_json(**NN_attributes)[0]
+def Get_paths_from_attributes(NN_attributes, NN_path_directory = None):
+    if NN_path_directory == None:
+        NN_path_directory = Get_model_path_json(**NN_attributes)[0]
     if '.h5' in NN_path_directory:
         NN_model_path = NN_path_directory
         NN_path_directory = os.path.dirname(NN_path_directory)
@@ -124,27 +125,44 @@ def Get_paths_from_attributes(NN_attributes):
         NN_model_path = os.path.join(NN_path_directory, 'model_{}.h5'.format(Config['Epoch']))
     return NN_path_directory, NN_model_path
 
-def Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEMO-CNRS',  T = None, shuffle = None):
+def Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEMO-CNRS', T = None, shuffle = None, NN_path = None):
+    
+    '''
+    Input :
+    Ocean target : can be either list of string, represent the ocean targets to which computing will occur on.
+    NN_attributes : is a dictionnary containing all the attributes of the NN to be used.
+    T[month] : Either list int or other, if list or int the computing will occur on either multiple or one timestep. If other, the computing will occur on all timesteps.
+    Shuffle : List, must contains atleast one variable name to be shuffled if '-ms' is in the list mixed shuffling will occcur.
+    
+    Output:
+    if no T is given, the function ouputs integrated melt rates over the entire ice shelf. If a non None value for T is given say 'ALL' or anything else, the function outputs horizontal profile of melt rates at the time steps dependant on T.
+    '''
     if type(Ocean_target) != list:Ocean_target = [Ocean_target]
-    NN_path_directory, NN_model_path = Get_paths_from_attributes(NN_attributes)
+    NN_path_directory, NN_model_path = Get_paths_from_attributes(NN_attributes, NN_path_directory = NN_path)
     print(f'Model used : {NN_model_path}')
     Config = Get_model_attributes(NN_path_directory)    
-    
-#    Data = Load_dataset(Ocean_target, Ocean_type)
-    
-#     if T != None:
-#         Data = Data.isel(nTime = T)
     All_melts, All_reference_melts, RMSEs = [], [], []
+    ds = []
     for Ocean in Ocean_target:
-        Start = time.time()
         Dataset = Fetch_data(Ocean, Type_target, Method = Config['Method_data'])
-        Melts, Reference_melts, RMSE = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, Dataset, shuffle)
+        Start = time.time()
+        if T == None:
+            Melts, Reference_melts, RMSE = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, Dataset, shuffle, integrate = True)
+            All_melts.append(Melts.to_list())
+            All_reference_melts.append(Reference_melts.to_list())
+            RMSEs.append(RMSE)
+        else:
+            if type(T) == list or type(T) == int:
+                Dataset = Dataset.loc[Dataset.date.isin(T)]
+            d = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, Dataset, shuffle, integrate = False)
+            ds.append(d)
         print(f'Done computing for {Ocean} in : {int(time.time() - Start)} s')
-        All_melts.append(Melts.to_list())
-        All_reference_melts.append(Reference_melts.to_list())
-        RMSEs.append(RMSE)
-    Overall_RMSE = Compute_rmse(np.array(np.concatenate(All_melts).flat), np.array(np.concatenate(All_reference_melts).flat))
-    return All_melts, All_reference_melts, RMSEs, Overall_RMSE
+
+    if T == None:
+        Overall_RMSE = Compute_rmse(np.array(np.concatenate(All_melts).flat), np.array(np.concatenate(All_reference_melts).flat))
+        return All_melts, All_reference_melts, RMSEs, Overall_RMSE, Ocean_target
+    else:
+        return ds, Ocean_target
                                   
 def Shuffling_variables(Data, shuffle):
     if '-ms' in shuffle:
@@ -156,12 +174,12 @@ def Shuffling_variables(Data, shuffle):
         Data[shuffle] = Data[shuffle].sample(frac=1).values
     return Data
                                   
-def Compute_RMSE_from_model_ocean(NN_path_directory, NN_path : str, Config, Dataset, shuffle):
+def Compute_RMSE_from_model_ocean(NN_path_directory, NN_path : str, Config, Dataset, shuffle, integrate):
     NN = Fetch_model(NN_path)
     X = Normalize_dataset(Dataset, Config['Choix'], NN_path_directory)
     if shuffle != None:
         X = Shuffling(X, shuffle)
-    Melts, Reference_melts = Compute_NN_results(NN, X, Config, NN_path_directory, Dataset)
+    Melts, Reference_melts = Compute_NN_results(NN, X, Config, NN_path_directory, Dataset, integrate)
     RMSE = Compute_rmse(Melts, Reference_melts)
     return Melts, Reference_melts, RMSE
 
@@ -172,6 +190,8 @@ def Compute_NN_results(NN, X, Config, NN_path_directory, Dataset, integrate = Tr
         Melts = (Dataset.groupby('date')['meltRate'].sum() * Yr_t_s * Rho * S / 10**12)
         Modded_melts = (Dataset.groupby('date')['Mod_melt'].sum() * Yr_t_s * Rho * S / 10**12)
         return Melts, Modded_melts
+    elif integrate == False:
+        return Dataset.set_index(['date', 'y', 'x']).to_xarray()
                                   
 def Compute_data_from_model(X, Model, Config, NN_path_directory):
     Choix = Config['Choix']
@@ -304,20 +324,21 @@ def Compute_general_benchmark(Var_to_bench : str, NN_attributes = {}, **kwargs):
     Model_paths = Get_model_path_json(return_all = True, **NN_attributes)
     Interest = []
     ALL_RMSEs = []
-    Overall_RMSE = []
+    ALL_Overall_RMSE = []
     dfT = pd.DataFrame()
     for i, p in enumerate(Model_paths):
         print(f'Model : {p}, ( {i+1} / {len(Model_paths)})')
         Config = Get_model_attributes(p)
-        RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(**kwargs, Models_paths = p)
+        #RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(**kwargs, Models_paths = p)
+        All_melts, All_reference_melts, RMSEs, Overall_RMSE, Ocean_target = Compute_NN_oceans(NN_attributes = {}, NN_path = p, **kwargs)
         Interest.append(Config.get(Var_to_bench))
         ALL_RMSEs.append(RMSEs)
-        Overall_RMSE.append(Compute_rmse(Melts, Modded_melts))
+        ALL_Overall_RMSE.append(Overall_RMSE)
         Path = PWD + '/Cached_data/Generic_benchmark/'
     df = pd.DataFrame()
     df[Var_to_bench] = Interest
-    df['Overall_RMSE'] = Overall_RMSE
-    df[Oc_tar] = ALL_RMSEs
+    df['Overall_RMSE'] = ALL_Overall_RMSE
+    df[Ocean_target] = ALL_RMSEs
 #    return Interest, ALL_RMSEs, Overall_RMSE, Oc_tar
     pd.DataFrame.to_csv(df, Path + f'{Var_to_bench}_{int(time.time())}.csv', index = False)
     return df

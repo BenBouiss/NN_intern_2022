@@ -101,7 +101,7 @@ def Plot_total_RMSE_param(save = False, message_p = 1,load = False,See_best = Fa
         plt.savefig(os.path.join(PWD, 'Image_output', 'Tot_RMSE_param_{}'.format(int(time.time()))), facecolor = 'white')
     return Param, RMSE, Neur, T
     
-def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '',Indep = True, Display_label = True, SIZE = SIZE,
+def Plot_Melt_time_function(ind = 0, save = False, Nothing = False, Save_name = '',Indep = True, Display_label = True, SIZE = SIZE,
                             NN_attributes = {},Labels = [], Display_title = True,Title = None, SLC = False, Axis_type = None, **kwargs):
     li_NN = [NN_attributes] if type(NN_attributes) != list else NN_attributes
     
@@ -116,14 +116,18 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False,Save_name = '
     RMSEs = []
     RMSE_SLC = []
     for i, NN in enumerate(li_NN):
-        RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, NN_attributes = NN, **kwargs)
-        RMSEs.append(RMSE)
+#        RMSE, _, Melts, Modded_Melts, _, _, Oc_train, Oc_tar, *_ = Compute_RMSE_from_model_ocean(index = ind, NN_attributes = NN, **kwargs)
+        Melts, Modded_Melts, RMSE, Overall_RMSE, Oc_tar = Compute_NN_oceans(NN_attributes = NN, **kwargs)
+        Melts, Modded_Melts = Melts[0], Modded_Melts[0]
+        RMSEs.append(RMSEs)
+        Path = Get_model_path_json(**NN)[0]
+        Config = Get_model_attributes(Path)
+        Oc_train = Config['Dataset_train']
         x = np.arange(1, len(Modded_Melts) + 1)
         if len(Labels) >= len(li_NN):
             label = Labels[i]
         else:
-            label = f'NN trained on {Concat_Oc_names(Oc_train)}'
-        
+            label = 'NN computed melts'
         if SLC:
             Real = np.cumsum(Melts) * (1/12) * Gt_ice_to_mm
             Mod = np.cumsum(Modded_Melts) * (1/12) * Gt_ice_to_mm
