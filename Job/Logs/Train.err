@@ -1,0 +1,45 @@
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+2022-07-13 21:33:47.527055: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-13 21:33:47.527099: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+2022-07-13 22:14:08.310108: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-13 22:14:08.310165: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+./Job_for_Train_big.py: line 11: 38550 Killed                  python Train_big.py
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+------------------------------------------------## OAR [2022-07-16 11:40:23] Job 73788119 KILLED ##
+2022-07-16 11:40:31.934040: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-16 11:40:31.934089: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-07-16 11:49:10.414623: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-07-16 11:49:10.414891: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-07-16 11:49:10.414936: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (luke60): /proc/driver/nvidia/version does not exist
+2022-07-16 11:49:10.415418: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/home/bouissob/.local/lib/python3.7/site-packages/tensorflow_model_optimization/python/core/sparsity/keras/pruning_wrapper.py:218: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use the `layer.add_weight()` method instead.
+  aggregation=tf.VariableAggregation.MEAN)
+/home/bouissob/.local/lib/python3.7/site-packages/tensorflow_model_optimization/python/core/sparsity/keras/pruning_wrapper.py:225: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use the `layer.add_weight()` method instead.
+  aggregation=tf.VariableAggregation.MEAN)
+/home/bouissob/.local/lib/python3.7/site-packages/tensorflow_model_optimization/python/core/sparsity/keras/pruning_wrapper.py:238: UserWarning: `layer.add_variable` is deprecated and will be removed in a future version. Please use the `layer.add_weight()` method instead.
+  trainable=False)
+WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.

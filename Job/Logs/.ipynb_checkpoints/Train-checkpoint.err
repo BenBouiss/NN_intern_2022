@@ -1,0 +1,31 @@
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+2022-07-13 21:33:47.527055: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-13 21:33:47.527099: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+2022-07-13 22:14:08.310108: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-13 22:14:08.310165: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_big.py", line 78, in <module>
+    Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+  File "../Scripts/Trainings.py", line 475, in training
+    self.Generate_training_index(**kwargs)
+  File "../Scripts/Trainings.py", line 517, in Generate_training_index
+    index = df.sample(frac = 0.2).index
+AttributeError: 'tuple' object has no attribute 'sample'
+./Job_for_Train_big.py: line 11: 38550 Killed                  python Train_big.py
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+------------------------------------------------

@@ -37,11 +37,11 @@ Composite = ['Ocean1', 'Ocean2', 'Ocean3', 'Ocean4', 'CPL_EXP10_rst','CPL_EXP13_
 
 #class model_NN():
 #def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-#Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5)
+#Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None):
 ## Submit job oarsub -S ./Job.py
+## Submit this particular job : oarsub -S ./Job_for_Train_big.py
 
 
-Training = Trainings.Sequencial_training(Trainings.model_NN)
 #Best_Neur = ['96_96_96_96_96'] #, '96_96_96_96_96', '64_64_64_96_96', '32_32_32_64']
 #Best_Neur = ['0'] 
 #Best_Neur = ['128_128_128_128_128']
@@ -56,18 +56,34 @@ prunes = (1 - np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) 
 
 Best_Neur = ['128_128_128_128_128']
 Frac = (np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
-
+Training = Trainings.Sequencial_training(Trainings.model_NN)
 #for pr in prunes:
-for _ in range(3):
+for _ in range(4):
+    Training = Trainings.Sequencial_training(Trainings.model_NN)
     #for F in Frac:
-    for Batch in [64, 128, 1024, 2048]:
+#    for Batch in [64, 128, 1024, 2048]:
         ### Batch size benchmark
-        Training.training(verbose = 0, batch_size = Batch, message = 1,
-              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
-              Var_X = Var_X_BIG_Extra, Extra_n = 'Batch_Size_Benchmark',
-              Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
-    
+#        Training.training(verbose = 0, batch_size = Batch, message = 1,
+#              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
+#              Var_X = Var_X_BIG_Extra, Extra_n = 'Batch_Size_Benchmark',
+#              Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+#              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor #= 2)
+
+
+ ### Pruning benchmark composite
+    for pr in prunes:
+        Training = Trainings.Sequencial_training(Trainings.model_NN)
+        Training.training(verbose = 0, batch_size = 1028, message = 1,
+              Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64,
+              Var_X = Var_X_BIG_Extra, Extra_n = 'Prune_benchmark_Composite',
+              Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+
+#    Training.training(verbose = 0, batch_size = 1028, message = 1,
+#              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
+#              Var_X = Var_X_BIG_Extra, Extra_n = 'Seed_Benchmark', Random_seed = 123456,
+#              Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+#              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
         # Training.training(verbose = 1, batch_size = 1028, message = 1,
         #       Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64, Fraction = 0.6,
         #       Var_X = Var_X_BIG_Extra, Extra_n = 'Complexity_downgrade_composite',

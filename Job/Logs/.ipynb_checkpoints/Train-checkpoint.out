@@ -1,0 +1,141 @@
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 24: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 24: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 24: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Check index
+Begin Norma
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 24: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv

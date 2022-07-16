@@ -120,7 +120,7 @@ def Compute_datas(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, messag
         print('Data variables used : {}'.format(' '.join(Var_X)))
     Melts, Modded_melts = [], []
     if Compute_at_t == False:
-        for t in range(tmx):
+        for t in range(tmx+1):
             if (t+1)%int(tmx/5) == 0:
                 print('Starting {} / {}'.format(t+1, tmx) , end='\r')
                 

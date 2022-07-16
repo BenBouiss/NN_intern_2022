@@ -31,6 +31,9 @@ PWD = os.getcwd()
 Bet_path = '/bettik/bouissob/'
 SIZE = 13
 def Plot_RMSE_to_param(save = False, **kwargs):
+    '''
+    Deprecated for now
+    '''
     RMSEs, Params, _, _, Neurs, _, Oc_tr, Oc_tar, Ep, t = Compute_RMSE_from_model_ocean(**kwargs)
     fig, ax = plt.subplots()
     ax.scatter(Params, RMSEs, color = 'blue')
@@ -199,21 +202,23 @@ def Plot_Melt_time_function(ind = 0, save = False, Nothing = False, Save_name = 
     if SLC:
         return RMSEs, RMSE_SLC
     return RMSEs
-def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False,Display_label= True,Display_title = True, **kwargs):
-    RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
+def Plot_Melt_to_Modded_melt(NN_attributes = {}, save = False, Save_name = '',Compute_at_ind = False,Display_label= True,Display_title = True, **kwargs):
+    #RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask, Oc_tr, Oc_tar, *_ = Compute_RMSE_from_model_ocean(Compute_at_ind = Compute_at_ind, **kwargs)
+    Melts, Modded_Melts, RMSEs, Overall_RMSE, Oc_tar = Compute_NN_oceans(NN_attributes = NN_attributes, **kwargs)
     fig, ax = plt.subplots()
     dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
     fig.set_size_inches(dim)
-    Vmin = min(np.append(Melts, Modded_melts))
-    Vmax = max(np.append(Melts, Modded_melts))
-    for v in np.unique(Oc_mask):
-        idx = np.where(Oc_mask == v)
+    Vmin = min(np.append(Flatten_list_list(Melts), Flatten_list_list(Modded_Melts)))
+    Vmax = max(np.append(Flatten_list_list(Melts), Flatten_list_list(Modded_Melts)))
+    for i, (reference_melt, NN_melt)  in enumerate(zip(Melts, Modded_Melts)):
+        #idx = np.where(Oc_mask == v)
         if Display_label:
-            label =  f'R = {np.round(np.corrcoef(Modded_melts[idx],Melts[idx])[0,1], 4)}'
+            label =  f'R = {np.round(np.corrcoef(reference_melt,NN_melt)[0,1], 4)}'
         else:
             label = ''
-        ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = f'Ocean{int(v)} {label}')
-        ax.legend(Oc_mask)
+        #ax.scatter(Modded_melts[idx], Melts[idx], s = 3, alpha = 0.6 ,label = f'Ocean{int(v)} {label}')
+        ax.scatter(NN_melt, reference_melt, s = 3, alpha = 0.6 ,label = f'{Oc_tar[i]}')
+        ax.legend(Oc_tar[i])
     linex, liney = [Vmin, Vmax], [Vmin, Vmax]
     ax.plot(linex, liney, c = 'red', ls = '-', linewidth = 0.8)
     ax.legend(loc = 'upper left', fontsize = SIZE - 2)
@@ -222,13 +227,14 @@ def Plot_Melt_to_Modded_melt(save = False, Save_name = '',Compute_at_ind = False
     plt.ylabel('Reference melt (Gt/yr)', fontsize = SIZE)
     sns.despine()
     if Display_title:
-        plt.title('Modeling melt rates of {} \n (NN trained on {})'.format(Concat_Oc_names(Oc_tar), Concat_Oc_names(Oc_tr)), fontsize = SIZE)
+        plt.title('Modeling melt rates of {}'.format(Concat_Oc_names(Oc_tar)), fontsize = SIZE)
     plt.show()
-    print(Compute_rmse(Melts, Modded_melts))
+    print(Compute_rmse(Flatten_list_list(Melts), Flatten_list_list(Modded_Melts)))
+    
     if save:
-        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tr{}_Tar{}_{}_Ex_{}'.format(np.unique(Neurs), 
-                    Concat_Oc_names(Oc_tr), Concat_Oc_names(Oc_tar), int(time.time()), Save_name)), facecolor = 'white', dpi = 300)
-    return RMSEs, Params, Melts, Modded_melts, Neurs, Oc_mask
+        fig.savefig(os.path.join(PWD, 'Image_output', 'Line_real_Modeled_N{}_Tar{}_{}_Ex_{}'.format( 
+                    Concat_Oc_names(Oc_tar), int(time.time()), Save_name)), facecolor = 'white', dpi = 300)
+    return RMSEs, Melts, Modded_Melts
 
 
     
@@ -278,31 +284,46 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     return hist
 
-def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = [], Desired_length = None):
+def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = [], Desired_length = None, Generic_label = None, cmap = None, message = True, Dim = None):
 
     li = []
     fig, ax = plt.subplots()
-    dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
-    fig.set_size_inches(dim)
+    if Dim == None:
+        Dim = (8.75/3*3 * 0.75, 8.75/3*2 * 0.75)
+    fig.set_size_inches(Dim)
     
     prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
+    
+    if Generic_label != None:
+        label = []
+    for mod in Mods:
+        Model_ps = Get_model_path_json(index = ind, **mod)
+        for Model_p in Model_ps:
+            if message == True:
+                print(Model_p)
+            data = Get_model_attributes(Model_p)
+            Hist = pd.read_pickle(Model_p + '/TrainingHistory')
+            Cur_li = []
+            for k in Hist.keys():
+                if k in Desired_comparaison:
+                    if Desired_length == None:
+                        Cur_li.append(Hist[k])
+                    else:
+                        Cur_li.append(Hist[k][:Desired_length])
+            if Generic_label != None:
+                Config = Get_model_attributes(Model_p)
+                label.append(Config.get(Generic_label))
+            li.append(Cur_li)
+    if message == True:
+        print(label)
     indexes = np.unique(label, return_index = True)[1]
     Uniqs = np.array([label[i] for i in sorted(indexes)])
-    for mod in Mods:
-        Model_p = Get_model_path_json(index = ind, **mod)[0]
-        print(Model_p)
-        data = Get_model_attributes(Model_p)
-        Hist = pd.read_pickle(Model_p + '/TrainingHistory')
-        Cur_li = []
-        for k in Hist.keys():
-            if k in Desired_comparaison:
-                if Desired_length == None:
-                    Cur_li.append(Hist[k])
-                else:
-                    Cur_li.append(Hist[k][:Desired_length])
-        li.append(Cur_li)
-    #print(li)
+    if cmap == None:
+        colors = prop_cycle.by_key()['color']
+    else:
+    #colors = plt.cm.rainbow(np.linspace(0, 1, n))
+        colors = plt.get_cmap(cmap)(np.linspace(0, 1, len(Uniqs)))
+    #plt.plot(x, i * y, color=colors[i])
     Plotted_labels = []
     for i, Data in enumerate(li):
         if type(Data[0]) != list:
@@ -342,6 +363,11 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
         
         
 def Plotting_side_by_side(ind = 0,save = False, **kwargs):
+    '''
+    Deprecated for now due to better plotting function below. (Plot N side)
+    '''
+    
+    
     Dataset, name, T, Oc_tar, Oc_tr = Compute_dataset_for_plot(ind = ind, **kwargs)
     cmap = plt.get_cmap('seismic')
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
@@ -371,7 +397,8 @@ def Compute_dataset_for_plot(ind, Epoch = 4, Ocean_trained = 'Ocean1', Type_trai
     print(Model_p)
     Model_name = Model_p.split('/')[-1]
     EpochM, Neur, Choix = re.findall('Ep_(\d+)_N_(\w+)_Ch_(\d+)', Model_name)[0]
-    Dataset = Compute_datas(Model_p, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = 1, T = T)
+    #Dataset = Compute_datas(Model_p, Choix, Ocean_target, Type_tar, Epoch, message, Compute_at_t = 1, T = T)
+    Dataset, _ = Compute_NN_oceans(NN_attributes = {}, Ocean_target = Ocean_target, T = T, NN_path = Model_p)
     if Dataset != None:
         return Dataset, Model_name, T, Ocean_target, Ocean_trained
     else:
@@ -465,8 +492,8 @@ def plot_N_side(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1'
             'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight')
     return Datasets
 
-def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_tar = 'COM_NEMO-CNRS', 
-        message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False, One_profile = False, Single_type = 'Mean', Display_label = True, Dimensions = None, size = None):
+def plot_N_side_exp(Model_fn, Attribs : list, 
+        message = 0, T = [0], save = False, Title = [], sharing = False, Only_reference = False, One_profile = False, Single_type = 'Mean', Display_label = True, Dimensions = None, size = None, **kwargs):
     Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ", }
     s_to_yr = 3600 * 24 * 365
     cmap = plt.get_cmap('seismic')
@@ -493,9 +520,7 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
     plt.subplots_adjust(hspace = 0.15)
     Datasets = []
     for Index, Att in enumerate(Attribs):
-        Files = Get_model_path_json(**Att)
-        #print(Files)
-        File = Files[ind]
+        File = Get_model_path_json(**Att)[0]
         Config = Get_model_attributes(File)
         Choix, Epoch = Config['Choix'], Config['Epoch']
 #(Model,Model_path, Choix, Ocean_target, Type_tar, Epoch, message,
@@ -503,8 +528,9 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
         if message == True:
             print(f"Started computing for {File}", end = "/r")
         if One_profile:
-            Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
-                        Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+            #Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+            #            Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+            Dataset = Compute_NN_oceans(NN_attributes = Att, T = 'ALL', **kwargs)[0][0]
             
             if Single_type == 'Sum':
                 Modded = Dataset.Mod_melt.sum(dim = 'date', skipna= True)
@@ -518,8 +544,10 @@ def plot_N_side_exp(Model_fn, Attribs : list, ind = 0, Oc_tar = 'Ocean1',Type_ta
             Dataset = [ Dataset.assign(meltRate = Real) ]
         else:
             
-            Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
-                        Type_tar, Epoch, message, Compute_at_t = T, Method = Config.get('Method_data'))
+            #Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+            #            Type_tar, Epoch, message, Compute_at_t = T, Method = Config.get('Method_data'))
+            Dataset = Compute_NN_oceans(NN_attributes = Att, T = T, **kwargs)[0][0]
+            print(Dataset)
         Datasets.append(Dataset)
         if message == True:
             print(f"Finished computing for {File}", end = "\r")
@@ -719,3 +747,12 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
             'Spatial_error_{}_M_{}_{}_{}.png'.format(Type, Oc_tar,Oc_trained, Config.get('Uniq_id'))), facecolor='white', bbox_inches='tight')
     
     return Dataset
+
+def Plot_generic_benchmark(Path):
+    df = pd.read_csv(Path)
+    Var_interest = df.columns[0]
+    
+    Mean_df = df.groupby(Var_interest).mean()
+    #return Mean_df 
+    plt.plot(Mean_df.index, Mean_df.Overall_RMSE)
+    
