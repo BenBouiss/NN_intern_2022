@@ -16,6 +16,8 @@ import random
 import tensorflow_model_optimization as tfmot
 import tempfile
 import math 
+import gc
+
 PWD = os.getcwd()
 PWD = '/home/bouissob/Code'
 print(f'PWD : {PWD}')
@@ -50,13 +52,24 @@ def Generate_Var_name(Str, Extent):
     Min, Max = Extent
     return [f"{Str}_{i}" for i in np.arange(Min, Max)]
 
+def Convert_from_big(li : list):
+    if 'Big_T' in li:
+        li.remove('Big_T')
+        for i in range(40):
+            li.append(f'T_{i}')
+    if 'Big_S' in li:
+        li.remove('Big_S')
+        for i in range(40):
+            li.append(f'S_{i}')
+    return li
+
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_Cutting = False, Coordinate_box = None, Time_Cutting = False, Similar_training = False):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
-        self.Var_Y = Var_Y
+        self.Var_Y = [Var_Y] if type(Var_Y) != list else Var_Y
         self.Dataset_train = Dataset_train
         self.Oc_mod_type = Oc_mod_type
         self.activ_fct = activ_fct
@@ -83,6 +96,11 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                 self.LR_Patience = LR_Patience
                 self.LR_Factor = LR_Factor
                 self.min_delta = min_delta
+        self.Spatial_Cutting = Spatial_Cutting
+        self.Time_Cutting = Time_Cutting
+        self.Similar_training = Similar_training
+        if self.Spatial_Cutting == True:
+            self.Coordinate_box = Coordinate_box
         #self.Multi_thread = Multi_thread
         #self.Workers = Workers
         self.Hybrid = Hybrid
@@ -112,7 +130,253 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             self.target_sparsity = target_sparsity
         self.Js = dict(self.__dict__)
         self.Callback = []
+
+    def load_dataset(self, Ocean, Model_type, Method, Var_to_load):
+        path = Getpath_dataset(Ocean, Model_type, Method)
+        return pd.read_csv(path, usecols = Var_to_load)
+    def Fetch_dataset(self):
+        dfT = pd.DataFrame()
+        Var_to_load = self.Var_X + self.Var_Y
+        for Ocean in self.Dataset_train:
+            for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
+                print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+            print(f'Loading {Ocean} dataset')
+            df = self.load_dataset(Ocean, self.Oc_mod_type, self.Method_data, Var_to_load)
+            df = self.Apply_modif_to_dataset(df)
+            dfT = pd.concat([dfT, df], ignore_index= True)
+            del df
+        return dfT
+    def Apply_modif_to_dataset(self, li : list):
+        if self.Time_Cutting :
+            li = self.Apply_Time_Cutting(li)
+        if self.Spatial_Cutting:
+            li = self.Apply_Spatial_Cutting(li, self.Coordinate_box)
+        if self.Fraction != None:
+            li = li.sample(frac = self.Fraction)
+        return li
+    
+    def Apply_Time_Cutting(self, li : list):
+        return li
+    
+    def Apply_Spatial_Cutting(self, li : list, Coordinate_box : list):
+        return li
+    
+    def Extract_stat_variables(self, df):
+        if self.Choix == 0:
+            mean = df.mean().to_frame().T
+            std = df.std().to_frame().T
+            return mean, std
+        if self.Choix == 1:
+            Max = df.max().to_frame().T
+            Min = df.min().to_frame().T
+            return Max, Min
+        if self.Choix == 2:
+            iqr = (df.quantile(0.75) - df.quantile(0.25)).to_frame().T
+            med = df.median().to_frame().T
+            return iqr, med
+    def Extract_stat_variables_from_big(self, df):
+        arr = df.to_numpy()
+        if self.Choix == 0:
+            mean = arr.mean()
+            std = arr.std()
+            return mean, std
+        if self.Choix == 1:
+            Max = arr.max()
+            Min = arr.min()
+            return Max, Min
+        if self.Choix == 2:
+            iqr = np.quantile(arr, q = 0.75) - np.quantile(arr, q = 0.25)
+            med = np.median(arr)
+            return iqr, med
+    def Normalise(self):
+        Var_drop = [Var for Vars in self.Big_Var for Var in Vars]
+        Arr = self.X_train.drop(Var_drop, axis = 1) 
+        Stat1, Stat2 = self.Extract_stat_variables(Arr)
+        del Arr
         
+        for i, Var in enumerate(self.Big_Var):
+            Cur = self.Extract_stat_variables_from_big(self.X_train[Var])
+            Stat1[Var] = Cur[0]
+            Stat2[Var] = Cur[1]
+        if self.Choix == 0:
+            self.meanX = Stat1.mean()
+            self.stdX = Stat2.mean()
+            self.meanY, self.stdY = self.Y_train.mean(), self.Y_train.std()
+        elif self.Choix == 1:
+            self.maxX, self.minX = Stat1.mean(), Stat2.mean()
+            self.maxY, self.minY = self.Y_train.max(), self.Y_train.min()
+        elif self.Choix == 2:
+            self.iqrX = Stat1.mean()
+            self.MedX = Stat2.mean()
+            self.MedY = self.Y_train.median()
+            self.iqrY = self.Y_train.quantile(0.75) - self.Y_train.quantile(0.25)
+
+    def Normalize_Train_valid_ds(self):
+        self.Normalise()
+        if self.Choix == 0:
+            self.X_train, self.X_valid = (np.array((self.X_train - self.meanX)/self.stdX), 
+                                          np.array((self.X_valid - self.meanX)/self.stdX))
+
+            self.Y_train, self.Y_valid = (np.array((self.Y_train - self.meanY)/self.stdY), 
+                                          np.array((self.Y_valid - self.meanY)/self.stdY))
+        
+        elif self.Choix == 1:
+            self.X_train, self.X_valid = (np.array((self.X_train - self.minX)/(self.maxX - self.minX)), 
+                                          np.array((self.X_valid - self.minX)/(self.maxX - self.minX)))
+            
+            self.Y_train, self.Y_valid = (np.array((self.Y_train - self.minY)/(self.maxY - self.minY)), 
+                                          np.array((self.Y_valid - self.minY)/(self.maxY - self.minY)))
+        elif self.Choix == 2:
+            self.X_train, self.X_valid = (np.array((self.X_train - self.MedX)/(self.iqrX)),
+                                          np.array((self.X_valid - self.MedX)/(self.iqrX)))
+            
+            self.Y_train, self.Y_valid = (np.array((self.Y_train - self.MedY)/(self.iqrY)),
+                                          np.array((self.Y_valid - self.MedY)/(self.iqrY)))
+            
+        self.Training_sample_size = len(self.Y_train)
+        self.Js['Training_sample_size'] = self.Training_sample_size
+    def Separate_X_Y(self):
+        print('Separate X Y datasets')
+        Y = self.li[self.Var_Y]
+        #li.drop(columns=self.Var_Y, inplace = True)
+        X = self.li[self.Var_X]
+        del self.li
+        gc.collect()
+        if self.Similar_training == True:
+            self.Select_dataset_for_similar_train(X, Y)
+        else:
+            self.X_train = X.sample(frac = 0.8, random_state = self.Random_seed)
+            self.X_valid = X.drop(self.X_train.index)
+            del X
+            gc.collect()
+            self.Y_train = Y.loc[self.X_train.index]
+            self.Y_valid = Y.drop(self.X_train.index)
+            del Y
+            gc.collect()
+            #return X_train, X_valid, Y_train, Y_valid
+    
+    def Select_dataset_for_similar_train(self, X, Y):
+        ind_p = os.path.join(PWD, 'Auto_model/tmp/', '_'.join(self.Dataset_train))
+        inds = glob.glob(ind_p + '/ind_*.csv')
+        Inds = np.loadtxt(inds[0]).astype(int)
+        self.X_valid = X.loc[X.index.isin(Inds)]
+        self.Y_valid = Y.loc[Y.index.isin(Inds)]
+        self.X_train = X.loc[~X.index.isin(Inds)]
+        self.Y_train = Y.loc[~Y.index.isin(Inds)]
+        print(len(self.X_train), len(self.X_valid))
+        print(len(self.Y_train), len(self.Y_valid))
+        self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
+        #return X_train, X_valid, Y_train, Y_valid
+    def Save_stat_variables(self):
+        self.Name = 'Ep_{}_N_{}_Ch_{}-{}_Ex_{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id, self.Extra_n)
+        self.Path = os.path.join(PWD, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
+        Make_dire(self.Path)
+        if self.Choix == 0 :
+            self.meanX.to_pickle(self.Path + 'MeanX.pkl')
+            self.stdX.to_pickle(self.Path + 'StdX.pkl')
+            np.savetxt(self.Path + 'MeanY.csv', np.array(self.meanY).reshape(1, ))
+            np.savetxt(self.Path + 'StdY.csv', np.array(self.stdY).reshape(1, ))
+        elif self.Choix == 1:
+            self.maxX.to_pickle(self.Path + 'MaxX.pkl')
+            self.minX.to_pickle(self.Path + 'MinX.pkl')
+            np.savetxt(self.Path + 'MaxY.csv', np.array(self.maxY).reshape(1, ))
+            np.savetxt(self.Path + 'MinY.csv', np.array(self.minY).reshape(1, ))
+        elif self.Choix == 2:
+            self.MedX.to_pickle(self.Path + 'MedX.pkl')
+            self.iqrX.to_pickle(self.Path + 'iqrX.pkl')
+            np.savetxt(self.Path + 'MedY.csv', np.array(self.MedY).reshape(1, ))
+            np.savetxt(self.Path + 'iqrY.csv', np.array(self.iqrY).reshape(1, ))
+            
+    def DataProcessing(self):
+        self.li = self.Fetch_dataset()
+        self.Separate_X_Y()
+        self.Normalize_Train_valid_ds()
+        self.Save_stat_variables()
+
+    def Neural_network_training(self):
+        self.DataProcessing()
+        self.Init_NN_structure()
+        self.Gather_callbacks()
+        
+        Start = time.perf_counter()
+        if self.Hybrid == True:
+            Mod = self.Execute_hybrid_train()
+        else:
+            print('Start Training')
+            print(len(self.X_train), len(self.X_valid))
+            print(len(self.Y_train), len(self.Y_valid))
+            Mod = self.Execute_train()
+        self.Js['Training_time'] = time.perf_counter() - Start
+        print(f"Training done after {int(self.Js['Training_time'])} s")
+        self.Model_save(Mod)
+        
+    def Init_NN_structure(self):
+        Orders = self.Neur_seq.split('_')
+        self.model = tf.keras.models.Sequential()
+        self.model.add(tf.keras.layers.Input(len(self.Var_X)))
+        Drop_seq = []   
+        for i, Order in enumerate(Orders):
+            if int(Order)!=0:
+                self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
+                if self.Drop != None or self.Hybrid == True:
+                    if i < len(Orders) - 1 : 
+                        if self.Drop == 'Default' or self.Hybrid == True:
+                            self.model.add(tf.keras.layers.Dropout(self.Default_drop))
+                            Drop_seq.append(self.Default_drop)
+                        elif self.Drop == 'Scaling':
+                            Dropout = max(0.5, 0.9 - i * 0.15)
+                            self.model.add(tf.keras.layers.Dropout(Dropout))
+                            Drop_seq.append(Dropout)
+        self.Js['Drop_seq'] = Drop_seq
+        self.model.add(tf.keras.layers.Dense(len(self.Var_Y)))
+        print(self.model.layers)
+        if self.Drop == 'Scaling':
+            self.model.compile(optimizer=optimizer,
+                     loss = 'mse',
+                    metrics = ['mae', 'mse'])
+        else:
+            self.model.compile(optimizer='adam',
+                     loss = 'mse',
+                    metrics = ['mae', 'mse'])
+        self.Js['Param'] = self.model.count_params()
+    
+    def Gather_callbacks(self):
+        saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Fraction = self.Fraction_save)
+        self.Callback.append(saver)
+        
+        if self.Scaling_lr == True:
+            self.Add_lr_schedulling()
+        if self.Pruning == True:
+            self.Add_pruning()
+        if self.TensorBoard_logs == True:
+            logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
+            tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
+            self.Callback.append(tensorboard_callback)
+    def Add_lr_schedulling(self):
+
+        if self.Scaling_lr == True:
+            if self.Scaling_type == 'Linear':
+                New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
+            elif self.Scaling_type == 'Plateau':
+                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=self.min_delta)
+            
+            self.Callback.append(New_lr)
+
+    
+    def scheduler(self, epoch, lr):
+        if not self.Hybrid:
+            if (epoch+1) % self.Frequence_scaling_change == 0 and lr/self.Scaling_change >= self.LR_min:
+                return lr / self.Scaling_change
+            if lr/self.Scaling_change < self.LR_min:
+                return self.LR_min
+            else:
+                return lr
+        else:
+            if (epoch+1) % self.Frequence_scaling_change == 0 and self.Epoch_init == self.Epoch_lim:
+                return lr / self.Scaling_change
+            else:
+                return lr
+            
     def Add_pruning(self):
         logdir = tempfile.mkdtemp()
         prune_low_magnitude = tfmot.sparsity.keras.prune_low_magnitude
@@ -140,264 +404,18 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Callback.append(tfmot.sparsity.keras.PruningSummaries(log_dir=logdir))
         print('Engaging pruning procedure!')
                 
-    def Init_mod(self, Shape):
-        Orders = self.Neur_seq.split('_')
-        self.model = tf.keras.models.Sequential()
-        self.model.add(tf.keras.layers.Input(Shape))
-        Drop_seq = []
-        #self.model.add(tf.keras.layers.Dropout(self.Default_drop))
-        if self.Drop == 'Scaling':
-            optimizer = tf.keras.optimizers.Adam(lr=0.01) #x10
-        
 
-            
-        for i, Order in enumerate(Orders):
-            if int(Order)!=0:
-                self.model.add(tf.keras.layers.Dense(int(Order), activation = self.activ_fct))
-                if self.Drop != None or self.Hybrid == True:
-                    if i < len(Orders) - 1 : 
-                        if self.Drop == 'Default' or self.Hybrid == True:
-                            self.model.add(tf.keras.layers.Dropout(self.Default_drop))
-                            Drop_seq.append(self.Default_drop)
-                        elif self.Drop == 'Scaling':
-                            Dropout = max(0.5, 0.9 - i * 0.15)
-                            self.model.add(tf.keras.layers.Dropout(Dropout))
-                            Drop_seq.append(Dropout)
-        self.Js['Drop_seq'] = Drop_seq
-        if self.Pruning == True:
-            self.Add_pruning()
-        self.model.add(tf.keras.layers.Dense(1))
-
-        if self.Drop == 'Scaling':
-            self.model.compile(optimizer=optimizer,
-                     loss = 'mse',
-                    metrics = ['mae', 'mse'])
-        else:
-            self.model.compile(optimizer='adam',
-                     loss = 'mse',
-                    metrics = ['mae', 'mse'])
-        self.Js['Param'] = self.model.count_params()
-        
-    def Fetch_data(self, Datasets, Oc_mod_type):
-        li = []
-        for ind, Data in enumerate(Datasets):
-
-            if self.Method_data == None:
-                Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
-                if self.Cutting == 'Same_t':
-                    Current = Current.loc[Current.date <= 250]
-                elif self.Cutting != False:
-                    if '%' in self.Cutting:
-                        percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
-                        print(self.Cutting, percent)
-                        tmx = int(max(np.array(Current.date)))
-                        Current = Current.loc[Current.date <= int(percent * tmx) | Current.date >= int((1 - percent) * tmx)]
-                li.append(Current)
-                del Current
-            else:
-                print(f"Getting dataset : {Data}")
-                print(f"Dataset used : {Getpath_dataset(Data, Oc_mod_type, self.Method_data)}")
-                if (self.Method_data != 4 and self.Method_data != 2):
-                    if ind == 0:
-                        df = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
-                    else:
-                        df = pd.concat([df, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))], ignore_index= True)
-                else:
-                    if ind == 0:
-                        X = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)
-                        Y = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])
-                        if self.Cutting != False:
-                            if '%' in self.Cutting:
-                                percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
-                                print(self.Cutting, percent)
-                                Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
-                                tmx = int(max(np.array(Current.date)))
-                                Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
-                                X = Current[self.Var_X]
-                                Y = Current[self.Var_Y]
-                        
-                    else:
-                        if self.Cutting == False:
-                            X = pd.concat([X, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = self.Var_X)], ignore_index= True)
-                            Y = pd.concat([Y, pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data), usecols = [self.Var_Y])], ignore_index= True)
-                        else:
-                            Current = pd.read_csv(Getpath_dataset(Data, Oc_mod_type, self.Method_data))
-                            if '%' in self.Cutting:
-                                percent = int(re.findall('(\d+)%', self.Cutting)[0])/100
-                                print(self.Cutting, percent)
-                                tmx = int(max(np.array(Current.date)))
-                                Current = Current.loc[(Current.date <= int(percent * tmx)) | (Current.date >= int((1 - percent) * tmx))]
-                            X = pd.concat([X, Current[self.Var_X]], ignore_index= True)
-                            Y = pd.concat([Y, Current[self.Var_Y]], ignore_index= True)
-                            
-                #for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
-                #    print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
-                #print(f"Finished dataset : {Data}")
-            
-        if self.Method_data == 4 or self.Method_data == 2:
-            if self.Fraction != None:
-                X = X.sample(frac = self.Fraction)
-                Y = Y.loc[X.index]
-            return X, Y
-        
-        if self.Method_data == None:
-            df = pd.concat(li, ignore_index= True)
-        del li
-        return df
-
-    def Prepare_data(self, Indexs):
-        if self.Method_data == 4 or self.Method_data == 2:
-            X, Y = self.Fetch_data(self.Dataset_train, self.Oc_mod_type)
-            df = []
-        else:
-            df = self.Fetch_data(self.Dataset_train, self.Oc_mod_type)
-            X = df[self.Var_X]
-            Y = df[self.Var_Y]
-        del df
-        print('Check index')
-        if Indexs == None:
-            X_train = X.sample(frac = 0.8, random_state = self.Random_seed)
-            X_valid = X.drop(X_train.index)
-            Y_train = Y.loc[X_train.index]
-            Y_valid = Y.drop(X_train.index)
-            self.Js['Similar_training'] = 0
-        else:
-            ind_p = os.path.join(PWD, 'Auto_model/tmp/', '_'.join(self.Dataset_train))
-            if self.Cutting != False:
-                inds = glob.glob(ind_p + '/Cut*.csv')
-            else:
-                inds = glob.glob(ind_p + '/ind_*.csv')
-            Inds = np.loadtxt(inds[0]).astype(int)
-#            X_valid = X.loc[Inds]
-            X_valid = X.loc[X.index.isin(Inds)]
-            
-            #Y_valid = Y.loc[Inds]
-            Y_valid = Y.loc[Y.index.isin(Inds)]
-            
-            X_train = X.loc[~X.index.isin(Inds)]
-            Y_train = Y.loc[~Y.index.isin(Inds)]
-            #X_train = X.drop(Inds)
-            #Y_train = Y.drop(Inds)
-            self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
-        del X, Y
-        print('Begin Norma')
-        if self.Choix == 0:
-            if self.Method_data != 4 and self.Method_data != 2 and self.Method_data != 5:
-                self.meanX, self.stdX = X_train.mean(), X_train.std() 
-            else:
-                #Arr = X_train.drop(self.Big_Var, axis = 1)
-                Means, Stds = [], []
-                Var_drop = [Var for Vars in self.Big_Var for Var in Vars]
-                Arr = X_train.drop(Var_drop, axis = 1) 
-                M = Arr.mean().to_frame().T
-                Std = Arr.std().to_frame().T
-                for i, Var in enumerate(self.Big_Var):
-                    M[Var] = X_train[Var].to_numpy().mean()
-                    Std[Var] = X_train[Var].to_numpy().std()
-                self.meanX = M.mean()
-                self.stdX = Std.mean()
-                del Arr, M, Std
-            
-            self.meanY, self.stdY = Y_train.mean(), Y_train.std()     
-            self.X_train, self.X_valid = (np.array((X_train - self.meanX)/self.stdX), 
-                                          np.array((X_valid - self.meanX)/self.stdX))
-
-            self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
-                                          np.array((Y_valid - self.meanY)/self.stdY))
-        elif self.Choix == 1:
-            self.maxX, self.minX = X_train.max(), X_train.min()
-            self.maxY, self.minY = Y_train.max(), Y_train.min()
-            self.X_train, self.X_valid = (np.array((X_train - self.minX)/(self.maxX - self.minX)), 
-                                          np.array((X_valid - self.minX)/(self.maxX - self.minX)))
-            self.Y_train, self.Y_valid = (np.array((Y_train - self.minY)/(self.maxY - self.minY)), 
-                                          np.array((Y_valid - self.minY)/(self.maxY - self.minY)))
-        elif self.Choix == 2:
-            self.MedX, self.MedY = X_train.median(), Y_train.median()
-            self.iqrX = X_train.quantile(0.75) - X_train.quantile(0.25)
-            self.iqrY = Y_train.quantile(0.75) - Y_train.quantile(0.25)
-            self.X_train, self.X_valid = (np.array((X_train - self.MedX)/(self.iqrX)),
-                                          np.array((X_valid - self.MedX)/(self.iqrX)))
-            self.Y_train, self.Y_valid = (np.array((Y_train - self.MedY)/(self.iqrY)),
-                                          np.array((Y_valid - self.MedY)/(self.iqrY)))
-        self.Training_sample_size = len(Y_train)
-        self.Js['Training_sample_size'] = self.Training_sample_size
-    def train(self, Indexs = None):
-        
-        if self.Random_seed != None:
-            tf.random.set_seed(self.Random_seed)
-            
-        Shape = len(self.Var_X)
-        self.Prepare_data(Indexs)
-        self.Init_mod(Shape)
-        self.Data_save()
-        saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Fraction = self.Fraction_save)
-        self.Callback.append(saver)
-        if self.Scaling_lr == True:
-            if self.Scaling_type == 'Linear':
-                New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
-            elif self.Scaling_type == 'Plateau':
-                New_lr = tf.keras.callbacks.ReduceLROnPlateau(Patience = self.LR_Patience, factor = 1 / self.LR_Factor, monitor='val_loss', min_lr = self.LR_min, verbose = 1, min_delta=self.min_delta)
-            self.Callback.append(New_lr)
-        if self.TensorBoard_logs == True:
-            logdir="Auto_model/logs/fit/" + str(self.Uniq_id)
-            tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
-            self.Callback.append(tensorboard_callback)
-            
-        Start = time.perf_counter()
-        if not self.Hybrid:
-            Mod = self.model.fit(self.X_train, self.Y_train,
+    def Execute_hybrid_train(self):
+        pass
+    def Execute_train(self):
+        Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=self.Callback,
                    epochs = self.Epoch,
                    batch_size = self.batch_size,
                    validation_data = (self.X_valid, self.Y_valid),
                    verbose = self.verbose)
-            
-        else:
-            Epochs = [self.Epoch_lim, self.Epoch-self.Epoch_lim]
-            self.histories = []
-            for i,Ep in enumerate(Epochs):
-                if i == 0:
-                    self.Epoch_init = 0
-                else:
-                    self.Epoch_init = Epochs[i-1]
-                self.Callback[0] = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Epoch_init = self.Epoch_init, Fraction = self.Fraction_save)
-                Mod = self.model.fit(self.X_train, self.Y_train,
-                   callbacks=self.Callback,
-                   epochs = Ep,
-                   batch_size = self.batch_size,
-                   validation_data = (self.X_valid, self.Y_valid),
-                   verbose = self.verbose)
-                if i == 0:
-                    for i,layer in enumerate(self.model.layers):
-                        if layer.name[:7] == 'dropout':
-                            self.model.layers[i].rate = 0
-                    clone = tf.keras.models.clone_model(self.model)
-                    clone.set_weights(self.model.get_weights())
-                    self.model = clone
-                    self.model.compile(optimizer='adam',
-                     loss = 'mse',
-                        metrics = ['mae', 'mse'])
-                self.histories.append(Mod.history)
-                
-        self.Js['Training_time'] = time.perf_counter() - Start
-        del self.X_train, self.Y_train, self.X_valid, self.Y_valid
-        self.Model_save(Mod)
-        
-    def scheduler(self, epoch, lr):
-        if not self.Hybrid:
-            if (epoch+1) % self.Frequence_scaling_change == 0 and lr/self.Scaling_change >= self.LR_min:
-                return lr / self.Scaling_change
-            if lr/self.Scaling_change < self.LR_min:
-                return self.LR_min
-            else:
-                return lr
-        else:
-            if (epoch+1) % self.Frequence_scaling_change == 0 and self.Epoch_init == self.Epoch_lim:
-                return lr / self.Scaling_change
-            else:
-                return lr
-        
-        
+        return Mod
+    
     def Data_save(self):
         self.Name = 'Ep_{}_N_{}_Ch_{}-{}_Ex_{}/'.format(self.Epoch, self.Neur_seq, self.Choix, self.Uniq_id, self.Extra_n)
         self.Path = os.path.join(PWD, 'Auto_model', self.Oc_mod_type, '_'.join(self.Dataset_train), self.Name)
@@ -455,7 +473,7 @@ class Sequencial_training():
         for Mod_name in Model_list:
             self.training(Oc_mod_type = Mod_name, **kwargs)
     def training(self, training_extent = 0, verbose = 1, Verify = 1,message = 1,
-                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = 0, **kwargs):
+                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = False, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:
@@ -470,17 +488,14 @@ class Sequencial_training():
         else:
             print('Projected training regiment :\n {}'.format(Neur_seqs))
         
-        if Similar_training == 1:
-            Indexs = 1
+        if Similar_training == True:
             self.Generate_training_index(**kwargs)
-        else:
-            Indexs = None
         Time_elap = float(0)
         for ind, Neur in enumerate(Neur_seqs):
-            Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
+            Model = self.Model(Neur_seq = Neur, verbose = verbose,Similar_training = Similar_training, **kwargs)
             print("Starting training for neurone : {}, {}/{} (Previous step : {:.3f} s)".format(Neur, ind, len(Neur_seqs), Time_elap))
             Start = time.perf_counter()
-            Model.train(Indexs)
+            Model.Neural_network_training()
             Time_elap = time.perf_counter() - Start
     def Neur_seq_preview(self, training_extent):
         Neur_seqs = []

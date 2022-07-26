@@ -1,0 +1,71 @@
+Training(**Training_kwargs)
+
+
+----
+= separate function
+----
+
+----
+Fetch dataset
+    - Option for similar training
+----
+
+----
+Dataprocessing
+    ----
+    - Time cutting
+    ----
+    (merge?)
+    ----
+    - Spatial cutting
+    ----
+    
+    ----
+    - Split Training/Validation
+    ----
+    
+    ----
+    - Normalise datasets
+        ----
+        - Save stat variables
+        ----
+    ----
+----
+
+
+Neural network
+----
+    ----
+    - Gather the required callbacks
+        ----
+        - Pruning
+        ----
+        
+        - lr
+            ----
+            - scheduling every nth epochs
+            ----
+            - scheduling using Plateau lr
+            ----
+            - scheduling using circular lr setup
+            ----
+    ----
+----
+    ----
+    - Initialise NN structure
+        - Installing pruning and/or dropout layers
+    ----
+    - Fit functions
+        ----
+        - Normal fit
+        ----
+        - Hybrid fit 
+        ----
+    - Save models
+        ----
+        - Save every nth epochs
+        ----
+        - Save best and last (potentially)
+        ----
+    
+    

@@ -727,3 +727,478 @@ Epoch 32: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
 Epoch 42: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
 
 Epoch 52: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 62: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 54: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 64: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 16: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 27: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 37: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 47: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 58: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 46: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 15: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 26: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 36: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 46: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 23: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 33: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 44: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 54: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 64: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 23: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 33: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 22: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 32: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 42: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 53: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 63: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 20: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 30: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 43: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 53: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 63: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 20: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 30: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 24: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 34: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 53: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 63: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 19: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 29: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 40: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 50: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 60: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 19: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 29: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 40: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 50: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 60: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+Getting dataset : Ocean1
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean1_lite.csv
+Getting dataset : Ocean2
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean2_lite.csv
+Getting dataset : Ocean3
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean3_lite.csv
+Getting dataset : Ocean4
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/Ocean4_lite.csv
+Getting dataset : CPL_EXP10_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP10_rst_lite.csv
+Getting dataset : CPL_EXP13_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP13_rst_lite.csv
+Getting dataset : CPL_EXP22_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP22_rst_lite.csv
+Getting dataset : CPL_EXP23_rst
+Dataset used : /bettik/bouissob/Method_Data/COM_NEMO-CNRS/Method_4/CPL_EXP23_rst_lite.csv
+Check index
+Begin Norma
+Engaging pruning procedure!
+
+Epoch 23: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 42: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 52: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 62: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
