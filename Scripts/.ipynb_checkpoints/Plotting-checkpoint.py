@@ -530,15 +530,15 @@ def plot_N_side_exp(Model_fn, Attribs : list,
         if One_profile:
             #Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
             #            Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
-            Dataset = Compute_NN_oceans(NN_attributes = Att, T = 'ALL', **kwargs)[0][0]
-            
+            Dataset, Ocean_target = Compute_NN_oceans(NN_attributes = Att, T = 'ALL', **kwargs)
+            Dataset = Dataset[0]
             if Single_type == 'Sum':
                 Modded = Dataset.Mod_melt.sum(dim = 'date', skipna= True)
                 Real = Dataset.meltRate.sum(dim = 'date', skipna= True)
             if Single_type == 'Mean':
                 Modded = Dataset.Mod_melt.mean(dim = 'date', skipna= True)
                 Real = Dataset.meltRate.mean(dim = 'date', skipna= True)
-                
+            del Dataset
             Dataset = xr.Dataset()
             Dataset = Dataset.assign(Mod_melt = Modded)
             Dataset = [ Dataset.assign(meltRate = Real) ]
@@ -655,7 +655,7 @@ def plot_N_side_exp(Model_fn, Attribs : list,
         sns.despine()
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
-            'N_side_M_{}_{}.png'.format(Oc_tar, int(time.time()))), facecolor='white', bbox_inches='tight', dpi = 300)
+            'N_side_M_{}_{}.png'.format(Concat_Oc_names(Ocean_target), int(time.time()))), facecolor='white', bbox_inches='tight', dpi = 300)
     return Datasets
 
 def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
@@ -682,7 +682,7 @@ def Plot_Models_per_epoch(NN_attrib = {}, Neurones = [],Attribs = [], **kwargs):
                 Params.append(Param)
                 
 
-def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
+def Plot_spatial_RMSE(NN_attrib, Oc_tar = 'Ocean1', ind = 0,
         Type_tar = 'COM_NEMO-CNRS', message = 0, save = False, Title = [], Type = 'Mean'):
     #Titles = {"iceDraft" : "iceD", "temperatureYZ" : "T-YZ", "salinityYZ" : "S-YZ"}
     s_to_yr = 3600 * 24 * 365
@@ -699,8 +699,10 @@ def Plot_spatial_RMSE(Model_fn, NN_attrib, Oc_tar = 'Ocean1', ind = 0,
     Choix, Epoch = Config['Choix'], Config['Epoch']
     Model = Fetch_model(os.path.join(File, f'model_{Epoch}.h5'))
     print(f"Started computing for {File}")
-    Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
-                    Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+    #Dataset = Compute_datas(Model, File, Choix, Oc_tar, 
+     #               Type_tar, Epoch, message, Compute_at_t = 'ALL', Method = Config.get('Method_data'))
+    #Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEMO-CNRS', T = None, shuffle = None, NN_path = None, message = True, recursive_t = False)
+    Dataset = Compute_NN_oceans(NN_attributes = NN_attrib, T = 'ALL', Ocean_target = Oc_tar)[0][0]
     print(f"Finished computing for {File}")
     if Type == 'Mean':
         Diff = (Dataset.Mod_melt - Dataset.meltRate).mean(dim = 'date', skipna= True)
@@ -755,4 +757,59 @@ def Plot_generic_benchmark(Path):
     Mean_df = df.groupby(Var_interest).mean()
     #return Mean_df 
     plt.plot(Mean_df.index, Mean_df.Overall_RMSE)
+
+def Plot_spatial_selection(Name:str, cmap = 'seismic', box = False, Desired_box = [], save = False):
+    fig, ax = plt.subplots()
+    Path = os.path.join(PWD, 'Cached_data', 'Data_for_spatial_cutting/')
+    All_files = glob.glob(Path + '*.nc')
+    selected_file = Path + f'{Name}.nc'
+    cmap = plt.get_cmap('seismic')
+    if selected_file in All_files:
+        Array = xr.open_dataarray(selected_file)
+        Sec_array = Array.copy()
+        vmin = float(Array.min())
+        vmax = float(Array.max())
+        
+        if box != False:
+            xmin, xmax = Desired_box[0:2]
+            ymin, ymax = Desired_box[2:4]
+            Array_xmin = float(Array.x.min())
+            Array_ymin = float(Array.y.min())
+            #Array[dict(x=slice(Convert_coordinate(Array_xmin, xmin), Convert_coordinate(Array_xmin, xmax)), 
+            #           y=slice(Convert_coordinate(Array_ymin, ymin), Convert_coordinate(Array_ymin, ymax)))] = np.nan
+            if box == 'Full':
+                Array = xr.where((Array.x >= xmin) & (Array.x <= xmax) & (Array.y >= ymin) & (Array.y <= ymax), np.nan, Array)
+            elif box == 'Partial':
+                fill = -9999
+                Array = xr.where( (Array.x >= find_nearest(Array.x, xmin)) & (Array.x <= find_nearest(Array.x, xmax)) & (Array.y == find_nearest(Array.y, ymax)), fill, Array)
+
+            # Lower boundary x 
+                Array = xr.where( (Array.x >= find_nearest(Array.x, xmin)) & (Array.x <= find_nearest(Array.x, xmax)) & (Array.y == find_nearest(Array.y, ymin)), fill, Array)
+
+            # Upper boundary y 
+                Array = xr.where( (Array.y >= find_nearest(Array.y, ymin)) & (Array.y <= find_nearest(Array.y, ymax)) & (Array.x == find_nearest(Array.x, xmax)), fill, Array)
+
+            # Lower boundary y 
+                Array = xr.where( (Array.y >= find_nearest(Array.y, ymin)) & (Array.y <= find_nearest(Array.y, ymax)) & (Array.x == find_nearest(Array.x, xmin)), fill, Array)
+                
+        norm = MidpointNormalize( midpoint = 0 )
+        Array = Array.assign_coords({'x':  Array.x/1000,
+                                 'y': Array.y/1000
+                                })
+        Array.plot(x = 'x', cmap = cmap, vmin = vmin, vmax = vmax, norm = norm)
+        if save:
+            fig.savefig(os.path.join(PWD, 'Image_output', 'Sliced_image_{}_{}.png'.format(Name, int(time.time()))), facecolor='white', bbox_inches='tight')
+            
     
+        return Sec_array
+    else:
+        print('File not found')
+        return None
+    
+def Convert_coordinate(min_val, Coord:int, Resol = 2000):
+    return int((Coord - min_val)/Resol)
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]

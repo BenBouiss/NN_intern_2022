@@ -63,9 +63,10 @@ def Convert_from_big(li : list):
             li.append(f'S_{i}')
     return li
 
+
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_Cutting = False, Coordinate_box = None, Time_Cutting = False, Similar_training = False):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_cutting = False, Coordinate_box = None, Spatial_cutting_type = 'box', Time_cutting = False, Time_cutting_type = None, Similar_training = False, Time_percent = 1, Time_period = 1):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -96,11 +97,16 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                 self.LR_Patience = LR_Patience
                 self.LR_Factor = LR_Factor
                 self.min_delta = min_delta
-        self.Spatial_Cutting = Spatial_Cutting
-        self.Time_Cutting = Time_Cutting
+        self.Spatial_cutting = Spatial_cutting
+        self.Time_cutting = Time_cutting
         self.Similar_training = Similar_training
-        if self.Spatial_Cutting == True:
+        if self.Spatial_cutting == True:
             self.Coordinate_box = Coordinate_box
+            self.Spatial_cutting_type = Spatial_cutting_type
+        if self.Time_cutting == True:
+            self.Time_cutting_type = Time_cutting_type
+            self.Time_percent = Time_percent 
+            self.Time_period = Time_period
         #self.Multi_thread = Multi_thread
         #self.Workers = Workers
         self.Hybrid = Hybrid
@@ -134,9 +140,11 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
     def load_dataset(self, Ocean, Model_type, Method, Var_to_load):
         path = Getpath_dataset(Ocean, Model_type, Method)
         return pd.read_csv(path, usecols = Var_to_load)
+    
     def Fetch_dataset(self):
         dfT = pd.DataFrame()
-        Var_to_load = self.Var_X + self.Var_Y
+        Coord_var = ['x', 'y', 'date']
+        Var_to_load = self.Var_X + self.Var_Y + Coord_var
         for Ocean in self.Dataset_train:
             for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),key= lambda x: -x[1])[:10]:
                 print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
@@ -147,18 +155,37 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             del df
         return dfT
     def Apply_modif_to_dataset(self, li : list):
-        if self.Time_Cutting :
+        if self.Time_cutting :
             li = self.Apply_Time_Cutting(li)
-        if self.Spatial_Cutting:
+        if self.Spatial_cutting:
             li = self.Apply_Spatial_Cutting(li, self.Coordinate_box)
         if self.Fraction != None:
             li = li.sample(frac = self.Fraction)
         return li
     
     def Apply_Time_Cutting(self, li : list):
+        #if self.Time_cutting_type == 'S2end-int':
+        #    Tmin, Tmax = self.Time_interval
+        #    li = li.loc[li.date <= Tmin | li.data >= Tmax ]
+        
+        if self.Time_cutting_type == 'S2End-percent':
+            TMAX = int(max(li.date))
+            tmax = (1 - self.Time_percent) * TMAX
+            tmin = (self.Time_percent) * TMAX
+            li = li.loc[(li.date <= tmin) | (li.date >= tmax) ]
+        
+        if self.Time_cutting_type == 'period':
+            li = li.loc[li.date % self.Time_period == 0]
         return li
     
     def Apply_Spatial_Cutting(self, li : list, Coordinate_box : list):
+        print('Applying spatial cutting')
+        if self.Spatial_cutting_type == 'box':
+            xmin, xmax = self.Coordinate_box[0:2]
+            ymin, ymax = self.Coordinate_box[2:4]
+            li = li.loc[(li.x >= xmin) & (li.x <= xmax) & (li.y >= ymin) & (li.y <= ymax)]
+        if self.Spatial_cutting_type == 'downscale':
+            pass
         return li
     
     def Extract_stat_variables(self, df):
@@ -263,8 +290,8 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Y_valid = Y.loc[Y.index.isin(Inds)]
         self.X_train = X.loc[~X.index.isin(Inds)]
         self.Y_train = Y.loc[~Y.index.isin(Inds)]
-        print(len(self.X_train), len(self.X_valid))
-        print(len(self.Y_train), len(self.Y_valid))
+        #print(len(self.X_train), len(self.X_valid))
+        #print(len(self.Y_train), len(self.Y_valid))
         self.Js['Similar_training'] = inds[0].replace(ind_p + '/ind_', '').replace('.csv', '')
         #return X_train, X_valid, Y_train, Y_valid
     def Save_stat_variables(self):
@@ -302,9 +329,6 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         if self.Hybrid == True:
             Mod = self.Execute_hybrid_train()
         else:
-            print('Start Training')
-            print(len(self.X_train), len(self.X_valid))
-            print(len(self.Y_train), len(self.Y_valid))
             Mod = self.Execute_train()
         self.Js['Training_time'] = time.perf_counter() - Start
         print(f"Training done after {int(self.Js['Training_time'])} s")

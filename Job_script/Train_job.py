@@ -95,7 +95,7 @@ for i in range(1):
             Similar_training = True, Norm_Choix = 0, Method_data = 4,
             Fraction_save = 50, Scaling_type = 'Plateau',
             Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
-
+    
 
 # Training.training(training_extent = 0, verbose = 0, batch_size = 2048, Exact = 1, message = 1,
 #             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 

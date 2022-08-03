@@ -58,7 +58,7 @@ Best_Neur = ['128_128_128_128_128']
 Frac = (np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 #for pr in prunes:
-for _ in range(4):
+for _ in range(1):
     Training = Trainings.Sequencial_training(Trainings.model_NN)
     #for F in Frac:
 #    for Batch in [64, 128, 1024, 2048]:

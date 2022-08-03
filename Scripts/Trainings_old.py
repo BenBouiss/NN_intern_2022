@@ -477,7 +477,7 @@ class Sequencial_training():
             Indexs = None
         Time_elap = float(0)
         for ind, Neur in enumerate(Neur_seqs):
-            Model = self.Model(Neur_seq = Neur, verbose = verbose,Similar_training **kwargs)
+            Model = self.Model(Neur_seq = Neur, verbose = verbose, **kwargs)
             print("Starting training for neurone : {}, {}/{} (Previous step : {:.3f} s)".format(Neur, ind, len(Neur_seqs), Time_elap))
             Start = time.perf_counter()
             Model.train(Indexs)

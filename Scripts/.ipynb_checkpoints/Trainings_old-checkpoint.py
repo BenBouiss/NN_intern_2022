@@ -302,7 +302,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             self.X_train, self.X_valid = (np.array((X_train - self.meanX)/self.stdX), 
                                           np.array((X_valid - self.meanX)/self.stdX))
 
-            self.Y_train, self.Y_valid = (np.array((Y_train - self.meanY)/self.stdY), 
+            self.Y_train, self.Y_valid = (np.array ((Y_train - self.meanY)/self.stdY), 
                                           np.array((Y_valid - self.meanY)/self.stdY))
         elif self.Choix == 1:
             self.maxX, self.minX = X_train.max(), X_train.min()
@@ -455,7 +455,7 @@ class Sequencial_training():
         for Mod_name in Model_list:
             self.training(Oc_mod_type = Mod_name, **kwargs)
     def training(self, training_extent = 0, verbose = 1, Verify = 1,message = 1,
-                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = 0, **kwargs):
+                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = False, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:
