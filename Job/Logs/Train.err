@@ -145,3 +145,81 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 2022-08-25 18:26:31.522481: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 ./Job_for_Train_job.py: line 11:  2661 Killed                  python Train_job.py
+  File "Train_spatial.py", line 88
+    Training.training(training_extent = 0, verbose = 1, batch_size = 128, Exact = 1, message = 0,
+           ^
+IndentationError: expected an indented block
+2022-08-30 14:12:23.116593: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:12:23.116618: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_spatial.py", line 92, in <module>
+    Fraction_save = 50, Scaling_type = 'Plateau', Spatial_cutting = True, Coordinate_box = Coordinate_box, 
+NameError: name 'Coordinate_box' is not defined
+2022-08-30 14:13:38.848663: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:13:38.848688: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_spatial.py", line 94, in <module>
+    Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
+  File "../Scripts/Trainings.py", line 527, in training
+    Model.Neural_network_training()
+  File "../Scripts/Trainings.py", line 329, in Neural_network_training
+    self.DataProcessing()
+  File "../Scripts/Trainings.py", line 323, in DataProcessing
+    self.li = self.Fetch_dataset()
+  File "../Scripts/Trainings.py", line 155, in Fetch_dataset
+    df = self.Apply_modif_to_dataset(df)
+  File "../Scripts/Trainings.py", line 163, in Apply_modif_to_dataset
+    li = self.Apply_Spatial_Cutting(li)
+  File "../Scripts/Trainings.py", line 186, in Apply_Spatial_Cutting
+    X = Downsample(self.Downsample_Multiplier, l = np.unique(li.x))
+NameError: name 'Downsample' is not defined
+2022-08-30 14:15:38.552174: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:15:38.552199: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+Traceback (most recent call last):
+  File "Train_spatial.py", line 94, in <module>
+    Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
+  File "../Scripts/Trainings.py", line 527, in training
+    Model.Neural_network_training()
+  File "../Scripts/Trainings.py", line 329, in Neural_network_training
+    self.DataProcessing()
+  File "../Scripts/Trainings.py", line 323, in DataProcessing
+    self.li = self.Fetch_dataset()
+  File "../Scripts/Trainings.py", line 155, in Fetch_dataset
+    df = self.Apply_modif_to_dataset(df)
+  File "../Scripts/Trainings.py", line 163, in Apply_modif_to_dataset
+    li = self.Apply_Spatial_Cutting(li)
+  File "../Scripts/Trainings.py", line 186, in Apply_Spatial_Cutting
+    X = self.Downsample(self.Downsample_Multiplier, l = np.unique(li.x))
+TypeError: Downsample() got an unexpected keyword argument 'l'
+Traceback (most recent call last):
+  File "Train_spatial.py", line 5, in <module>
+    from Scripts import Trainings
+  File "../Scripts/Trainings.py", line 186
+    X = self.Downsample(self.Downsample_Multiplier, l= = np.unique(li.x))
+                                                       ^
+SyntaxError: invalid syntax
+2022-08-30 14:21:17.657630: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:21:17.657656: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+./Job_train_spatial.py: line 11: 44010 Killed                  python Train_spatial.py
+2022-08-30 14:31:58.800030: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:31:58.801239: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-08-30 14:35:55.135045: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-08-30 14:35:55.135439: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-08-30 14:35:55.135483: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (luke60): /proc/driver/nvidia/version does not exist
+2022-08-30 14:35:55.136007: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+## OAR [2022-08-30 14:47:15] Job 75042123 KILLED ##
+2022-08-30 14:47:41.633303: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 14:47:41.633362: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-08-30 14:51:10.944655: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-08-30 14:51:10.944956: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-08-30 14:51:10.945000: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (luke60): /proc/driver/nvidia/version does not exist
+2022-08-30 14:51:10.945441: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-08-30 18:36:08.209333: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-08-30 18:36:08.209363: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-08-30 18:39:11.835254: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-08-30 18:39:11.835550: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-08-30 18:39:11.835591: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (luke60): /proc/driver/nvidia/version does not exist
+2022-08-30 18:39:11.836098: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.

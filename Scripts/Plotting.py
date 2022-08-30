@@ -751,14 +751,19 @@ def Plot_spatial_RMSE(NN_attrib, Oc_tar = 'Ocean1', ind = 0,
     
     return Dataset
 
-def Plot_generic_benchmark(Path):
+def Plot_generic_benchmark(Path, xlabel = None, ylabel = None):
+    fig, ax = plt.subplots()
     df = pd.read_csv(Path)
     Var_interest = df.columns[0]
     
     Mean_df = df.groupby(Var_interest).mean()
     #return Mean_df 
-    plt.plot(Mean_df.index, Mean_df.Overall_RMSE)
-
+    ax.plot(Mean_df.index, Mean_df.Overall_RMSE)
+    if xlabel != None:
+        ax.set_xlabel(xlabel)
+    if ylabel != None:
+        ax.set_ylabel(ylabel)
+    
 def Plot_spatial_selection(Name:str, cmap = 'seismic', box = False, Desired_box = [], save = False):
     fig, ax = plt.subplots()
     Path = os.path.join(PWD, 'Cached_data', 'Data_for_spatial_cutting/')

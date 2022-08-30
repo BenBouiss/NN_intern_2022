@@ -66,7 +66,7 @@ def Convert_from_big(li : list):
 
 class model_NN():
     def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
-Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_cutting = False, Coordinate_box = None, Spatial_cutting_type = 'box', Time_cutting = False, Time_cutting_type = None, Similar_training = False, Time_percent = 1, Time_period = 1):
+Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_cutting = False, Coordinate_box = None, Spatial_cutting_type = 'box', Time_cutting = False, Time_cutting_type = None, Similar_training = False, Time_percent = 1, Time_period = 1, Downsample_Multiplier = 1):
         self.Neur_seq = Neur_seq
         self.Epoch = Epoch
         self.Var_X = list(Var_X)
@@ -103,6 +103,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         if self.Spatial_cutting == True:
             self.Coordinate_box = Coordinate_box
             self.Spatial_cutting_type = Spatial_cutting_type
+        self.Downsample_Multiplier = Downsample_Multiplier
         if self.Time_cutting == True:
             self.Time_cutting_type = Time_cutting_type
             self.Time_percent = Time_percent 
@@ -180,9 +181,16 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             xmin, xmax = self.Coordinate_box[0:2]
             ymin, ymax = self.Coordinate_box[2:4]
             li = li.loc[(li.x >= xmin) & (li.x <= xmax) & (li.y >= ymin) & (li.y <= ymax)]
-        if self.Spatial_cutting_type == 'downscale':
-            pass
+        if self.Spatial_cutting_type.lower() == 'downsample':
+            X = self.Downsample(self.Downsample_Multiplier, l = np.unique(li.x))
+            Y = self.Downsample(self.Downsample_Multiplier, l = np.unique(li.y))
+            li = li.loc[li.x.isin(X) & li.y.isin(Y)]
         return li
+    
+    def Downsample(self, Multiplier : int, l : list):
+        new_li = np.array([elem for i, elem in enumerate(l) if i % Multiplier == 0])
+        return new_li
+    
     
     def Extract_stat_variables(self, df):
         if self.Choix == 0:
@@ -493,7 +501,7 @@ class Sequencial_training():
         for Mod_name in Model_list:
             self.training(Oc_mod_type = Mod_name, **kwargs)
     def training(self, training_extent = 0, verbose = 1, Verify = 1,message = 1,
-                 Standard_train = ['32_64_64_32'], Exact = 0,Similar_training = False, **kwargs):
+                 Standard_train = ['32_64_64_32'], Exact = 0, Similar_training = False, **kwargs):
 
         #Neur_seqs.extend(Hyp_param_list(0, training_extent))
         if training_extent == 0:

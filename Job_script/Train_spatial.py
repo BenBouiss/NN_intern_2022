@@ -61,21 +61,36 @@ Neur_bench = ['1', '8', '4_4', '16_16', '32_32', '16_16_16', '32_32_32', '64_64_
 Neur_bench = ['8']
 Activ_fct = ['relu', 'swish']
 Activ_fct = ['swish']
-#Best_Neur = ['128_128_128_128_128']
-Best_Neur = ['32_32_96_96']
+Best_Neur = ['128_128_128_128_128']
+#Best_Neur = ['32_32_96_96']
 
 
 #Best_Neur = ['32_64_32']
 #def __init__(self, Epoch = 2, Neur_seq = '32_64_64_32', Dataset_train = ['Ocean1'], Oc_mod_type = 'COM_NEMO-CNRS', Var_X = ['x', 'y', 'temperatureYZ', 'salinityYZ', 'iceDraft'], Var_Y = 'meltRate', activ_fct = 'swish', Norm_Choix = 0, verbose = 1, batch_size = 32, Extra_n = '', Better_cutting = False, Drop = None, Default_drop = 0.5, Method_data = None, Method_extent = [0, 40], Scaling_lr = False, Scaling_change = 2, Frequence_scaling_change = 8, Multi_thread = False, Workers = 1, TensorBoard_logs = False, Hybrid = False, Fraction = None, Fraction_save = None,
 #Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR_Factor = 2, min_delta = 0.007, Pruning = False, Pruning_type = 'Constant', initial_sparsity = 0, target_sparsity = 0.5, Random_seed = None, Spatial_Cutting = False, Coordinate_box = None, Spatial_cutting_type = 'box', Time_Cutting = False, Time_cutting_type = None, Similar_training = False):
-Coordinate_box = [475000, 510000,  25000,  40000]
-for i in range(1):
-    print(f'Init training {i}')
-    Training.training(training_extent = 0, verbose = 1, batch_size = 128, Exact = 1, message = 0,
+
+for i in range(3):
+    
+    ## Box cutting part
+    # Coordinate_box = [475000, 510000,  25000,  40000]
+    # print(f'Init training {i}')
+    # Training.training(training_extent = 0, verbose = 1, batch_size = 128, Exact = 1, message = 0,
+    #         Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
+    #         Var_X = Var_X_BIG_TS_ice, Verify = 0, Extra_n = 'Spatial_Cutting_benchmark_simple_T_S',
+    #         Similar_training = True, Norm_Choix = 0, Method_data = 4,
+    #         Fraction_save = 50, Scaling_type = 'Plateau', Spatial_cutting = True, Coordinate_box = Coordinate_box, Spatial_cutting_type = 'box',
+    #         Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
+    
+    ## Downscaling part
+    
+    Downcale_multipliers = [1, 2, 3, 4, 5]
+    for mult in Downcale_multipliers:
+        Training.training(training_extent = 0, verbose = 1, batch_size = 1024, Exact = 1, message = 0,
             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
-            Var_X = Var_X_BIG_TS_ice, Verify = 0, Extra_n = 'Spatial_Cutting_benchmark_simple_T_S',
+            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Downsample_benchmark_big',
             Similar_training = True, Norm_Choix = 0, Method_data = 4,
-            Fraction_save = 50, Scaling_type = 'Plateau', Spatial_cutting = True, Coordinate_box = Coordinate_box, Spatial_cutting_type = 'box',
+            Fraction_save = 50, Scaling_type = 'Plateau', Spatial_cutting = True, 
+            Spatial_cutting_type = 'Downsample', Downsample_Multiplier = mult,
             Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
     
 
