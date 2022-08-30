@@ -158,16 +158,12 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         if self.Time_cutting :
             li = self.Apply_Time_Cutting(li)
         if self.Spatial_cutting:
-            li = self.Apply_Spatial_Cutting(li, self.Coordinate_box)
+            li = self.Apply_Spatial_Cutting(li)
         if self.Fraction != None:
             li = li.sample(frac = self.Fraction)
         return li
     
     def Apply_Time_Cutting(self, li : list):
-        #if self.Time_cutting_type == 'S2end-int':
-        #    Tmin, Tmax = self.Time_interval
-        #    li = li.loc[li.date <= Tmin | li.data >= Tmax ]
-        
         if self.Time_cutting_type == 'S2End-percent':
             TMAX = int(max(li.date))
             tmax = (1 - self.Time_percent) * TMAX
@@ -178,7 +174,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             li = li.loc[li.date % self.Time_period == 0]
         return li
     
-    def Apply_Spatial_Cutting(self, li : list, Coordinate_box : list):
+    def Apply_Spatial_Cutting(self, li : list):
         print('Applying spatial cutting')
         if self.Spatial_cutting_type == 'box':
             xmin, xmax = self.Coordinate_box[0:2]

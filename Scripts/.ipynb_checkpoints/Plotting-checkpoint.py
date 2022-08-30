@@ -284,7 +284,7 @@ def Plot_loss_model(save = False, ind = 0,Forbid_key = [],Second_axis = [],Title
             f"Loss_graph_M_{data['Neur_seq']}_{data['Uniq_id']}.png"), facecolor='white', bbox_inches='tight', dpi = 300)
     return hist
 
-def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = [], Desired_length = None, Generic_label = None, cmap = None, message = True, Dim = None):
+def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Second_axis = [], Title = True, Mods = [], label = [], Desired_length = None, Generic_label = None, cmap = None, message = True, Dim = None, ylim = None):
 
     li = []
     fig, ax = plt.subplots()
@@ -344,7 +344,8 @@ def Plot_Loss_against_loss(save = False, ind = 0, Desired_comparaison = [], Seco
     ax.tick_params(labelsize = SIZE - 2)
     ax.set_xlabel('Epoch', fontsize = SIZE)
     sns.despine()
-    
+    if ylim != None:
+        ax.set_ylim(top=ylim)
     if save:
         fig.savefig(os.path.join(PWD, 'Image_output', 
             f"Multiple_Loss_graph_M_{int(time.time())}.png"), facecolor='white', bbox_inches='tight', dpi = 300)

@@ -73,7 +73,7 @@ for i in range(1):
     print(f'Init training {i}')
     Training.training(training_extent = 0, verbose = 1, batch_size = 1024, Exact = 1, message = 0,
             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, 
-            Var_X = Var_X_BIG_TS_ice, Verify = 0, Extra_n = 'Time_cutting_10percent',
+            Var_X = Var_X_BIG_Slopexy, Verify = 0, Extra_n = 'Time_cutting_10percent',
             Similar_training = True, Norm_Choix = 0, Method_data = 4,
             Fraction_save = 50, Scaling_type = 'Plateau', Time_cutting = True, Time_cutting_type = 'S2End-percent', Time_percent = Time_percent, Scaling_lr = True, LR_Patience = 10, LR_min = 0.0000006, LR_Factor = 2, min_delta = 0.003)
     

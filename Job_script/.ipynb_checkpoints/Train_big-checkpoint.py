@@ -58,26 +58,27 @@ Best_Neur = ['128_128_128_128_128']
 Frac = (np.around(np.linspace(1, 10, 16, endpoint = False), decimals = 2) ** 2 / 100)[::-1]
 Training = Trainings.Sequencial_training(Trainings.model_NN)
 #for pr in prunes:
-for _ in range(1):
+for _ in range(4):
     Training = Trainings.Sequencial_training(Trainings.model_NN)
-    #for F in Frac:
-#    for Batch in [64, 128, 1024, 2048]:
-        ### Batch size benchmark
-#        Training.training(verbose = 0, batch_size = Batch, message = 1,
-#              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
-#              Var_X = Var_X_BIG_Extra, Extra_n = 'Batch_Size_Benchmark',
-#              Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-#              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor #= 2)
+    b = [64, 128, 1024, 2048]
+    b = [4096, 8192, 16384]
+    for Batch in b :
+        ## Batch size benchmark
+        Training.training(verbose = 0, batch_size = Batch, message = 1,
+             Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
+             Var_X = Var_X_BIG_Extra, Extra_n = 'Batch_Size_Benchmark2',
+             Similar_training = True, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+             Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
 
 
  ### Pruning benchmark composite
-    for pr in prunes:
-        Training = Trainings.Sequencial_training(Trainings.model_NN)
-        Training.training(verbose = 0, batch_size = 1028, message = 1,
-              Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64,
-              Var_X = Var_X_BIG_Extra, Extra_n = 'Prune_benchmark_Composite',
-              Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
-              Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
+    # for pr in prunes:
+    #     Training = Trainings.Sequencial_training(Trainings.model_NN)
+    #     Training.training(verbose = 0, batch_size = 1028, message = 1,
+    #           Standard_train = Best_Neur, Dataset_train = Composite, Epoch = 64,
+    #           Var_X = Var_X_BIG_Extra, Extra_n = 'Prune_benchmark_Composite',
+    #           Similar_training = False, Norm_Choix = 0, Method_data = 4, activ_fct= "swish", 
+    #           Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2, Pruning = True, Pruning_type = 'Constant', target_sparsity = pr, Fraction = 0.6)
 
 #    Training.training(verbose = 0, batch_size = 1028, message = 1,
 #              Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64,
@@ -91,6 +92,7 @@ for _ in range(1):
         #       Scaling_lr = True, Fraction_save = 32, Scaling_type = 'Plateau', LR_min = 0.0000016, LR_Patience = 8, LR_Factor = 2)
         
         ### Fraction benchmark
+        #for F in Frac:
         # Training.training(verbose = 0, batch_size = 1028, message = 1,
         #       Standard_train = Best_Neur, Dataset_train = OcT, Epoch = 64, Fraction = F,
         #       Var_X = Var_X_BIG_Extra, Extra_n = 'Fraction_dataset_Benchmark',

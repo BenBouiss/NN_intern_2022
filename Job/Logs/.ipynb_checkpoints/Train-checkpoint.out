@@ -1,0 +1,605 @@
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Init training 0
+Projected training regiment :
+ ['32_32_96_96']
+Starting training for neurone : 32_32_96_96, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+7483133 1870783
+7483133 1870783
+[<keras.layers.core.dense.Dense object at 0x7f23a6577c50>, <keras.layers.core.dense.Dense object at 0x7f23a65507d0>, <keras.layers.core.dense.Dense object at 0x7f23a6500450>, <keras.layers.core.dense.Dense object at 0x7f23a6565ad0>, <keras.layers.core.dense.Dense object at 0x7f23a65573d0>]
+Start Training
+7483133 1870783
+7483133 1870783
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 46: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Init training 0
+Projected training regiment :
+ ['32_32_96_96']
+Starting training for neurone : 32_32_96_96, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+Applying spatial cutting
+                           dfT: 24.3 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+Applying spatial cutting
+                           dfT: 48.5 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+Applying spatial cutting
+                           dfT: 169.8 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Applying spatial cutting
+Separate X Y datasets
+331596 83124
+331596 83124
+[<keras.layers.core.dense.Dense object at 0x7fd122509c90>, <keras.layers.core.dense.Dense object at 0x7fd126782f50>, <keras.layers.core.dense.Dense object at 0x7fd122139090>, <keras.layers.core.dense.Dense object at 0x7fd122530ad0>, <keras.layers.core.dense.Dense object at 0x7fd12251f290>]
+Start Training
+331596 83124
+331596 83124
+
+Epoch 13: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 28: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 38: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 48: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 58: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 442 s
+Init training 1
+Projected training regiment :
+ ['32_32_96_96']
+Starting training for neurone : 32_32_96_96, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+Applying spatial cutting
+                           dfT: 24.3 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+Applying spatial cutting
+                           dfT: 48.5 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+Applying spatial cutting
+                           dfT: 169.8 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Applying spatial cutting
+Separate X Y datasets
+331596 83124
+331596 83124
+[<keras.layers.core.dense.Dense object at 0x7fd122281a50>, <keras.layers.core.dense.Dense object at 0x7fd126782f50>, <keras.layers.core.dense.Dense object at 0x7fd1226a6810>, <keras.layers.core.dense.Dense object at 0x7fd120306310>, <keras.layers.core.dense.Dense object at 0x7fd122281fd0>]
+Start Training
+331596 83124
+331596 83124
+
+Epoch 20: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 30: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 40: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 50: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 60: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 420 s
+Init training 2
+Projected training regiment :
+ ['32_32_96_96']
+Starting training for neurone : 32_32_96_96, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+Applying spatial cutting
+                           dfT: 24.3 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+Applying spatial cutting
+                           dfT: 48.5 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+Applying spatial cutting
+                           dfT: 169.8 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Applying spatial cutting
+Separate X Y datasets
+331596 83124
+331596 83124
+[<keras.layers.core.dense.Dense object at 0x7fd1222cf9d0>, <keras.layers.core.dense.Dense object at 0x7fd122483b90>, <keras.layers.core.dense.Dense object at 0x7fd122302550>, <keras.layers.core.dense.Dense object at 0x7fd1226a6bd0>, <keras.layers.core.dense.Dense object at 0x7fd1222cfd10>]
+Start Training
+331596 83124
+331596 83124
+
+Epoch 15: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 425 s
+Init training 3
+Projected training regiment :
+ ['32_32_96_96']
+Starting training for neurone : 32_32_96_96, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+Applying spatial cutting
+                           dfT: 24.3 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+Applying spatial cutting
+                           dfT: 48.5 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+Applying spatial cutting
+                           dfT: 169.8 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Applying spatial cutting
+Separate X Y datasets
+331596 83124
+331596 83124
+[<keras.layers.core.dense.Dense object at 0x7fd12216b690>, <keras.layers.core.dense.Dense object at 0x7fd122245550>, <keras.layers.core.dense.Dense object at 0x7fd1226ee6d0>, <keras.layers.core.dense.Dense object at 0x7fd122343dd0>, <keras.layers.core.dense.Dense object at 0x7fd122135610>]
+Start Training
+331596 83124
+331596 83124
+
+Epoch 13: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 35: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 45: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 55: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 426 s
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+Switching to nixos-21.05
+PWD : /home/bouissob/Code
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbfd419ea10>, <keras.layers.core.dense.Dense object at 0x7fbfd419e9d0>, <keras.layers.core.dense.Dense object at 0x7fbfd4252210>, <keras.layers.core.dense.Dense object at 0x7fbfd41a7210>, <keras.layers.core.dense.Dense object at 0x7fbfd432b6d0>, <keras.layers.core.dense.Dense object at 0x7fbfd419ec10>]
+
+Epoch 13: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 27: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 37: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 47: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 57: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 27218 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbfd41a7210>, <keras.layers.core.dense.Dense object at 0x7fbfe0255e50>, <keras.layers.core.dense.Dense object at 0x7fbe9075c710>, <keras.layers.core.dense.Dense object at 0x7fbfd3ce3850>, <keras.layers.core.dense.Dense object at 0x7fbfd3ed3d90>, <keras.layers.core.dense.Dense object at 0x7fbfd86c8e10>]
+
+Epoch 15: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 26: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 36: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 46: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 16534 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbfd3cdfd90>, <keras.layers.core.dense.Dense object at 0x7fbfd3ce0110>, <keras.layers.core.dense.Dense object at 0x7fbe90770090>, <keras.layers.core.dense.Dense object at 0x7fbfd3ef15d0>, <keras.layers.core.dense.Dense object at 0x7fbfd4263910>, <keras.layers.core.dense.Dense object at 0x7fbe9075c0d0>]
+
+Epoch 15: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 32: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 42: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 52: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 62: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 2584 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbfd3c6a650>, <keras.layers.core.dense.Dense object at 0x7fbfd3f89950>, <keras.layers.core.dense.Dense object at 0x7fbfe0255e50>, <keras.layers.core.dense.Dense object at 0x7fbfd3c51950>, <keras.layers.core.dense.Dense object at 0x7fbe907108d0>, <keras.layers.core.dense.Dense object at 0x7fbfd3c6a890>]
+
+Epoch 19: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 29: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 39: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 49: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 59: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 1813 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbe907b9910>, <keras.layers.core.dense.Dense object at 0x7fbe90770090>, <keras.layers.core.dense.Dense object at 0x7fbe907108d0>, <keras.layers.core.dense.Dense object at 0x7fbe907f3d90>, <keras.layers.core.dense.Dense object at 0x7fbfd3ef15d0>, <keras.layers.core.dense.Dense object at 0x7fbfd3c46250>]
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 29: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 39: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 49: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 59: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 27581 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbe907e3d50>, <keras.layers.core.dense.Dense object at 0x7fbfd3eeb310>, <keras.layers.core.dense.Dense object at 0x7fbe90718750>, <keras.layers.core.dense.Dense object at 0x7fbfd349cb10>, <keras.layers.core.dense.Dense object at 0x7fbfd3fcac90>, <keras.layers.core.dense.Dense object at 0x7fbe907f2690>]
+
+Epoch 16: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 26: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 36: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 46: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 57: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+Training done after 16389 s
+Projected training regiment :
+ ['128_128_128_128_128']
+Starting training for neurone : 128_128_128_128_128, 0/1 (Previous step : 0.000 s)
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                           dfT:   32.0 B
+Loading Ocean1 dataset
+                           dfT: 489.9 MiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   52.0 B
+                          size:   28.0 B
+Loading Ocean2 dataset
+                           dfT:  1.0 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean3 dataset
+                           dfT:  3.7 GiB
+                   Var_to_load:  808.0 B
+                     Coord_var:   96.0 B
+                          self:   64.0 B
+                         Ocean:   55.0 B
+                          name:   53.0 B
+                          size:   28.0 B
+Loading Ocean4 dataset
+Separate X Y datasets
+[<keras.layers.core.dense.Dense object at 0x7fbe907f5290>, <keras.layers.core.dense.Dense object at 0x7fbe907e6610>, <keras.layers.core.dense.Dense object at 0x7fbfd3493250>, <keras.layers.core.dense.Dense object at 0x7fbfd3493a50>, <keras.layers.core.dense.Dense object at 0x7fbfd3b3c2d0>, <keras.layers.core.dense.Dense object at 0x7fbfd3fcae10>]
+
+Epoch 14: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+
+Epoch 29: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+
+Epoch 39: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+
+Epoch 49: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+
+Epoch 59: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
