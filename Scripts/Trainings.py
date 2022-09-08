@@ -325,12 +325,18 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Save_stat_variables()
 
     def Neural_network_training(self):
+        #Prepare all the data :
+        #Fetching, Normalising, creating self.X_train ..... self.Y_valid
         self.DataProcessing()
+        
+        #Initialise NN structure and all the hyperparameter
         self.Init_NN_structure()
         self.Gather_callbacks()
         
+        # Execute training
         Start = time.perf_counter()
         if self.Hybrid == True:
+            # Not yet implemented
             Mod = self.Execute_hybrid_train()
         else:
             Mod = self.Execute_train()
@@ -339,6 +345,22 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
         self.Model_save(Mod)
         
     def Init_NN_structure(self):
+        '''
+    This functions initialise the NN structure, neurons, activation function and dropout layers.
+    
+    Parameters
+    ----------
+    arg : all contained in self
+        - Neur_seq : str : Is a string containing the NN neurons and layers structure 
+            ex : "8_16" is a NN composed of two dense layers between the input and ouput layer. The first dense layer having 8 neurons and second 16 neurons.
+        - activ_fct : Sets the activation function to be used by all dense layers of the NN(except the output). Any function can be selected from the keras library. Default here : self.activ_fct = 'swish'    
+        
+        - Drop = Default : Adds dropout layers between the dense layers with a constant self.Default_drop dropout rate(ex:0.1 : 10% of dropping connections)
+        - Drop = Scaling : Adds dropout layers between the dense layers with a changing dropout rate chaning from 0.9(90%) at the first dropout layer to a minimum of 0.5(50%). Values can be change to observe changes in NN behaviour.
+    
+    Returns:
+            self.model: NN model to be used for the training process.
+    '''
         Orders = self.Neur_seq.split('_')
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Input(len(self.Var_X)))
@@ -355,10 +377,10 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
                             Dropout = max(0.5, 0.9 - i * 0.15)
                             self.model.add(tf.keras.layers.Dropout(Dropout))
                             Drop_seq.append(Dropout)
-        self.Js['Drop_seq'] = Drop_seq
         self.model.add(tf.keras.layers.Dense(len(self.Var_Y)))
-        print(self.model.layers)
+        #print(self.model.layers)
         if self.Drop == 'Scaling':
+            optimizer = tf.keras.optimizers.Adam(lr=0.01)
             self.model.compile(optimizer=optimizer,
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
@@ -366,9 +388,24 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             self.model.compile(optimizer='adam',
                      loss = 'mse',
                     metrics = ['mae', 'mse'])
+        # Nice to have values in the config files.
+        self.Js['Drop_seq'] = Drop_seq
         self.Js['Param'] = self.model.count_params()
     
     def Gather_callbacks(self):
+    '''
+    This functions initialise all of the required callbacks for the training process. All callbacks are then stored inside the self.Callback list.
+    
+    Special case : When using the hybrid training method(Training in 2 parts with and without dropout) the self.Callback will be a list of dimension 2 for the respective training parts as the lr schedulling method does not do well with dropout.
+    
+    Parameters
+    ----------
+    arg : all contained in self
+        - Scaling_lr = True : Adds a learning scheduling method to the NN training using the self.Add_lr_schedulling() function
+        - Pruning = True : Adds a pruning method to the NN training using the self.Add_pruning() function
+        - TensorBoard_logs = True : Creates a tensorboard file for the NN training.
+    
+    '''
         saver = CustomSaver(path = self.Path, Epoch_max = self.Epoch, Fraction = self.Fraction_save)
         self.Callback.append(saver)
         
@@ -381,7 +418,16 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
             self.Callback.append(tensorboard_callback)
     def Add_lr_schedulling(self):
+    '''
+    This functions initialise all of the required callbacks for the training process. All callbacks are then stored inside the self.Callback list.
 
+    Parameters
+    ----------
+    arg : all contained in self
+        - Scaling_type = Linear : Adds a linear lr schedulling method meaning the lr gets reduced every (self.Frequence_scaling_change)th number of epoch.
+        - Scaling_type == 'Plateau' : Adds a lr schedduling method using the ReduceLROnPlateau keras's callback with a lr reduced depending on the variation of the valiation loss with respect to previous epoch's end.
+
+    '''
         if self.Scaling_lr == True:
             if self.Scaling_type == 'Linear':
                 New_lr = tf.keras.callbacks.LearningRateScheduler(self.scheduler)
@@ -392,6 +438,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
 
     
     def scheduler(self, epoch, lr):
+        
         if not self.Hybrid:
             if (epoch+1) % self.Frequence_scaling_change == 0 and lr/self.Scaling_change >= self.LR_min:
                 return lr / self.Scaling_change
@@ -435,6 +482,7 @@ Epoch_lim = 15, Scaling_type = 'Linear', LR_Patience = 2, LR_min = 0.0000016, LR
 
     def Execute_hybrid_train(self):
         pass
+    
     def Execute_train(self):
         Mod = self.model.fit(self.X_train, self.Y_train,
                    callbacks=self.Callback,

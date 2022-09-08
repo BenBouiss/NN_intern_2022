@@ -819,3 +819,9 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
+
+
+def Variable_benchmark_plotting(NN_attributes = {}, **kwargs):
+    Dataset, Ocean_target = Compute_NN_oceans(NN_attributes = NN_attributes, T = 'ALL', **kwargs)
+    return Dataset
+

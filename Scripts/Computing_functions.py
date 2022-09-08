@@ -169,23 +169,6 @@ def Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEM
                 All_melts.append(Melts.to_list())
                 All_reference_melts.append(Reference_melts.to_list())
                 RMSEs.append(RMSE)
-            #else:
-            #    tmax = int(max(Dataset['date']))
-            #    print(tmax)
-            #    current_ref = []
-            #    current_mod = []
-            #    for t in range(tmax+1):
-            #        if (t+1)%int(tmax/100) == 0:
-            #            print('Starting {} / {}'.format(t+1, tmax) , end='\r')
-            #        cur = Dataset.loc[Dataset.date == t].reset_index(drop = True)
-            #        Reference_melts, Melts, RMSE = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, cur, shuffle, integrate = True)
-            #        current_mod.append(Melts)
-            #        current_ref.append(Reference_melts)
-            #    #print(current_mod)
-                #print(Flatten_list_list(current_ref))
-            #    RMSEs.append(Compute_rmse(Flatten_list_list(current_mod), Flatten_list_list(current_ref)))
-            #    All_melts.append(current_ref)
-            #    All_reference_melts.append(current_mod)
         else:
             if type(T) == list or type(T) == int:
                 Dataset = Dataset.loc[Dataset.date.isin(T)]
@@ -379,3 +362,10 @@ def Compute_general_benchmark(Var_to_bench : str, NN_attributes = {}, **kwargs):
     pd.DataFrame.to_csv(df, Path + f'{Var_to_bench}_{int(time.time())}.csv', index = False)
     return df
         
+    def Compute_variable_importance_NN(Path):
+        '''
+        Method inspired by the paper : https://doras.dcu.ie/21859/1/dawak_2017.pdf
+        Method computes the variable importance using the trained weights of a neural network. The output importance value can then be scaled and compared with other variables to determine the relative importance of trained variables. The higher the absolute value of the importance value is, the more the variables impacts in the computing of melt rates.
+        '''
+        pass
+    

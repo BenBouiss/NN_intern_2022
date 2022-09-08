@@ -169,23 +169,6 @@ def Compute_NN_oceans(NN_attributes, Ocean_target : list, Type_target = 'COM_NEM
                 All_melts.append(Melts.to_list())
                 All_reference_melts.append(Reference_melts.to_list())
                 RMSEs.append(RMSE)
-            #else:
-            #    tmax = int(max(Dataset['date']))
-            #    print(tmax)
-            #    current_ref = []
-            #    current_mod = []
-            #    for t in range(tmax+1):
-            #        if (t+1)%int(tmax/100) == 0:
-            #            print('Starting {} / {}'.format(t+1, tmax) , end='\r')
-            #        cur = Dataset.loc[Dataset.date == t].reset_index(drop = True)
-            #        Reference_melts, Melts, RMSE = Compute_RMSE_from_model_ocean(NN_path_directory, NN_model_path, Config, cur, shuffle, integrate = True)
-            #        current_mod.append(Melts)
-            #        current_ref.append(Reference_melts)
-            #    #print(current_mod)
-                #print(Flatten_list_list(current_ref))
-            #    RMSEs.append(Compute_rmse(Flatten_list_list(current_mod), Flatten_list_list(current_ref)))
-            #    All_melts.append(current_ref)
-            #    All_reference_melts.append(current_mod)
         else:
             if type(T) == list or type(T) == int:
                 Dataset = Dataset.loc[Dataset.date.isin(T)]
